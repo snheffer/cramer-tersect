@@ -39,6 +39,11 @@ module.exports = {
             "name": "File Drop",
             "id": "fileDrop",
             "info": "Allows to drag and drop a file directly into the browser and display it"
+        },
+        "tersectIntegration": {
+            "name": "Tersect Integration",
+            "id": "tersectIntegration",
+            "info": "Additional functionality to use Tersect to view variant differences"
         }
     }
 };
