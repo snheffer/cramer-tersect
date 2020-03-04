@@ -94,3 +94,4 @@ require(__dirname + '/public/javascript/plugins/tooltips.js');
 require(__dirname + '/public/javascript/plugins/trackControls.js');
 require(__dirname + '/public/javascript/plugins/search.js');
 require(__dirname + '/public/javascript/plugins/selectChromosome.js');
+require(__dirname + '/public/javascript/plugins/tersectIntegration.js');
