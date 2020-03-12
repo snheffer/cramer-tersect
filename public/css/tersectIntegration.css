@@ -1,7 +1,7 @@
 .fa-override:before {
     content: "\f093";
 }
-.gv-search-plugin .gv-search-menu {
+.gv-tersect-integration-plugin .gv-tersect-integration-menu {
     color: white;
     background-color: #5F8CB0;
     border-radius: 0px 12px 12px 12px;
@@ -13,7 +13,7 @@
     margin-left: 5px;
 }
 
-.gv-search-plugin .gv-search-button button {
+.gv-tersect-integration-plugin .gv-tersect-integration-button button {
     background: none;
     border: none;
     border-bottom: 1px solid #1C5380;
@@ -27,22 +27,22 @@
     margin: 0;
 }
 
-.gv-search-plugin .gv-search-menu {
+.gv-tersect-integration-plugin .gv-tersect-integration-menu {
     left: 24%;
     top: 70px;
 }
 
-.gv-search-plugin .gv-search-menu table {
+.gv-tersect-integration-plugin .gv-tersect-integration-menu table {
     margin: 0 0 10px;
 }
 
-.gv-search-plugin .gv-search-menu td {
+.gv-tersect-integration-plugin .gv-tersect-integration-menu td {
     padding: 5px 10px!important;
     vertical-align: top;
     width: 50%;
 }
 
-.gv-search-plugin .gv-search-menu tr:first-child td {
+.gv-tersect-integration-plugin .gv-tersect-integration-menu tr:first-child td {
     font-weight: bold;
     white-space: nowrap;
     padding: 5px 30px 5px 10px;
@@ -51,65 +51,76 @@
     line-height: normal;
 }
 
-.gv-search-plugin .gv-search-menu tr:first-child td:last-child {
+.gv-tersect-integration-plugin .gv-tersect-integration-menu tr:first-child td:last-child {
     border-radius: 0 12px 0 0;
     white-space: nowrap;
 }
 
-.gv-search-plugin .gv-search-menu tr td:first-child {
+.gv-tersect-integration-plugin .gv-tersect-integration-menu tr td:first-child {
     padding-right: 50px!important;
     white-space: nowrap;
 }
 
 
-.gv-search-plugin .gv-search-menu .gv-close {
+.gv-tersect-integration-plugin .gv-tersect-integration-menu .gv-close {
     font-size: 20px;
 }
 
-.gv-search-plugin .gv-search-menu .gv-gene-search-button {
+.gv-tersect-integration-plugin .gv-tersect-integration-menu .gv-tersect-integration-file-button {
     font-size: 20px;
     position: absolute;
     left: 200px;
 }
 
-.gv-search-plugin .gv-search-menu .gv-menu-content {
+.gv-tersect-integration-plugin .gv-tersect-integration-menu .gv-tersect-integration-select-button {
+    font-size: 20px;
+    position: absolute;
+}
+
+.gv-tersect-integration-plugin .gv-tersect-integration-menu .gv-tersect-integration-submit-button {
+    font-size: 20px;
+    position: absolute;
+    left: 440px;
+}
+
+.gv-tersect-integration-plugin .gv-tersect-integration-menu .gv-menu-content {
     font-size: 13px;
 }
 
-.gv-search-plugin .gv-search-menu .gv-search-input {
+.gv-tersect-integration-plugin .gv-tersect-integration-menu .gv-tersect-integration-input {
     width: 200px;
 }
 
-.gv-search-plugin .gv-search-menu .gv-settings {
+.gv-tersect-integration-plugin .gv-tersect-integration-menu .gv-settings {
     margin-top: 4px;
     width: 200px;
 }
-.gv-search-plugin .gv-search-menu .gv-search-text {
+.gv-tersect-integration-plugin .gv-tersect-integration-menu .gv-tersect-integration-text {
     font-weight: bold;
 }
 
-.gv-search-plugin .gv-search-menu .gv-checkbox {
+.gv-tersect-integration-plugin .gv-tersect-integration-menu .gv-checkbox {
     position: absolute;
     left: 460px;
 }
 
-.gv-search-plugin .gv-gene-menu {
+.gv-tersect-integration-plugin .gv-tersect-integration-file-menu {
     left: 35%;
     top: 70px;
 }
 
-.gv-search-plugin .gv-gene-menu table {
+.gv-tersect-integration-plugin .gv-tersect-integration-file-menu table {
     margin: 0 0 10px;
 }
 
-.gv-search-plugin .gv-gene-menu td {
+.gv-tersect-integration-plugin .gv-tersect-integration-file-menu td {
     padding: 5px 10px!important;
     vertical-align: top;
     width: 50%;
     white-space: nowrap;
 }
 
-.gv-search-plugin .gv-gene-menu tr:first-child td {
+.gv-tersect-integration-plugin .gv-tersect-integration-file-menu tr:first-child td {
     font-weight: bold;
     white-space: nowrap;
     padding: 5px 30px 5px 10px;
@@ -118,20 +129,28 @@
     line-height: normal;
 }
 
-.gv-search-plugin .gv-gene-menu tr:first-child td:last-child {
+.gv-tersect-integration-plugin .gv-tersect-integration-file-menu tr:first-child td:last-child {
     border-radius: 0 12px 0 0;
 }
 
-.gv-search-plugin .gv-gene-menu tr td:first-child {
+.gv-tersect-integration-plugin .gv-tersect-integration-file-menu tr td:first-child {
     padding-right: 50px!important;
 }
 
-.gv-search-plugin .gv-gene-menu .gv-close {
+.gv-tersect-integration-plugin .gv-tersect-integration-file-menu .gv-close {
     font-size: 20px;
 }
 
-.gv-search-plugin .gv-gene-menu .gv-menu-content {
+.gv-tersect-integration-plugin .gv-tersect-integration-file-menu .gv-menu-content {
     font-size: 13px;
+}
+
+.gv-tersect-integration-plugin .gv-tersect-integration-span {
+    padding-right: 15px;
+}
+
+.gv-tersect-integration-plugin .gv-tersect-integration-headspan {
+    margin-bottom: 15px;
 }
 
 .jspDrag {
@@ -140,4 +159,7 @@
 
 .jspVerticalBar {
     background-color: #5F8CB0;
+}
+#testDiv{
+    color: #5cb85c;
 }

@@ -1,176 +1,102 @@
 Genoverse.Plugins.tersectIntegration = function () {
     this.controls.push({
         icon: '<i class="fa fa-override"></i>',
-        'class': 'gv-search',
+        'class': 'gv-tersect-integration',
         name: 'Use Tersect Functionalities.',
         action: function (browser) {
             // Resetting variables
-            var searchButton = this;
-            var start = 0;
-            var end = 0;
-            var gene = '';
-            var matchingGenes = [];
-            var matchingPos = [];
-            var featuresENS = [];
-            var featuresGFF = [];
-            var ensIds = false;
-            var ensNames = false;
-            var gffname = false;
-            var gffid = false;
+            var tersectButton = this;
+            var tersectFileMenu = false;
+            var queryMenu = false;
             // If the control panel search button has already been clicked, it will close the search menu
-            if ($(searchButton).hasClass('gv-active')) {
-                $('.gv-menu.gv-search-menu .gv-close').trigger('click');
-                $(this).removeClass('gv-active');
+            if ($(tersectButton).hasClass('gv-active')) {
+                $('.gv-menu.gv-tersect-integration-menu .gv-close').trigger('click');
+                $(tersectButton).removeClass('gv-active');
             } else {
                 // otherwise it will open the search menu
-                var searchMenu = $(this).data('searchMenu');
-                if (searchMenu) {
-                    searchMenu.show();
+                var tersectMenu = $(this).data('tersectMenu');
+                if (tersectMenu) {
+                    tersectMenu.show();
                 } else {
-                    searchMenu = makeSearchMenu();
+                    tersectMenu = makeTersectMenu();
                 }
-                $(searchButton).addClass('gv-active');
-                // When gene-search button is clicked, set new position and search genes
-                $('.gv-gene-search-button', searchMenu).on('click', function () {
-                    start = Number($('#start-search').val());
-                    end = Number($('#end-search').val());
-                    gene = $('#gene-name').val();
-                    // If start and end undefined, set them to search the whole chromosome
-                    if (start == 0 && end == 0 && gene != '') {
-                        start = 1;
-                        end = browser.chromosomeSize;
-                    }
+                $(tersectButton).addClass('gv-active');
+                // Use off() to devalidate any handlers added by spamming the tersect button.
 
-                    if (start < end) {
-                        $('#start-search').css({'background-color': "white"});
-                        $('#end-search').css({'background-color': "white"});
-                        browser.moveTo(browser.chr, start, end, true);
-                        $('.gv-menu.gv-search-menu .gv-close').trigger('click');
-
-                        ensIds = $(".gv-ens-ids-search").is(':checked');
-                        ensNames = $(".gv-ens-names-search").is(':checked');
-                        gffname = $(".gv-gffname-search").is(':checked');
-                        gffid = $(".gv-gffids-search").is(':checked');
-                        if (gene != '' && (ensIds || ensNames || gffname || gffid)) {
-
-                            window.setTimeout(function () {
-                                getMatchingGenes(ensIds, ensNames, gffid, gffname);
-                                var geneMenu = $(this).data('geneMenu');
-                                if (geneMenu) {
-                                    geneMenu.css("display", "none");
-                                } else {
-                                    geneMenu = makeGeneMenu();
-                                }
-                                $('.gv-gene-menu').draggable();
-                                // Get gene names and positions
-                                var geneNames = $('.gv-gene-names', geneMenu).data({
-                                    listGenes: function () {
-                                        if (matchingGenes.length > 1) {
-                                            for (var i = 0; i < matchingGenes.length; i++) {
-                                                $('<div>')
-                                                        .append('<li data-id="' + i + '">' + matchingGenes[i] + '</li>')
-                                                        .appendTo(geneNames);
-                                            }
-                                        } else {
-                                            $('<div>')
-                                                    .append('<li>' + 'No matching genes' + '</li>')
-                                                    .appendTo(geneNames);
-                                        }
-                                    }});
-                                var genePositions = $('.gv-gene-positions', geneMenu).data({
-                                    listPositions: function () {
-                                        for (var i = 0; i < matchingGenes.length; i++) {
-                                            $('<div>')
-                                                    .append('<span> ' + matchingPos[i] + '</span>')
-                                                    .appendTo(genePositions);
-                                        }
-                                    }});
-                                // Set the data in the menu
-                                geneNames.empty();
-                                genePositions.empty();
-                                geneNames.data('listGenes')();
-                                genePositions.data('listPositions')();
-                                window.setTimeout(function () {
-                                    geneMenu.show();
-                                }, 100);
-                                // Set the scrollbar and selection of gene menu
-                                if (matchingGenes.length > 30) {
-                                    setScrollBar();
-                                } else {
-                                    removeScrollBar();
-                                }
-                                $("li").css({"cursor": "pointer"});
-                                $('li', geneMenu).click(function () {
-                                    var index = $(this).data('id');
-                                    var positions = matchingPos[index].split(' - ');
-                                    browser.moveTo(browser.chr, positions[0], positions[1], true);
-                                });
-                                $(this).data('geneMenu', geneMenu);
-                            }, 500);
-                        }
+                $('#tsi-file').off().on('click', function () {
+                    //$(".gv-tersect-integration-file-menu").remove();
+                    //tersectFileMenu = makeTersectFileMenu();
+                    if(tersectFileMenu){
+                        tersectFileMenu.show();
                     } else {
-                        $('#start-search').css({'background-color': "rgba(255,0,51,0.6)"});
-                        $('#end-search').css({'background-color': "rgba(255,0,51,0.6)"});
+                        tersectFileMenu = makeTersectFileMenu();
                     }
+
+
                 });
-                $('.gv-close', searchMenu).on('click', function () {
-                    $(searchButton).removeClass('gv-active');
+
+                $('#saved-queries').off().on('click', function () {
+                    //$(".gv-tersect-integration-file-menu").remove();
+                    //tersectFileMenu = makeTersectFileMenu();
+                    if(queryMenu){
+                        queryMenu.show();
+                    } else {
+                        queryMenu = makeQueryMenu();
+                    }
+
+
                 });
-                $(this).data('searchMenu', searchMenu);
+
+                $('#save-query').off().on('click', function () {
+                    $("#save-status").removeClass("fa-arrow-circle-right");
+                    $("#save-status").addClass("fa-spin fa-spinner");
+                    setTimeout(function(){
+                        $("#save-status").removeClass("fa-spin fa-spinner");
+                        $("#save-status").addClass("fa-arrow-circle-right")
+                    },3000)
+                });
+
+                $('.gv-close', tersectMenu).on('click', function () {
+                    $(tersectButton).removeClass('gv-active');
+                });
+
+                $(this).data('tersectMenu', tersectMenu);
+            }
+
+            //makeMenu function declarations.
+            function makeTersectMenu() {
+                var tersectMenu = browser.makeMenu({
+                    'Tersect: File Selection:': '',
+                    '<span class="gv-tersect-integration-headspan><a class="gv-tersect-integration-text gv-tersect-integration-input gv-tersect-integration-select-button" id="tsi-file">TSI File <i class="fa fa-arrow-circle-right"></i></a></span>':'',
+                    '<div><span>Space For Operations</span></div><div><span>Space For Operations</span></div><div><span>Space For Operations</span></div>':'<div><span>Space For Operations</span></div><div><span>Space For Operations</span></div><div><span>Space For Operations</span></div>',
+                    '<div><span class="gv-tersect-integration-span" id="save-query"><a class="gv-tersect-integration-text ">Save Query <i id="save-status" class="fa fa-arrow-circle-right"></i></a></span> <span class="gv-tersect-integration-span" id="saved-queries"><a class="gv-tersect-integration-text">Saved Queries <i class="fa fa-arrow-circle-right"></i></a></span></div>': '<span><a class="gv-tersect-integration-text gv-tersect-integration-submit-button" id="submit-query">Submit <i class="fa fa-arrow-circle-right"></i></a></span>',
+
+                }).addClass('gv-tersect-integration-menu');
+                return tersectMenu;
             }
 
 
-            function makeSearchMenu() {
-                var searchMenu = browser.makeMenu({
-                    'Search inputs:': 'Search settings:',
-                    '<input class="gv-search-input" id="start-search" placeholder="Start position">': '<div class="gv-settings"> GFF gene IDs: <input class="gv-checkbox gv-gffids-search" type="checkbox"></div>',
-                    '<input class="gv-search-input" id="end-search" placeholder="End position">': '<div class="gv-settings">GFF gene names: <input class="gv-checkbox gv-gffnames-search" type="checkbox"></div>',
-                    '<input class="gv-search-input" id="gene-name" placeholder="Gene name/ID">': '<div class="gv-settings">Ensembl gene IDs: <input class="gv-checkbox gv-ens-ids-search" type="checkbox"></div>',
-                    '<div class="gv-search-text">Search: <div class="gv-gene-search-button gv-menu-button fa fa-arrow-circle-right"></div></div>': '<div class="gv-settings">Ensembl gene names: <input class="gv-checkbox gv-ens-names-search" type="checkbox"></div>'
-                }).addClass('gv-search-menu');
-                return searchMenu;
-            }
-
-
-            function makeGeneMenu() {
+            function makeTersectFileMenu() {
                 var geneMenu = browser.makeMenu({
-                    'Gene Name:': 'Position:',
-                    '<div id="names" class="gv-gene-names"></div>': '<div id="pos" class="gv-gene-positions"></div>'
-                }).addClass('gv-gene-menu');
+                    '<div>Choose Files For Tersect Index Generation:</div>':'',
+                    '<div id="names" class="gv-tersect-integration-text">Demo</div>':'<div class="gv-tersect-integration-text">Test Message for this menu.</div> <div class="gv-tersect-integration-text">Test Message for this menu.</div>',
+                }).addClass('gv-tersect-integration-file-menu');
+                console.log("FileRunAgain");
                 return geneMenu;
             }
 
 
-            function getMatchingGenes(ensIds, ensNames, gffids, gffnames) {
-                for (var i = 0; i < browser.tracks.length; i++) {
-                    if ((ensNames || ensIds) && browser.tracks[i].id == "genes") { // for ensembl track
-                        featuresENS = browser.tracks[i].model.findFeatures(browser.chr, start, end);
-                        for (var j = 0; j < featuresENS.length; j++) {
-                            if (ensNames && (featuresENS[j].external_name.includes(gene.toUpperCase()) || featuresENS[j].external_name.includes(gene.toLowerCase()) || featuresENS[j].external_name.includes(gene))) {
-                                matchingGenes.push(featuresENS[j].external_name);
-                                matchingPos.push(featuresENS[j].start + ' - ' + featuresENS[j].end);
-                            }
-                            if (ensIds && (featuresENS[j].id.includes(gene.toUpperCase()) || featuresENS[j].id.includes(gene.toLowerCase()) || featuresENS[j].external_name.includes(gene))) {
-                                matchingGenes.push(featuresENS[j].id);
-                                matchingPos.push(featuresENS[j].start + ' - ' + featuresENS[j].end);
-                            }
-                        }
-                    } else if (gffids && browser.tracks[i].id === "gff") { // for gff track
-                        featuresGFF = browser.tracks[i].model.findFeatures(browser.chr, start, end);
-                        for (var j = 0; j < featuresGFF.length; j++) {
-                            if (featuresGFF[j].id.includes(gene.toUpperCase()) || featuresGFF[j].id.includes(gene.toLowerCase()) || featuresGFF[j].id.includes(gene)) {
-                                matchingGenes.push(featuresGFF[j].id);
-                                matchingPos.push(featuresGFF[j].start + ' - ' + featuresGFF[j].end);
-                            }
-                            if (featuresGFF[j].name.includes(gene.toUpperCase()) || featuresGFF[j].name.includes(gene.toLowerCase()) || featuresGFF[j].name.includes(gene)) {
-                                matchingGenes.push(featuresGFF[j].name);
-                                matchingPos.push(featuresGFF[j].start + ' - ' + featuresGFF[j].end);
-                            }
-                        }
-                    }
-
-                }
+            function makeQueryMenu() {
+                var geneMenu = browser.makeMenu({
+                    '<div>Choose Query</div>':'',
+                    '<div id="names" class="gv-tersect-integration-text">Demo</div><div>Query List Here</div>':'',
+                }).addClass('gv-tersect-integration-file-menu');
+                console.log("FileRunAgain");
+                return geneMenu;
             }
+
+
+
         }});
 };
 function setScrollBar() {
@@ -191,4 +117,4 @@ function removeScrollBar() {
     $('#names').css({"overflow-y": "hidden"});
 }
 
-Genoverse.Plugins.search.requires = 'controlPanel';
+Genoverse.Plugins.tersectIntegration.requires = 'controlPanel';

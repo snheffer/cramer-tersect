@@ -98,7 +98,7 @@ module.exports = {
         try {
             var list = require(path + filename);
             if (filename === "list-species.js") {
-                //sort alphatebetically by displayed name
+                //sort alphabetically by displayed name
                 var Species = list.Species;
                 var sortable = []; //the sortable elements
                 for (var sp in Species) {
