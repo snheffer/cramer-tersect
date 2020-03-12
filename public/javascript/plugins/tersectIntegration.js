@@ -78,7 +78,7 @@ Genoverse.Plugins.tersectIntegration = function () {
 
             function makeTersectFileMenu() {
                 var geneMenu = browser.makeMenu({
-                    '<div>Choose Files For Tersect Index Generation:</div>':'',
+                    '<div>Choose Tersect Index Files:</div>':'',
                     '<div id="names" class="gv-tersect-integration-text">Local File Selection Here</div>':'<div class="gv-tersect-integration-text">Remote File Selection Here</div> <div class="gv-tersect-integration-text">(FTP etc.)</div>',
                     '<input class="gv-tersect-integration-input" type="file" id="local-file-chooser" name="local file chooser" multiple>':'<input class="gv-tersect-integration-input" type="file" id="remote-file-chooser" name="remote file chooser" multiple>',
                     '<span class="gv-tersect-integration-span" id="tsi-submit-local"><a class="gv-tersect-integration-text">Submit <i class="fa fa-arrow-circle-right"></i></a></span>':'<span class="gv-tersect-integration-span" id="tsi-submit-remote"><a class="gv-tersect-integration-text">Submit <i class="fa fa-arrow-circle-right"></i></a></span>',
