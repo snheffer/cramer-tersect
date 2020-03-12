@@ -67,7 +67,7 @@ Genoverse.Plugins.tersectIntegration = function () {
             function makeTersectMenu() {
                 var tersectMenu = browser.makeMenu({
                     'Tersect: File Selection:': '',
-                    '<span class="gv-tersect-integration-headspan><a class="gv-tersect-integration-text gv-tersect-integration-input gv-tersect-integration-select-button" id="tsi-file">TSI File <i class="fa fa-arrow-circle-right"></i></a></span>':'',
+                    '<span><a class="gv-tersect-integration-text gv-tersect-integration-input gv-tersect-integration-select-button" id="tsi-file">TSI File <i class="fa fa-arrow-circle-right"></i></a></span></br>':'',
                     '<div><span>Space For Operations</span></div><div><span>Space For Operations</span></div><div><span>Space For Operations</span></div>':'<div><span>Space For Operations</span></div><div><span>Space For Operations</span></div><div><span>Space For Operations</span></div>',
                     '<div><span class="gv-tersect-integration-span" id="save-query"><a class="gv-tersect-integration-text ">Save Query <i id="save-status" class="fa fa-arrow-circle-right"></i></a></span> <span class="gv-tersect-integration-span" id="saved-queries"><a class="gv-tersect-integration-text">Saved Queries <i class="fa fa-arrow-circle-right"></i></a></span></div>': '<span><a class="gv-tersect-integration-text gv-tersect-integration-submit-button" id="submit-query">Submit <i class="fa fa-arrow-circle-right"></i></a></span>',
 
@@ -79,7 +79,10 @@ Genoverse.Plugins.tersectIntegration = function () {
             function makeTersectFileMenu() {
                 var geneMenu = browser.makeMenu({
                     '<div>Choose Files For Tersect Index Generation:</div>':'',
-                    '<div id="names" class="gv-tersect-integration-text">Demo</div>':'<div class="gv-tersect-integration-text">Test Message for this menu.</div> <div class="gv-tersect-integration-text">Test Message for this menu.</div>',
+                    '<div id="names" class="gv-tersect-integration-text">Local File Selection Here</div>':'<div class="gv-tersect-integration-text">Remote File Selection Here</div> <div class="gv-tersect-integration-text">(FTP etc.)</div>',
+                    '<input class="gv-tersect-integration-input" type="file" id="local-file-chooser" name="local file chooser" multiple>':'<input class="gv-tersect-integration-input" type="file" id="remote-file-chooser" name="remote file chooser" multiple>\'',
+                    '<span class="gv-tersect-integration-span" id="tsi-submit-local"><a class="gv-tersect-integration-text">Submit <i class="fa fa-arrow-circle-right"></i></a></span>':'<span class="gv-tersect-integration-span" id="tsi-submit-remote"><a class="gv-tersect-integration-text">Submit <i class="fa fa-arrow-circle-right"></i></a></span>',
+                    '<span class="gv-tersect-integration-span" id="generate-new-button"><a class="gv-tersect-integration-text">Generate New Index <i class="fa fa-arrow-circle-right"></i></a></span>':''
                 }).addClass('gv-tersect-integration-file-menu');
                 console.log("FileRunAgain");
                 return geneMenu;
