@@ -16,6 +16,7 @@ dotenv.config();
 
 // Require the routes
 const index = require('./routes/index');
+const ajaxRoutes = require('./routes/ajaxRoutes');
 const instance = require('./routes/instance');
 const welcome = require('./routes/welcome');
 const login = require('./routes/login');
@@ -57,6 +58,7 @@ passport.init(app);
 
 
 app.use('/index', index);
+app.use('/index', ajaxRoutes);
 app.use('/instance', instance);
 app.use('/', welcome);
 app.use('/login', login);
