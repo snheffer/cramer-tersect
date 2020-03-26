@@ -27,19 +27,25 @@ Genoverse.Plugins.tersectIntegration = function () {
                 $('#tsi-file').off().on('click', function () {
                     //$(".gv-tersect-integration-file-menu").remove();
                     //tersectFileMenu = makeTersectFileMenu();
-                    console.log("index menu is worth:" + $("#tersectIndexMenu"));
-                    if($("#tersectIndexMenu")[0]){
-                        $("#tersectIndexMenu").show();
+                    tersectIndexMenu = $(this).data("tersectIndexMenu");
+                    console.log("index menu is worth:" + tersectIndexMenu);
+                    if(tersectIndexMenu){
+                        tersectIndexMenu.show();
 
                     } else {
                         tersectIndexMenu = makeTersectIndexMenu().attr("id","tersectIndexMenu");
+                        //$('#tsi-locate-index',tersectIndexMenu).on('click',indexPopulator('/index/tersectUpload'));
                         $('#tsi-locate-index',tersectIndexMenu).on('click',function () {
-                            if($("#tersectFileMenu")[0]){
-                                $("#tersectFileMenu").show()
+                            tersectFileMenu = $(this).data("tersectFileMenu");
+                            if(tersectFileMenu){
+                                tersectFileMenu.show();
                             } else {
                                 tersectFileMenu = makeTersectFileMenu().attr("id","tersectFileMenu");
+                                $('#tsi-locate-index',tersectIndexMenu).on('click',indexPopulator(".gv-tersect-index-list tbody","/index/tersectUpload"))
+                                $(this).data("tersectFileMenu",tersectFileMenu);
                             }
                         })
+                        $(this).data("tersectIndexMenu",tersectIndexMenu);
                     }
                 });
 
@@ -86,7 +92,7 @@ Genoverse.Plugins.tersectIntegration = function () {
             function makeTersectIndexMenu() {
                 var indexMenu = browser.makeMenu({
                     '<div>Choose Tersect Index File:</div>':'',
-                    '<div class="gv-tersect-integration-text">Tersect Files Here</div>':'',
+                    '<table class="gv-tersect-integration-text gv-tersect-index-list"><thead><tr><td>Name</td><td>Local?</td><td></td></tr></thead><tbody></tbody></table>':'',
                     '<span class="gv-tersect-integration-span" id="tsi-locate-index"><a class="gv-tersect-integration-text">Locate TSI Index <i class="fa fa-arrow-circle-right"></i></a></span>':'',
                     '<span class="gv-tersect-integration-span" id="generate-new-button"><a class="gv-tersect-integration-text">Generate New Index <i class="fa fa-arrow-circle-right"></i></a></span>':''
                 }).addClass('gv-tersect-integration-file-menu');
@@ -102,7 +108,7 @@ Genoverse.Plugins.tersectIntegration = function () {
                     '<span id="tsi-submit-local" class="gv-tersect-integration-span"><a id="tsi-submit-local-text" class="gv-tersect-integration-text">Submit <i class="fa fa-arrow-circle-right"></i></a></span>':'<span class="gv-tersect-integration-span" id="tsi-submit-remote"><a class="gv-tersect-integration-text">Submit <i class="fa fa-arrow-circle-right"></i></a></span>',
                     '<span class="gv-tersect-integration-span" id="generate-new-button"><a class="gv-tersect-integration-text">Generate New Index <i class="fa fa-arrow-circle-right"></i></a></span>':''
                 }).addClass('gv-tersect-integration-file-menu');
-                $('#tsi-submit-local',fileMenu).on('click',function(){fileUploader(fileMenu,"#tsi-submit-local-text","#local-file-progress","#local-file-chooser","txt","/index/tersectUpload")});
+                $('#tsi-submit-local',fileMenu).on('click',function(){fileUploader(fileMenu,"#tsi-submit-local-text","#local-file-progress","#local-file-chooser","txt", ".gv-tersect-index-list tbody","/index/tersectUpload")});
                 return fileMenu;
             }
 
@@ -139,17 +145,18 @@ function removeScrollBar() {
 }
 
 
-function fileUploader(parent,submit_link_text,progress_bar,chooser,extension,url) {
+function fileUploader(parent,submit_link_text,progress_bar,chooser,extension,index_list,url) {
     $(chooser,parent).click();
 
     var flag = true;
-    $(chooser).on('change', function() {
+    $(chooser).off().on('change', function() {
         var files = $(chooser,parent).get(0).files;
 
         if (files.length > 0) {
             $(submit_link_text,parent).text('Submit 0%');
-            $(progress_bar,parent).width("0%")
+            $(progress_bar,parent).width("0%");
             var formData = new FormData();
+            formData.append("instanceName",$('h1')[0].childNodes[0].nodeValue);
             for (var i = 0; i < files.length; i++) {
                 var file = files[i];
                 // add the files to formData object for the data payload
@@ -174,7 +181,9 @@ function fileUploader(parent,submit_link_text,progress_bar,chooser,extension,url
                 processData: false,
                 contentType: false,
                 success: function (data) {
-                    console.log('upload successful!\n' + data);
+                    console.log('upload successful!\n' + Date.now());
+                    indexPopulator(index_list,url);
+
                 },
                 xhr: function () {
                     // create an XMLHttpRequest
@@ -185,7 +194,7 @@ function fileUploader(parent,submit_link_text,progress_bar,chooser,extension,url
                             // calculate the percentage of upload completed
                             var percentComplete = evt.loaded / evt.total;
                             percentComplete = parseInt(percentComplete * 100);
-                            // update the Bootstrap progress bar with the new percentage
+                            //
                             $(submit_link_text,parent).text('Submit ' + percentComplete + '%');
                             $(progress_bar,parent).width(percentComplete+'%');
                             // once the upload reaches 100%, set the progress bar text to done
@@ -205,6 +214,56 @@ function fileUploader(parent,submit_link_text,progress_bar,chooser,extension,url
         $(chooser).val("");
     });
 }
+
+function indexPopulator(index_list,url){
+    console.log("event fired successfully!");
+    $(index_list).empty();
+    $.ajax({
+        type: 'GET',
+        url: url,
+        success: function(data){
+            console.log("latest value"+this);
+            $.each(data, function(){
+                $(index_list).append('<tr data-id="'+this._id+'"><td><a>'+this.name+'</a></td><td><a>'+this.local+'</a></td><td><a class="gv-tersect-index-delete">delete</a></td></tr>');
+            });
+
+            $(index_list).parent().off().on('click','.gv-tersect-index-delete',function(){indexDeleter(index_list,$(this).parent().parent().data("id"),url)});
+
+        },
+        dataType: "json"
+    });
+}
+
+function indexDeleter(index_list,deletion_id,url){
+    console.log("delete event fired at: "+Date.now());
+    $.ajax({
+        type: 'DELETE',
+        url: url + "/" + deletion_id,
+        success: function(data){
+            alert("Item Deleted!");
+            indexPopulator(index_list,url);
+        },
+        error: function(err){
+            console.error(err);
+        }
+    })
+}
+// function indexPopulator(url){
+//     console.log("event fired successfully!");
+//     $.ajax({
+//         type: 'GET',
+//         url: url,
+//         success: function(data){
+//             console.log("latest value"+this);
+//
+//             $.each(data, function(){
+//                 $(".gv-tersect-index-list").append('<div id="'+this._id+'"><a>'+this.name+'</a>--<a>delete</a></div>')
+//
+//             })
+//         },
+//         dataType: "json"
+//     });
+// }
 /*function () {
     $('#tsi-submit-local-text').text('Submit 0%');
     var files = $('#local-file-chooser').get(0).files;

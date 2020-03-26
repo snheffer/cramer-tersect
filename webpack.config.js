@@ -10,9 +10,9 @@ module.exports = {
     }),
     new webpack.DefinePlugin({
       define: undefined // Stop jquery-ui.js trying to do define(["jquery"]), which doesn't work if jquery isn't in node_modules
-    }),
+    })/*,
     new webpack.optimize.UglifyJsPlugin({
       comments: false
-    })
+    })*/
   ]
 };
