@@ -2,15 +2,17 @@
     content: "\f093";
 }
 .gv-tersect-integration-plugin .gv-tersect-integration-menu {
-    color: white;
     background-color: #5F8CB0;
     border-radius: 0px 12px 12px 12px;
+    box-shadow: 3px 3px 10px #666666;
+    color: white;
+    left: 24%;
+    margin-left: 5px;
     min-width: 200px;
     padding: 0;
     position: absolute;
+    top: 70px;
     z-index: 1001;
-    box-shadow: 3px 3px 10px #666666;
-    margin-left: 5px;
 }
 
 .gv-tersect-integration-plugin .gv-tersect-integration-button button {
@@ -18,18 +20,13 @@
     border: none;
     border-bottom: 1px solid #1C5380;
     color: #E2E9EF;
+    font-size: 18px;
+    height: 50px;
+    line-height: 20px;
+    margin: 0;
+    padding: 2px;
     text-shadow: 0 1px 0 rgba(0, 0, 0, 0.75);
     width: 30px;
-    height: 50px;
-    font-size: 18px;
-    line-height: 20px;
-    padding: 2px;
-    margin: 0;
-}
-
-.gv-tersect-integration-plugin .gv-tersect-integration-menu {
-    left: 24%;
-    top: 70px;
 }
 
 .gv-tersect-integration-plugin .gv-tersect-integration-menu table {
@@ -43,12 +40,12 @@
 }
 
 .gv-tersect-integration-plugin .gv-tersect-integration-menu tr:first-child td {
-    font-weight: bold;
-    white-space: nowrap;
-    padding: 5px 30px 5px 10px;
-    margin-bottom: 5px;
     background: rgba(6, 54, 95, 0.35);
+    font-weight: bold;
     line-height: normal;
+    margin-bottom: 5px;
+    padding: 5px 30px 5px 10px;
+    white-space: nowrap;
 }
 
 .gv-tersect-integration-plugin .gv-tersect-integration-menu tr:first-child td:last-child {
@@ -68,8 +65,8 @@
 
 .gv-tersect-integration-plugin .gv-tersect-integration-menu .gv-tersect-integration-file-button {
     font-size: 20px;
-    position: absolute;
     left: 200px;
+    position: absolute;
 }
 
 .gv-tersect-integration-plugin .gv-tersect-integration-menu .gv-tersect-integration-select-button {
@@ -79,8 +76,8 @@
 
 .gv-tersect-integration-plugin .gv-tersect-integration-menu .gv-tersect-integration-submit-button {
     font-size: 20px;
-    position: absolute;
     left: 440px;
+    position: absolute;
 }
 
 .gv-tersect-integration-plugin .gv-tersect-integration-menu .gv-menu-content {
@@ -93,6 +90,11 @@
 
 .gv-tersect-integration-plugin .gv-tersect-integration-file-menu .gv-tersect-file-input {
     display: none;
+}
+
+.gv-tersect-integration-plugin .gv-tersect-integration-file-menu .gv-tersect-dropzone{
+    height: 250px;
+    width: 250px;
 }
 
 .gv-tersect-integration-plugin .gv-tersect-integration-file-menu gv-tersect-index-list {
@@ -108,8 +110,8 @@
 }
 
 .gv-tersect-integration-plugin .gv-tersect-integration-menu .gv-checkbox {
-    position: absolute;
     left: 460px;
+    position: absolute;
 }
 
 .gv-tersect-integration-plugin .gv-tersect-integration-file-menu {
@@ -128,17 +130,17 @@
 .gv-tersect-integration-plugin .gv-tersect-integration-file-menu td {
     padding: 5px 10px!important;
     vertical-align: top;
-    width: 50%;
     white-space: nowrap;
+    width: 50%;
 }
 
 .gv-tersect-integration-plugin .gv-tersect-integration-file-menu tr:first-child td {
-    font-weight: bold;
-    white-space: nowrap;
-    padding: 5px 30px 5px 10px;
-    margin-bottom: 5px;
     background: rgba(6, 54, 95, 0.35);
+    font-weight: bold;
     line-height: normal;
+    margin-bottom: 5px;
+    padding: 5px 30px 5px 10px;
+    white-space: nowrap;
 }
 
 .gv-tersect-integration-plugin .gv-tersect-integration-file-menu br {
@@ -163,30 +165,30 @@
 }
 
 .gv-tersect-integration-plugin .gv-tersect-index-list{
-    width: 100%;
     border-collapse: collapse;
+    width: 100%;
 }
 
 .gv-tersect-integration-plugin .gv-tersect-index-list thead {
-    display:block;
     background: rgba(6, 54, 95, 0.35);
+    display:block;
     width: 100%;
 }
 
 .gv-tersect-integration-plugin .gv-tersect-index-list tbody{
     display:block;
-    overflow:auto;
     height:100px;
+    overflow:auto;
     width:100%;
 }
 
 .gv-tersect-integration-plugin .gv-tersect-index-list tr:first-child td {
-    font-weight: normal;
-    white-space: nowrap;
-    padding: 5px 30px 5px 10px;
-    margin-bottom: 5px;
     background: rgba(6, 54, 95, 0.00);
+    font-weight: normal;
     line-height: normal;
+    margin-bottom: 5px;
+    padding: 5px 30px 5px 10px;
+    white-space: nowrap;
 }
 
 
@@ -209,8 +211,8 @@
 .progressbar-border{border:1px solid #ccc}
 
 .progressbar-fill{
-    color:#000;
     background-color:#00fa9a;
+    color:#000;
     height:24px;
     width:0%
 
@@ -221,6 +223,24 @@ progress[value] {
     -webkit-appearance: none;
     appearance: none;
 
-    width: 250px;
     height: 20px;
+    width: 250px;
 }
+
+.filename
+{
+    display:inline-block;
+    vertical-align:top;
+    width:250px;
+}
+.filesize
+{
+    display:inline-block;
+    vertical-align:top;
+    width:100px;
+    margin-right:5px;
+}
+.gv-tersect-dropzone div:nth-child(odd) span{
+    background-color: rgba(6, 54, 95, 0.35);
+}
+
