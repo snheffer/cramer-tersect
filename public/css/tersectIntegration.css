@@ -115,7 +115,7 @@
 }
 
 .gv-tersect-integration-plugin .gv-tersect-integration-file-menu {
-    min-width: 400px;
+    max-width: 600px;
 }
 
 .gv-tersect-integration-plugin .gv-tersect-integration-file-menu {

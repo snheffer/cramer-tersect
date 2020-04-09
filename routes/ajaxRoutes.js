@@ -16,7 +16,7 @@ isTersectAuthenticated = function (req, res, next) {
     }
 };
 
-router.post('/tersectUpload',isTersectAuthenticated, function(req,res,next){
+router.post('/tersectUpload/new',isTersectAuthenticated, function(req,res,next){
         // create an incoming form object
         var form = new formidable.IncomingForm();
         var instanceName = [];
