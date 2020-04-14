@@ -15,7 +15,7 @@ isTersectAuthenticated = function (req, res, next) {
         req.flash('warning', 'Please login to use this functionality.');
     }
 };
-
+//route for uploading a new Tersect Index (TSI) file.
 router.post('/tersectUpload/new',isTersectAuthenticated, function(req,res,next){
         // create an incoming form object
         var form = new formidable.IncomingForm();
@@ -69,6 +69,7 @@ router.post('/tersectUpload/new',isTersectAuthenticated, function(req,res,next){
         // parse the incoming request containing the form data
         form.parse(req);
 });
+//populator route for updating the list of items on the server.
 router.get('/tersectUpload',isTersectAuthenticated, function(req,res,next){
     TersectIntegration.find(function(err,items){
         if(err){
@@ -78,7 +79,7 @@ router.get('/tersectUpload',isTersectAuthenticated, function(req,res,next){
 
     })
 });
-
+//deletion route for deleting entries in the server database, and removing the files.
 router.delete('/tersectUpload/:id',isTersectAuthenticated, function(req,res,next){
     let query = {_id:req.params.id};
     TersectIntegration.findOne(query, function(err,entry){
@@ -107,7 +108,7 @@ router.delete('/tersectUpload/:id',isTersectAuthenticated, function(req,res,next
 //
 // });
 
-
+//uploader route for uploading new vcf files to generate new TSI files, and add them to the database.
 router.post('/vcfUpload',isTersectAuthenticated, function(req,res,next){
     // create an incoming form object
     var form = new formidable.IncomingForm();
@@ -174,21 +175,21 @@ router.post('/vcfUpload',isTersectAuthenticated, function(req,res,next){
     form.parse(req);
 });
 
-//router.post(tersect)
-function recursiveRenamer(file,form,curr_path){
-    fs.stat(curr_path, function (err, stats) {
-
-        if(stats){
-        curr_path = path.join(form.uploadDir,(path.basename(curr_path).replace(/\.[^/.]+$/, "")+"(copy)"+path.extname(curr_path)));
-        console.log(curr_path);
-        recursiveRenamer(file,form,curr_path)
-    } else {
-        fs.renameSync(file.path, curr_path);
-        //return curr_path
-    }
-
-    })
-}
+// //router.post(tersect)
+// function recursiveRenamer(file,form,curr_path){
+//     fs.stat(curr_path, function (err, stats) {
+//
+//         if(stats){
+//         curr_path = path.join(form.uploadDir,(path.basename(curr_path).replace(/\.[^/.]+$/, "")+"(copy)"+path.extname(curr_path)));
+//         console.log(curr_path);
+//         recursiveRenamer(file,form,curr_path)
+//     } else {
+//         fs.renameSync(file.path, curr_path);
+//         //return curr_path
+//     }
+//
+//     })
+// }
 
 
 
