@@ -175,6 +175,109 @@ router.post('/vcfUpload',isTersectAuthenticated, function(req,res,next){
     form.parse(req);
 });
 
+router.post('/tersectUpload/view',function(req,res,next){
+    query = {_id:req.body.tsifile}
+    TersectIntegration.findOne(query, function(err,entry){
+        if (err){
+            console.error('File Deletion Error: Cant Find Ref: ' + err)
+        } else {
+            console.log(entry.name)
+            var arr = [];
+            var getSamples = spawn('tersect', ['samples', entry.route], { shell: true });
+            //The output of the command is printed in the command line if there are no errors
+            getSamples.stdout.on('data', (data) => {
+                //each sample name is on a new line, split by new line
+                arr = data.toString().trim().split('\n');
+                //remove first item - Sample
+                arr.shift();
+            });
+            //prints error from running tersect
+            getSamples.stderr.on('data', (data) => {
+                console.error(`tersect stderr: ${data}`);
+
+            });
+            //prints after command is complete if there was an error
+            getSamples.on('close', (code) => {
+                res.send({ "samples": arr });
+
+                if (code !== 0) {
+                    console.log(`tersect process exited with code ${code}`);
+                }
+
+            });
+        }
+    })
+});
+
+
+//add file path to tsi file to run
+function tersect(comp, id, file, sA, sB, rev) {
+    //need to look into JSON object strings - for now use .includes()
+    console.log(comp);
+    query={_id:id}
+    TersectIntegration.findOne(query, function(err,entry){
+        if (err){
+            console.error('File Deletion Error: Cant Find Ref: ' + err)
+        } else {
+            console.log(entry.route);
+            //if command involves B going first
+            if (rev.includes("yes")) {
+                //if command is for single circle/fileset
+                if (comp.includes("none")) {
+                    var tcommand = spawn('tersect', ['view', entry.route, '"' + sB + '"'], {shell: true});
+                    //if command is for difference betweeen B and A
+                } else {
+                    var tcommand = spawn('tersect', ['view', entry.route, '"' + sB + comp + sA + '"'], {shell: true});
+
+                }
+
+            } else {
+                //if intersect
+                if (comp.includes("amp")) {
+                    var tcommand = spawn('tersect', ['view', entry.route, '"' + sA + '&' + sB + '"'], {shell: true});
+
+                    //if command is for single circle/fileset
+                } else if (comp.includes("none")) {
+                    var tcommand = spawn('tersect', ['view', entry.route, '"' + sA + '"'], {shell: true});
+                    //if command is for difference betweeen A and B
+                } else {
+                    var tcommand = spawn('tersect', ['view', entry.route, '"' + sA + comp + sB + '"'], {shell: true});
+
+                }
+
+            }
+            let output = fs.createWriteStream(file);
+            tcommand.stdout.on('data', (data) => {
+                output.write(data);
+            });
+
+
+            tcommand.stderr.on('data', (data) => {
+                console.error(`tersect stderr: ${data}`);
+            });
+
+            tcommand.on('close', (code) => {
+                if (code !== 0) {
+                    console.log(`tersect process exited with code ${code}`);
+                } else {
+                    console.log('done!');
+                }
+            });
+        }
+})}
+
+router.post('/generate',function(req,res,next){
+    var opt = req.body.operation;
+    var id = req.body.idToGet;
+    var f = path.join(__dirname, "../newVCF/"+ req.body.filepath);
+    var r = req.body.reverse;
+    //convert samples selected into tersect format u()
+    var A = "u" + req.body.setA.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, "");
+    var B = "u" + req.body.setB.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, "");
+
+    tersect(opt,id, f, A, B, r);
+    res.send({ "location": f });
+});
 // //router.post(tersect)
 // function recursiveRenamer(file,form,curr_path){
 //     fs.stat(curr_path, function (err, stats) {

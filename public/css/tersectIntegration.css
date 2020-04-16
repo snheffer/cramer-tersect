@@ -6,12 +6,12 @@
     border-radius: 0px 12px 12px 12px;
     box-shadow: 3px 3px 10px #666666;
     color: white;
-    left: 24%;
+    left: 5%;
     margin-left: 5px;
-    min-width: 200px;
+    min-width: 90%;
     padding: 0;
     position: absolute;
-    top: 70px;
+    top: 0px;
     z-index: 1001;
 }
 
@@ -244,3 +244,75 @@ progress[value] {
     background-color: rgba(6, 54, 95, 0.35);
 }
 
+
+#gv-tersect-gui-container td {
+    padding: 5px 5px;
+    margin: 2px 1px;
+    display: inline-block;
+    border: 3px solid black;
+    border-radius: 5px;
+    background: #ebebeb;
+    color: #000;
+}
+
+#gv-tersect-gui-container body {
+    font-family: Verdana, Helvetica, sans-serif;
+}
+
+#genomeTable {
+    height: 300px;
+    width: 300px;
+    overflow: auto;
+    display: inline-block;
+    border: 3px solid black;
+    padding: 15px;
+    white-space: normal;
+}
+
+#gv-tersect-gui-container {
+    text-align: center;
+}
+
+#gv-tersect-gui-container venntooltip {
+    position: absolute;
+    text-align: center;
+    width: 250px;
+    height: 200px;
+    background: #555;
+    color: #fff;
+    padding: 2px;
+    border: 0px;
+    border-radius: 8px;
+    opacity: 0;
+}
+
+#gv-tersect-gui-container .samples {
+    cursor: -webkit-grab;
+    cursor: grab;
+    width: 40%;
+}
+
+#gv-tersect-gui-container .samples:active {
+    cursor: -webkit-grabbing;
+    cursor: grabbing;
+}
+
+#gv-tersect-gui-container .samples.ui-draggable-disabled {
+    cursor: not-allowed;
+    background-color: #555;
+}
+
+#venn {
+    cursor: pointer;
+    height: 400px;
+    width: 100%;
+    display: inline-block;
+    margin: 0 auto;
+}
+
+#gv-tersect-gui-container .sidenav{
+    float:left;
+    width:30%;
+    overflow:hidden;
+
+}
