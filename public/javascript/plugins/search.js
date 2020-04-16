@@ -30,8 +30,12 @@ Genoverse.Plugins.search = function () {
                     searchMenu = makeSearchMenu();
                 }
                 $(searchButton).addClass('gv-active');
+                console.log("Added at: "+Date.now());
+
                 // When gene-search button is clicked, set new position and search genes
                 $('.gv-gene-search-button', searchMenu).on('click', function () {
+                    console.log("Added at: "+Date.now());
+
                     start = Number($('#start-search').val());
                     end = Number($('#end-search').val());
                     gene = $('#gene-name').val();
