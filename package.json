@@ -19,6 +19,7 @@
     "body-parser": "~1.18.2",
     "connect-flash": "^0.1.1",
     "cookie-parser": "~1.4.3",
+    "d3": "^5.16.0",
     "debug": "~3.1.0",
     "dotenv": "^8.2.0",
     "express": "~4.16.3",
