@@ -6,9 +6,8 @@
     border-radius: 0px 12px 12px 12px;
     box-shadow: 3px 3px 10px #666666;
     color: white;
-    left: 5%;
     margin-left: 5px;
-    min-width: 90%;
+    min-width: 100%;
     padding: 0;
     position: absolute;
     top: 0px;
@@ -260,11 +259,11 @@ progress[value] {
 }
 
 #genomeTable {
-    height: 300px;
+    height: 200px;
     width: 300px;
     overflow: auto;
     display: inline-block;
-    border: 3px solid black;
+    border: 3px solid #4D6297;
     padding: 15px;
     white-space: normal;
 }
@@ -315,4 +314,21 @@ progress[value] {
     width:30%;
     overflow:hidden;
 
+}
+
+#tersectMenu{
+    background-color: white;
+    color : #0f0f0f;
+    border-style: solid;
+    border-color: #4D6297;
+}
+
+#tersectMenu tr:first-child td  {
+    background-color: #4D6297;
+    color: #FFFFFF;
+    width: 100%;
+}
+
+#tersectMenu *{
+    color: #0f0f0f;
 }

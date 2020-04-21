@@ -211,9 +211,9 @@ router.post('/tersectUpload/view',function(req,res,next){
 
 
 //add file path to tsi file to run
-function tersect(comp, id, file, sA, sB, rev) {
+function tersect(command, id, file) {
     //need to look into JSON object strings - for now use .includes()
-    console.log(comp);
+    console.log(command);
     query={_id:id}
     TersectIntegration.findOne(query, function(err,entry){
         if (err){
@@ -221,32 +221,8 @@ function tersect(comp, id, file, sA, sB, rev) {
         } else {
             console.log(entry.route);
             //if command involves B going first
-            if (rev.includes("yes")) {
-                //if command is for single circle/fileset
-                if (comp.includes("none")) {
-                    var tcommand = spawn('tersect', ['view', entry.route, '"' + sB + '"'], {shell: true});
-                    //if command is for difference betweeen B and A
-                } else {
-                    var tcommand = spawn('tersect', ['view', entry.route, '"' + sB + comp + sA + '"'], {shell: true});
-
-                }
-
-            } else {
-                //if intersect
-                if (comp.includes("amp")) {
-                    var tcommand = spawn('tersect', ['view', entry.route, '"' + sA + '&' + sB + '"'], {shell: true});
-
-                    //if command is for single circle/fileset
-                } else if (comp.includes("none")) {
-                    var tcommand = spawn('tersect', ['view', entry.route, '"' + sA + '"'], {shell: true});
-                    //if command is for difference betweeen A and B
-                } else {
-                    var tcommand = spawn('tersect', ['view', entry.route, '"' + sA + comp + sB + '"'], {shell: true});
-
-                }
-
-            }
-            let output = fs.createWriteStream(file);
+            var tcommand = spawn('tersect', ['view', entry.route, '"' + command +'"'], { shell: true });
+            var output = fs.createWriteStream(file);
             tcommand.stdout.on('data', (data) => {
                 output.write(data);
             });
@@ -267,16 +243,20 @@ function tersect(comp, id, file, sA, sB, rev) {
 })}
 
 router.post('/generate',function(req,res,next){
-    var opt = req.body.operation;
-    var id = req.body.idToGet;
-    var f = path.join(__dirname, "../newVCF/"+ req.body.filepath);
-    var r = req.body.reverse;
-    //convert samples selected into tersect format u()
+    var comm = req.body.command;
     var A = "u" + req.body.setA.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, "");
     var B = "u" + req.body.setB.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, "");
+    var C = "u" + req.body.setC.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, "");
 
-    tersect(opt,id, f, A, B, r);
-    res.send({ "location": f });
+    var fullCommand = comm.replace(/A/g, A).replace(/B/g, B).replace(/C/g, C);
+    var id = req.body.idToGet;
+    var filepath = path.join(__dirname, "../newVCF/"+ req.body.filepath);
+    //convert samples selected into tersect format u()
+    console.error("ID: "+req.body.idToGet);
+    console.error("Command: "+req.body.command);
+    console.error("Fullcommand: "+fullCommand);
+    tersect(fullCommand,id, filepath);
+    res.send({ "location": filepath });
 });
 // //router.post(tersect)
 // function recursiveRenamer(file,form,curr_path){
