@@ -130,10 +130,12 @@ Genoverse.Plugins.tersectIntegration = function () {
             function makeTersectIndexMenu() {
                 var indexMenu = browser.makeMenu({
                     '<div>Choose Tersect Index File:</div>':'',
+                    '<span class="gv-tersect-integration-span" id="tsi-refresh"><a class="gv-tersect-integration-text">Refresh List <i class="fa fa-arrow-circle-right"></i></a></span>':'',
                     '<table class="gv-tersect-integration-text gv-tersect-index-list"><thead><tr><td>Name</td><td>Instance</td><td>Local?</td><td>&emsp;&emsp;&emsp;</td></tr></thead><tbody></tbody></table>':'',
                     '<span class="gv-tersect-integration-span" id="tsi-locate-index"><a class="gv-tersect-integration-text">Locate TSI Index <i class="fa fa-arrow-circle-right"></i></a></span>':'',
                     '<span class="gv-tersect-integration-span" id="generate-new-button"><a class="gv-tersect-integration-text">Generate New Index <i class="fa fa-arrow-circle-right"></i></a></span>':''
                 }).addClass('gv-tersect-integration-file-menu');
+                $('#tsi-refresh',indexMenu).on('click',function(){indexPopulator(".gv-tersect-index-list tbody","/index/tersectUpload")})
                 return indexMenu;
             }
 
