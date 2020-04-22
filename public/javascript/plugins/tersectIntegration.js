@@ -825,7 +825,6 @@ function vennInit(){
 
     $("#submit").click(function () {
         var files = circlesDisplayed();
-        alert(typeof files);
         function hasSamples() {
             for(var x=0; x<files.length;x++){
                 if(files[x]=="A"){
@@ -838,7 +837,6 @@ function vennInit(){
             }
         }
 
-        alert(hasSamples())
         getNotation();
         //alert("command:" +command+"filepath: "+$("#filepath").val()+"hassamples: "+ hasSamples2(files));
 
