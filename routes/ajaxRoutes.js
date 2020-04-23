@@ -5,6 +5,7 @@ var formidable = require('formidable');
 var fs = require('fs');
 var dir = process.cwd();
 var TersectIntegration = require('../models/tersectIntegration.js');
+var TersectVCF = require('../models/TersectVCF.js');
 var utils = require('../routes/utils.js');
 var { v4: uuid } = require('uuid');
 const {spawn} = require('child_process');
@@ -79,6 +80,21 @@ router.get('/tersectUpload',isTersectAuthenticated, function(req,res,next){
 
     })
 });
+//populator route for updating the queries associated with the instance.
+router.post('/tersectQueries',isTersectAuthenticated, function(req,res,next){
+    console.error("Query Route Hit");
+    console.error(req.body.idToGet);
+    var query = {parent_id:req.body.idToGet};
+    TersectVCF.find(query,function(err,items){
+        if(err){
+            return console.error(err)
+        } else {
+            console.error(JSON.stringify(items,null, 4));
+        }
+        res.json(items)
+
+    })
+});
 //deletion route for deleting entries in the server database, and removing the files.
 router.delete('/tersectUpload/:id',isTersectAuthenticated, function(req,res,next){
     let query = {_id:req.params.id};
@@ -102,11 +118,6 @@ router.delete('/tersectUpload/:id',isTersectAuthenticated, function(req,res,next
     });
 
 });
-
-// router.post('/vcfUpload',isTersectAuthenticated,function(req,res,next){
-//
-//
-// });
 
 //uploader route for uploading new vcf files to generate new TSI files, and add them to the database.
 router.post('/vcfUpload',isTersectAuthenticated, function(req,res,next){
@@ -211,18 +222,16 @@ router.post('/tersectUpload/view',function(req,res,next){
 
 
 //add file path to tsi file to run
-function tersect(command, id, file) {
-    //need to look into JSON object strings - for now use .includes()
+function tersect(command, id, file, filepath) {
     console.log(command);
-    query={_id:id}
+    query={_id:id};
     TersectIntegration.findOne(query, function(err,entry){
         if (err){
             console.error('File Deletion Error: Cant Find Ref: ' + err)
         } else {
             console.log(entry.route);
-            //if command involves B going first
             var tcommand = spawn('tersect', ['view', entry.route, '"' + command +'"'], { shell: true });
-            var output = fs.createWriteStream(file);
+            var output = fs.createWriteStream(filepath);
             tcommand.stdout.on('data', (data) => {
                 output.write(data);
             });
@@ -237,6 +246,14 @@ function tersect(command, id, file) {
                     console.log(`tersect process exited with code ${code}`);
                 } else {
                     console.log('done!');
+                    var item = new TersectVCF({ name: file, command:encodeURIComponent(command), parent_id:id,  route: filepath});
+                    item.save(function (err, item) {
+                        if (err) {
+                            return console.error(err)
+                        } else {
+                            console.error("Query VCF added to TersectVCF")
+                        }
+                    });
                 }
             });
         }
@@ -244,27 +261,25 @@ function tersect(command, id, file) {
 
 router.post('/generate',function(req,res,next){
     var comm = req.body.command;
-    var fullCommand = comm;
-    if(comm.includes("A")){
-        var A = "u" + req.body.setA.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, "");
-        fullCommand = fullCommand.replace(/A/g, A);
-    }
-    if(comm.includes("B")){
-        var B = "u" + req.body.setB.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, "");
-        fullCommand = fullCommand.replace(/B/g, B);
-    }
-    if(comm.includes("C")){
-        var C = "u" + req.body.setC.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, "");
-        fullCommand = fullCommand.replace(/C/g, C);
-    }
+    var mapObj = {
+        A:"u" + req.body.setA.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, ""),
+        B:"u" + req.body.setB.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, ""),
+        C:"u" + req.body.setC.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, "")
+    };
+    var fullCommand = comm.replace(/A|B|C/g, function(matched){
+        return mapObj[matched];
+    });
+
 
     var id = req.body.idToGet;
-    var filepath = path.join(__dirname, "../newVCF/"+ req.body.filepath);
+    var file = req.body.filepath;
+    var filepath = path.join(__dirname, "../newVCF/"+ file);
+
     //convert samples selected into tersect format u()
     console.error("ID: "+req.body.idToGet);
     console.error("Command: "+ comm);
     console.error("Fullcommand: "+fullCommand);
-    tersect(fullCommand,id, filepath);
+    tersect(fullCommand,id, file,filepath);
     res.send({ "location": filepath });
 });
 // //router.post(tersect)
