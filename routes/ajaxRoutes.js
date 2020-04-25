@@ -235,25 +235,43 @@ function tersect(command, id, file, filepath) {
             tcommand.stdout.on('data', (data) => {
                 output.write(data);
             });
-
-
             tcommand.stderr.on('data', (data) => {
                 console.error(`tersect stderr: ${data}`);
             });
-
-            tcommand.on('close', (code) => {
+            tcommand.on('exit', (code) => {
                 if (code !== 0) {
                     console.log(`tersect process exited with code ${code}`);
                 } else {
                     console.log('done!');
-                    var item = new TersectVCF({ name: file, command:encodeURIComponent(command), parent_id:id,  route: filepath});
-                    item.save(function (err, item) {
-                        if (err) {
-                            return console.error(err)
+                    var bgzipcommand = spawn('bgzip',[filepath]);
+                    bgzipcommand.stderr.on('data', (data) => {console.error(`bgzip stderr: ${data}`);});
+                    bgzipcommand.on('exit', (code) => {
+                        if (code !== 0) {
+                            console.log(`bgzip process exited with code ${code}`);
                         } else {
-                            console.error("Query VCF added to TersectVCF")
+                            var filePathForTabix = filepath+'.gz';
+                            var tabixcommand = spawn('tabix',[filePathForTabix]);
+                            tabixcommand.stderr.on('data', (data) => {console.error(`tabix stderr: ${data}`);});
+                            tabixcommand.on('close', (code) => {
+                                if (code !== 0) {
+                                    console.log(`tabix process exited with code ${code}`);
+                                } else {
+                                    var item = new TersectVCF({ name: file, command:encodeURIComponent(command), parent_id:id,  route: filePathForTabix});
+                                    item.save(function (err, item) {
+                                        if (err) {
+                                            return console.error(err)
+                                        } else {
+                                            console.error("Query VCF added to TersectVCF");
+                                        }
+                                    });
+
+                                }
+
+                            });
                         }
+
                     });
+
                 }
             });
         }
@@ -273,14 +291,22 @@ router.post('/generate',function(req,res,next){
 
     var id = req.body.idToGet;
     var file = req.body.filepath;
-    var filepath = path.join(__dirname, "../newVCF/"+ file);
+    var newPath = path.join(__dirname, "../newVCF/"+uuid()+"/");
+    var filepath = path.join(newPath+ file);
+
+    fs.mkdir(newPath, { recursive: true }, (err) => {
+        if (err){throw err} else {
+            tersect(fullCommand,id, file,filepath);
+            console.error("ID: "+req.body.idToGet);
+            console.error("Command: "+ comm);
+            console.error("Fullcommand: "+fullCommand);
+            res.send({ "location": filepath });
+
+        }
+    });
 
     //convert samples selected into tersect format u()
-    console.error("ID: "+req.body.idToGet);
-    console.error("Command: "+ comm);
-    console.error("Fullcommand: "+fullCommand);
-    tersect(fullCommand,id, file,filepath);
-    res.send({ "location": filepath });
+
 });
 // //router.post(tersect)
 // function recursiveRenamer(file,form,curr_path){
