@@ -375,7 +375,7 @@ input[type="radio"]{
 
 .CellComment{
     position:absolute;
-    z-index:0;
+    z-index:1;
     border:1px;
     background-color:white;
     border-style:solid;
@@ -385,8 +385,12 @@ input[type="radio"]{
     color:red;
     top:20px;
     left:20px;
+    visibility: hidden;
+
 }
 
-.CellWithComment:hover span.CellComment{
+.CellWithComment:hover .CellComment{
     display:block;
+    visibility: visible;
+
 }

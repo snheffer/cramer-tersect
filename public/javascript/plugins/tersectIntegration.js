@@ -159,7 +159,7 @@ Genoverse.Plugins.tersectIntegration = function () {
                     '': '',
                     '<button class="btn btn-primary" id="submit-new-button">Generate New Index <i class="fa fa-arrow-circle-right"></i></button>': ''
                 }).addClass('gv-tersect-integration-file-menu');
-                vcfUploader(generationMenu, '#submit-new-button', "#vcf-file-chooser", "#select-vcf", "vcf", "/index/vcfUpload")
+                vcfUploader(generationMenu, '#submit-new-button', "#vcf-file-chooser", "#select-vcf", "vcf", "/index/vcfUpload/new")
                 return generationMenu;
             }
 
@@ -181,6 +181,8 @@ Genoverse.Plugins.tersectIntegration = function () {
                     '<div>Choose Query VCF</div>':'',
                     '<span class="gv-tersect-integration-span" id="query-refresh"><a class="gv-tersect-integration-text">Refresh List <i class="fa fa-arrow-circle-right"></i></a></span>':'',
                     '<table class="gv-tersect-integration-text gv-tersect-list"><thead><tr><td>File Name</td><td>Command</td></tr></thead><tbody></tbody></table>':'',
+                    '<button class="btn btn-primary" id="add-tracks">Add tracks to Instance <i class="fa fa-arrow-circle-right"></i></button>': ''
+
                 }).addClass('gv-tersect-integration-file-menu');
                 $('#query-refresh').on('click', function(){if($(document).data('query-id')){
                     queryPopulator('#queryMenu .gv-tersect-list tbody',$(document).data('query-id'),'/index/tersectQueries');
@@ -329,19 +331,31 @@ function queryPopulator(query_list,id,url){
 
 
             $(query_list).parent().off().on('click','.gv-tersect-query-name',function(){
-                // var track = Genoverse.Track.File['VCF'];
-                //
-                // track = track.extend({
-                //     name      : "Demo",
-                //     info      : 'Local file',
-                //     isLocal   : true,
-                //     dataFile  : "",
-                //     indexFile : undefined,
-                //     gz        : false
-                // });
-                //
-                // browser.addTrack(track, browser.tracks.length - 1);
+                if($(this).hasClass("active")){
+                    $(this).removeClass("active");
+                    $(this).css("border","none");
+                    var index = idsForTracks.indexOf($(this).parent().parent().data('id'));
+                    if (index !== -1) idsForTracks.splice(index, 1);
+                } else {
+                    $(this).addClass("active");
+                    $(this).css("border","5px solid white");
+                    idsForTracks.push($(this).parent().parent().data('id'));
+                }
+
             });
+            $('#add-tracks').off().on('click',function(){
+                var instanceName = $('h1')[0].childNodes[0].nodeValue.replace("CRAMER - ","")
+                if(idsForTracks){
+                    $.ajax({
+                        url: url+'/newTracks',
+                        type: 'POST',
+                        data: {idsForTracks:idsForTracks,instanceName:instanceName},
+                        success: function(data){$('a',query_list).css('border','none');
+                        location.reload(true)}
+                    })
+                }
+
+            })
             //$(index_list).parent().on('click','.gv-tersect-index-name',function(){indexGetter(index_list,$(this).parent().parent().data("id"),url)});
         },
         dataType: "json"
@@ -634,8 +648,7 @@ var tooltipC;
 //sets for making venn diagram
 var sets = [{ sets: ['A'], size: 12 }];
 
-
-
+idsForTracks = [];
 
 /**allows mouseover event to fire during drag and drop and not after
  * also adds sample being dragged to its respective tooltip and fileset array */

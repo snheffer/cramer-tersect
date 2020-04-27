@@ -4,6 +4,7 @@ var path = require('path');
 var formidable = require('formidable');
 var fs = require('fs');
 var dir = process.cwd();
+var GenoverseInstance = require('../models/GenoverseInstance.js');
 var TersectIntegration = require('../models/tersectIntegration.js');
 var TersectVCF = require('../models/TersectVCF.js');
 var utils = require('../routes/utils.js');
@@ -70,7 +71,7 @@ router.post('/tersectUpload/new',isTersectAuthenticated, function(req,res,next){
         // parse the incoming request containing the form data
         form.parse(req);
 });
-//populator route for updating the list of items on the server.
+//populator route for updating the list of TSI files on the server.
 router.get('/tersectUpload',isTersectAuthenticated, function(req,res,next){
     TersectIntegration.find(function(err,items){
         if(err){
@@ -80,7 +81,7 @@ router.get('/tersectUpload',isTersectAuthenticated, function(req,res,next){
 
     })
 });
-//populator route for updating the queries associated with the instance.
+//populator route for updating the queries associated with the specific index file.
 router.post('/tersectQueries',isTersectAuthenticated, function(req,res,next){
     console.error("Query Route Hit");
     console.error(req.body.idToGet);
@@ -95,6 +96,47 @@ router.post('/tersectQueries',isTersectAuthenticated, function(req,res,next){
 
     })
 });
+
+//route for using generated query vcfs to generate new Tracks.
+router.post('/tersectQueries/newTracks',isTersectAuthenticated,function(req,res,next){
+    query = {_id:{$in:req.body.idsForTracks}};
+    TersectVCF.find(query, function(err,items){
+        if(err){console.log(err)}
+        else {
+            var secondQuery = {name:req.body.instanceName};
+            console.error("Instance Name: "+req.body.instanceName);
+            console.error("Instance Name: "+req.body.idsForTracks);
+            GenoverseInstance.findOne(secondQuery,function(err,entry){
+                if(err){console.log(err)}
+                else {
+                    entry.tracks.filter(function(track){
+                        if(track.group === "VCF"){
+                            items.forEach(function(current) {
+                                track.trackChildren.push({
+                                    "name": current.name,
+                                    "description": decodeURIComponent(current.command),
+                                    'data': 'Genoverse.Track.File.VCF.extend({\nname: "'+current.name+'",\ninfo: "'+decodeURIComponent(current.command)+'",\nmodel: Genoverse.Track.Model.File.VCF.extend({\nurl: "http://localhost:4000/index/request?chr=__CHR__&start=__START__&end=__END__&type=tabix",\nlargeFile: true,\nurlParams: {file: "'+current.route+'"}\n})\n})'
+                                })
+
+                            })
+
+                        }
+                    });
+                    entry.save(function (err) {
+                        if (err) {
+                            console.log(err);
+                        } else {
+                            console.log('Instance modified !');
+                            res.send('Success');
+                        }
+                    });
+                }
+            })
+        }
+    })
+});
+
+
 //deletion route for deleting entries in the server database, and removing the files.
 router.delete('/tersectUpload/:id',isTersectAuthenticated, function(req,res,next){
     let query = {_id:req.params.id};
@@ -120,7 +162,7 @@ router.delete('/tersectUpload/:id',isTersectAuthenticated, function(req,res,next
 });
 
 //uploader route for uploading new vcf files to generate new TSI files, and add them to the database.
-router.post('/vcfUpload',isTersectAuthenticated, function(req,res,next){
+router.post('/vcfUpload/new',isTersectAuthenticated, function(req,res,next){
     // create an incoming form object
     var form = new formidable.IncomingForm();
     var fields = {};
@@ -308,21 +350,6 @@ router.post('/generate',function(req,res,next){
     //convert samples selected into tersect format u()
 
 });
-// //router.post(tersect)
-// function recursiveRenamer(file,form,curr_path){
-//     fs.stat(curr_path, function (err, stats) {
-//
-//         if(stats){
-//         curr_path = path.join(form.uploadDir,(path.basename(curr_path).replace(/\.[^/.]+$/, "")+"(copy)"+path.extname(curr_path)));
-//         console.log(curr_path);
-//         recursiveRenamer(file,form,curr_path)
-//     } else {
-//         fs.renameSync(file.path, curr_path);
-//         //return curr_path
-//     }
-//
-//     })
-// }
 
 
 
