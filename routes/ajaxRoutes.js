@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var path = require('path');
 var formidable = require('formidable');
+var rimraf = require('rimraf');
 var fs = require('fs');
 var dir = process.cwd();
 var GenoverseInstance = require('../models/GenoverseInstance.js');
@@ -10,15 +11,29 @@ var TersectVCF = require('../models/TersectVCF.js');
 var utils = require('../routes/utils.js');
 var { v4: uuid } = require('uuid');
 const {spawn} = require('child_process');
+
+isUploadAuthenticated = function (req, res, next) {
+    if (req.isAuthenticated()) {
+        next();
+    } else {
+        req.destroy()
+    }
+};
+
 isTersectAuthenticated = function (req, res, next) {
     if (req.isAuthenticated()) {
         next();
     } else {
-        req.flash('warning', 'Please login to use this functionality.');
+        res.status(403).send({
+            message: 'Error:Not Logged in.'
+        });
     }
 };
+
+////Uploader Routes --------------------------------------------------------
+
 //route for uploading a new Tersect Index (TSI) file.
-router.post('/tersectUpload/new',isTersectAuthenticated, function(req,res,next){
+router.post('/tersectUpload/new',isUploadAuthenticated, function(req,res,next){
         // create an incoming form object
         var form = new formidable.IncomingForm();
         var instanceName = [];
@@ -37,24 +52,16 @@ router.post('/tersectUpload/new',isTersectAuthenticated, function(req,res,next){
         form.on('file', function(field, file) {
             var newPath = path.join(form.uploadDir,file.name);
             newPath = path.join(form.uploadDir,(path.basename(newPath).replace(/\.[^/.]+$/, "")+"_"+uuid()+path.extname(newPath)));
-            //console.log(newPath);
             fs.renameSync(file.path, newPath);
-            //recursiveRenamer(file,form,newPath);
             console.error(file.path);
             console.error(instanceName[0]);
-            var item = new TersectIntegration({ name: file.name, instance: instanceName[0], local: true, route: newPath });
+            var item = new TersectIntegration({ name: file.name, instance: instanceName[0].replace("CRAMER - ",""), local: true, route: newPath });
             item.save(function (err, item) {
                 if (err) {
-                    return console.error(err)
+                    next(err);
+                    console.error(err)
                 }
             });
-            TersectIntegration.find(function(err,items){
-                if(err){
-                    return console.error(err)
-                }
-                console.log(items)
-
-            })
         });
         // log any errors that occur
         form.on('error', function(err) {
@@ -71,98 +78,9 @@ router.post('/tersectUpload/new',isTersectAuthenticated, function(req,res,next){
         // parse the incoming request containing the form data
         form.parse(req);
 });
-//populator route for updating the list of TSI files on the server.
-router.get('/tersectUpload',isTersectAuthenticated, function(req,res,next){
-    TersectIntegration.find(function(err,items){
-        if(err){
-            return console.error(err)
-        }
-        res.json(items)
-
-    })
-});
-//populator route for updating the queries associated with the specific index file.
-router.post('/tersectQueries',isTersectAuthenticated, function(req,res,next){
-    console.error("Query Route Hit");
-    console.error(req.body.idToGet);
-    var query = {parent_id:req.body.idToGet};
-    TersectVCF.find(query,function(err,items){
-        if(err){
-            return console.error(err)
-        } else {
-            console.error(JSON.stringify(items,null, 4));
-        }
-        res.json(items)
-
-    })
-});
-
-//route for using generated query vcfs to generate new Tracks.
-router.post('/tersectQueries/newTracks',isTersectAuthenticated,function(req,res,next){
-    query = {_id:{$in:req.body.idsForTracks}};
-    TersectVCF.find(query, function(err,items){
-        if(err){console.log(err)}
-        else {
-            var secondQuery = {name:req.body.instanceName};
-            console.error("Instance Name: "+req.body.instanceName);
-            console.error("Instance Name: "+req.body.idsForTracks);
-            GenoverseInstance.findOne(secondQuery,function(err,entry){
-                if(err){console.log(err)}
-                else {
-                    entry.tracks.filter(function(track){
-                        if(track.group === "VCF"){
-                            items.forEach(function(current) {
-                                track.trackChildren.push({
-                                    "name": current.name,
-                                    "description": decodeURIComponent(current.command),
-                                    'data': 'Genoverse.Track.File.VCF.extend({\nname: "'+current.name+'",\ninfo: "'+decodeURIComponent(current.command)+'",\nmodel: Genoverse.Track.Model.File.VCF.extend({\nurl: "http://localhost:4000/index/request?chr=__CHR__&start=__START__&end=__END__&type=tabix",\nlargeFile: true,\nurlParams: {file: "'+current.route+'"}\n})\n})'
-                                })
-
-                            })
-
-                        }
-                    });
-                    entry.save(function (err) {
-                        if (err) {
-                            console.log(err);
-                        } else {
-                            console.log('Instance modified !');
-                            res.send('Success');
-                        }
-                    });
-                }
-            })
-        }
-    })
-});
-
-
-//deletion route for deleting entries in the server database, and removing the files.
-router.delete('/tersectUpload/:id',isTersectAuthenticated, function(req,res,next){
-    let query = {_id:req.params.id};
-    TersectIntegration.findOne(query, function(err,entry){
-        if (err){
-            console.error('File Deletion Error: Cant Find Ref: ' + err)
-        } else {
-            fs.unlink(entry.route,function(err){
-                if(err){
-                    console.error('File Deletion Error: Cant Delete File at: ' + entry.route + ', ' + err)
-                }
-            });
-        }
-    })
-    TersectIntegration.deleteOne(query,function(err){
-        if(err){
-            console.error('Entry Deletion Error: Can\'t Delete DB Entry at: ' + err);
-        } else {
-            res.send('Success');
-        }
-    });
-
-});
 
 //uploader route for uploading new vcf files to generate new TSI files, and add them to the database.
-router.post('/vcfUpload/new',isTersectAuthenticated, function(req,res,next){
+router.post('/vcfUpload/new',isUploadAuthenticated, function(req,res,next){
     // create an incoming form object
     var form = new formidable.IncomingForm();
     var fields = {};
@@ -173,7 +91,10 @@ router.post('/vcfUpload/new',isTersectAuthenticated, function(req,res,next){
     var randomDirName = uuid();
     var newPath = path.join(__dirname, "../vcf/"+randomDirName);
     fs.mkdir(newPath, { recursive: true }, (err) => {
-        if (err) throw err;
+        if (err){
+            console.error(err);
+            next(err)
+        }
     });
 
     // store all uploads in the ../vcf/ directory in a random directory.
@@ -193,7 +114,6 @@ router.post('/vcfUpload/new',isTersectAuthenticated, function(req,res,next){
             file.path = form.uploadDir + "/" + path.basename(file.name)+"_"+uuid()+".vcf.gz";
 
         }
-        // file.path = form.uploadDir + "/" + path.basename(file.name)+"_"+uuid()+path.extname(file.name);
     });
     form.on('file', function(name, file) {
         files.push(file);
@@ -213,28 +133,71 @@ router.post('/vcfUpload/new',isTersectAuthenticated, function(req,res,next){
         console.error(JSON.stringify(files, null, 4));
         const newIndexName =  fields.newName+"_"+uuid()+ ".tsi";
         const child = spawn("tersect", ["build", newIndexName,"../vcf/"+randomDirName+"/*"], {cwd: dir + "/indexes"});
-        child.on("error", err => {console.error(err)});
+        child.on("error", err => {
+            console.error(err)
+            next(err);
+        });
         child.on("close", (code, signal) => {
-            var item = new TersectIntegration({ name: fields.newName, instance: fields.instanceName, local: true, route: (dir+"/indexes/"+newIndexName)});
-            item.save(function (err, item) {
-                if (err) {
-                    return console.error(err)
-                }
-            });
 
+                var item = new TersectIntegration({
+                    name: fields.newName,
+                    instance: fields.instanceName.replace("CRAMER - ",""),
+                    local: true,
+                    route: (dir + "/indexes/" + newIndexName)
+                });
+                item.save(function (err, item) {
+                    if (err) {
+                        console.error(err)
+                        next(err)
+                    }
+                });
         })
     });
     // parse the incoming request containing the form data
     form.parse(req);
 });
 
+////Populator Routes --------------------------------------------------------
+
+//populator route for updating the list of TSI files on the server.
+router.post('/tersectUpload', function(req,res,next){
+    var instanceName = req.body.instanceName.replace("CRAMER - ","")
+    var query = {instance:instanceName};
+    TersectIntegration.find(query, function(err,items){
+        if(err){
+            console.error(err)
+            next(err);
+        }
+        res.json(items)
+
+    })
+});
+//populator route for updating the queries associated with the specific index file.
+router.post('/tersectQueries', function(req,res,next){
+    console.error("Query Route Hit");
+    console.error(req.body.idToGet);
+    var query = {parent_id:req.body.idToGet};
+    TersectVCF.find(query,function(err,items){
+        if(err){
+            console.error(err);
+            next(err);
+        } else {
+            console.error(JSON.stringify(items,null, 4));
+        }
+        res.json(items)
+
+    })
+});
+
+//Route for populating sample list for the Venn GUI.
 router.post('/tersectUpload/view',function(req,res,next){
-    query = {_id:req.body.tsifile}
+    query = {_id:req.body.tsifile};
     TersectIntegration.findOne(query, function(err,entry){
         if (err){
-            console.error('File Deletion Error: Cant Find Ref: ' + err)
+            console.error('Population Error: Cant Find Ref: ' + err);
+            next(err);
         } else {
-            console.log(entry.name)
+            console.log(entry.name);
             var arr = [];
             var getSamples = spawn('tersect', ['samples', entry.route], { shell: true });
             //The output of the command is printed in the command line if there are no errors
@@ -262,6 +225,139 @@ router.post('/tersectUpload/view',function(req,res,next){
     })
 });
 
+//route for using generated query VCFs to generate new Tracks.
+router.post('/tersectQueries/newTracks',isTersectAuthenticated,function(req,res,next){
+    var vcfFlag = req.body.vcfFlag;
+    var densityFlag = req.body.densityFlag;
+    var query = {_id:{$in:req.body.idsForTracks}};
+    TersectVCF.find(query, function(err,items){
+        if(err){
+            console.error(err);
+            next(err)
+        }
+        else {
+            var secondQuery = {name:req.body.instanceName.replace("CRAMER - ","")};
+            console.error("Instance Name: "+req.body.instanceName.replace("CRAMER - ",""));
+            console.error("Instance Name: "+req.body.idsForTracks);
+            console.error("Instance VCF Flag: "+typeof(req.body.vcfFlag));
+            console.error("Instance Density Flag: "+typeof(req.body.densityFlag));
+            GenoverseInstance.findOne(secondQuery,function(err,entry){
+                if(err){
+                    console.log(err);
+                    next(err);
+                }
+                else {
+                    if(vcfFlag == 1) {
+                        entry.tracks.filter(function (track) {
+                            if (track.group === "VCF") {
+                                items.forEach(function (current) {
+                                    track.trackChildren.push({
+                                        "name": current.name,
+                                        "description": current.command,
+                                        'data': 'Genoverse.Track.File.VCF.extend({\nname: "' + current.name + '",\ninfo: "' + current.command + '",\nmodel: Genoverse.Track.Model.File.VCF.extend({\nurl: "http://localhost:4000/index/request?chr=__CHR__&start=__START__&end=__END__&type=tabix",\nlargeFile: true,\nurlParams: {file: "' + current.route + '"}\n})\n})'
+                                    })
+
+                                })
+
+                            }
+                        });
+                    };
+                    if(densityFlag == 1) {
+                        entry.tracks.filter(function (track) {
+                            if (track.group === "SNP Density") {
+                                items.forEach(function (current) {
+                                    track.trackChildren.push({
+                                        "name": current.name,
+                                        "description": current.command,
+                                        'data': 'Genoverse.Track.SNPDensity.extend({\nname: "' + current.name + '",\ninfo: "' + current.command + '",\nmodel: Genoverse.Track.Model.SNPDensity.extend({\nurl: "http://localhost:4000/index/request?chr=__CHR__&start=__START__&end=__END__&type=tabix",\nlargeFile: true,\nurlParams: {file: "' + current.route + '"}\n})\n})'
+                                    })
+
+                                })
+
+                            }
+                        });
+                    };
+                    entry.save(function (err) {
+                        if (err) {
+                            next(err);
+                            console.log(err);
+                        } else {
+                            console.log('Instance modified !');
+                            res.send('Success');
+                        }
+                    });
+                }
+            })
+        }
+    })
+});
+
+////Deletion Routes --------------------------------------------------------
+
+//deletion route for deleting entries in the TSI database, and removing the associated query VCF files.
+router.delete('/tersectUpload/:id',isTersectAuthenticated, function(req,res,next){
+    let query = {_id:req.params.id};
+    let childQuery = {parent_id:req.params.id};
+    TersectIntegration.findOneAndDelete(query, function(err,entry){
+        if (err){
+            console.error('File Deletion Error: Cant Find Ref: ' + err);
+            next(err);
+        } else {
+            rimraf(entry.route,function(err){
+                if(err){
+                    console.error('File Deletion Error: Cant Delete File at: ' + entry.route + ', ' + err)
+                    next(err);
+                } else {
+                    TersectVCF.find(childQuery,function(err,entries){
+                        if(err){
+                            console.error("error with tersectVCF delete")
+                            next(err);
+                        } else {
+                            entries.forEach(function(current){
+                                rimraf(path.dirname(current.route), function(err){
+                                    if(err){
+                                        console.error('error in /tersectUpload query VCF deletion: ' + err);
+                                        next(err);
+                                    }
+                                })
+                            })
+                            TersectVCF.deleteMany(childQuery,function(err){
+                                if(err){
+                                    console.error('error in /tersectUpload query VCF database removal: ' + err);
+                                    next(err);
+                                } else res.send('success')
+                            })
+                        }
+                    })
+                }
+            });
+        }
+    })
+});
+
+//deletion route for deleting entries in the QueryVCF database, and removing the files.
+router.delete('/tersectQueries/:id',isTersectAuthenticated, function(req,res,next){
+    let query = {_id:req.params.id};
+    TersectVCF.findOneAndDelete(query, function(err,entry){
+        if (err){
+            console.error('File Deletion Error: Cant Find Ref: ' + err);
+            next(err);
+        } else {
+            rimraf(path.dirname(entry.route),function(err){
+                if(err){
+                    console.error("Error in /tersectQueries Delete Route: " + err)
+                    next(err);
+                } else {
+                    res.send('success')
+                }
+            })
+        }
+    });
+
+
+});
+
+////Query Generation Routes --------------------------------------------------------
 
 //add file path to tsi file to run
 function tersect(command, id, file, filepath) {
@@ -269,7 +365,8 @@ function tersect(command, id, file, filepath) {
     query={_id:id};
     TersectIntegration.findOne(query, function(err,entry){
         if (err){
-            console.error('File Deletion Error: Cant Find Ref: ' + err)
+            console.error('Cant Find Ref: ' + err);
+            next(err);
         } else {
             console.log(entry.route);
             var tcommand = spawn('tersect', ['view', entry.route, '"' + command +'"'], { shell: true });
@@ -301,7 +398,8 @@ function tersect(command, id, file, filepath) {
                                     var item = new TersectVCF({ name: file, command:encodeURIComponent(command), parent_id:id,  route: filePathForTabix});
                                     item.save(function (err, item) {
                                         if (err) {
-                                            return console.error(err)
+                                            return console.error(err);
+                                            next(err);
                                         } else {
                                             console.error("Query VCF added to TersectVCF");
                                         }
@@ -319,7 +417,7 @@ function tersect(command, id, file, filepath) {
         }
 })}
 
-router.post('/generate',function(req,res,next){
+router.post('/tersectQueries/generate',function(req,res,next){
     var comm = req.body.command;
     var mapObj = {
         A:"u" + req.body.setA.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, ""),
@@ -332,12 +430,15 @@ router.post('/generate',function(req,res,next){
 
 
     var id = req.body.idToGet;
-    var file = req.body.filepath;
+    var file = req.body.filepath.replace(/ /g,"_");
     var newPath = path.join(__dirname, "../newVCF/"+uuid()+"/");
     var filepath = path.join(newPath+ file);
 
     fs.mkdir(newPath, { recursive: true }, (err) => {
-        if (err){throw err} else {
+        if (err){
+            console.error("Error in making tersect query directory: " + err)
+            next(err)
+        } else {
             tersect(fullCommand,id, file,filepath);
             console.error("ID: "+req.body.idToGet);
             console.error("Command: "+ comm);
@@ -346,11 +447,25 @@ router.post('/generate',function(req,res,next){
 
         }
     });
-
-    //convert samples selected into tersect format u()
-
 });
 
+////Query VCF Download Route ---------------------------------
 
+router.post('/tersectQueries/:id/download', function(req, res, next){
+    var query = {_id:req.params.id};
+    console.error(req.params.id)
+    TersectVCF.findOne(query,function(err,entry){
+        if(err){
+            console.error("Cant find file for download id.");
+            next(err);
+        }
+        else {
+            var file = entry.route;
+            res.set('Content-Type', 'application/gzip')
+
+            res.download(file);
+        }
+    })
+});
 
 module.exports = router;

@@ -394,3 +394,19 @@ input[type="radio"]{
     visibility: visible;
 
 }
+
+#tersectIndexMenu .gv-tersect-list tbody tr:nth-child(even){
+    background-color: rgba(6, 54, 95, 0.15);
+}
+#tersectIndexMenu .gv-tersect-list tbody td{
+    overflow: hidden;
+    cursor: pointer;
+}
+
+#queryMenu .gv-tersect-list tbody tr:nth-child(even){
+    background-color: rgba(6, 54, 95, 0.15);
+}
+#queryMenu .gv-tersect-list tbody td{
+    overflow: hidden;
+    cursor: pointer;
+}
