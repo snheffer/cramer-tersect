@@ -12,6 +12,21 @@ var utils = require('../routes/utils.js');
 var { v4: uuid } = require('uuid');
 const {spawn} = require('child_process');
 
+try {
+    if (!fs.existsSync(path.join(dir+"/vcf"))){
+        fs.mkdirSync(path.join(dir+"/vcf"))
+    }
+} catch(err) {
+    console.error(err)
+}
+try {
+    if (!fs.existsSync(path.join(dir+"/newVCF"))) {
+        fs.mkdirSync(path.join(dir+"/newVCF"))
+    }
+} catch(err) {
+    console.error(err)
+}
+
 isUploadAuthenticated = function (req, res, next) {
     if (req.isAuthenticated()) {
         next();
