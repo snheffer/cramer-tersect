@@ -80,14 +80,7 @@ Genoverse.Plugins.tersectIntegration = function () {
                         }
 
                     });
-                    $('#save-query').on('click', function () {
-                        $("#save-status").removeClass("fa-arrow-circle-right");
-                        $("#save-status").addClass("fa-spin fa-spinner");
-                        setTimeout(function () {
-                            $("#save-status").removeClass("fa-spin fa-spinner");
-                            $("#save-status").addClass("fa-arrow-circle-right")
-                        }, 3000)
-                    });
+
                     $('.gv-close', tersectMenu).on('click', function () {
                         $(tersectButton).removeClass('gv-active');
                     });
@@ -129,7 +122,7 @@ Genoverse.Plugins.tersectIntegration = function () {
                                 </tr>\
                                 </tbody>\
                             </table>\ </div>': '<div id="venn"></div><div id="venncontrols" class="panel panel-default"><div class="panel-heading"><h5 class="panel-title">Set Controls</h5></div><div class="panel-body"> <button class="btn btn-primary btn-sm" id="addCircle">Add Circle <i class="fa fa-plus"></i></button> <span style="display:inline-block; width: 15px;"></span> <input id="circleName" type="text" placeholder="Input circle..." size="12"/>&nbsp;&nbsp;<button id="removeCircle" class="btn btn-primary btn-sm">Remove Circle <i class="fa fa-trash"></i></button></div></div></br></br>\
-                            <div id="query"><button class="btn btn-default btn-xs" id="save-query">Save Query <i id="save-status" class="fa fa-save"></i></button><span style="display:inline-block; width: 20px;"></span><button class="btn btn-default btn-xs" id="saved-queries">Saved Queries <i class="fa fa-folder-open"></i></button></div></div>',
+                            <div id="query"><span style="display:inline-block; width: 20px;"></span><button class="btn btn-default btn-xs" id="saved-queries">Saved Queries <i class="fa fa-folder-open"></i></button></div></div>',
 
                 }).addClass('gv-tersect-integration-menu');
                 vennInit();
