@@ -36,6 +36,7 @@
     "uuid": "^7.0.2"
   },
   "devDependencies": {
+    "ip": "^1.1.5",
     "nodemon": "^1.19.1",
     "webpack": "3.11"
   },
