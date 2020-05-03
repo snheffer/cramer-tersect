@@ -96,8 +96,8 @@
     width: 250px;
 }
 
-.gv-tersect-integration-plugin .gv-tersect-integration-file-menu gv-tersect-index-list {
-    overflow: scroll;
+.gv-tersect-integration-plugin .gv-tersect-integration-file-menu .gv-tersect-list {
+
 }
 
 .gv-tersect-integration-plugin .gv-tersect-integration-menu .gv-settings {
@@ -163,25 +163,32 @@
     font-size: 13px;
 }
 
-.gv-tersect-integration-plugin .gv-tersect-index-list{
+.gv-tersect-integration-plugin .gv-tersect-list{
+    overflow: scroll;
+    table-layout: fixed;
     border-collapse: collapse;
     width: 100%;
 }
 
-.gv-tersect-integration-plugin .gv-tersect-index-list thead {
+.gv-tersect-integration-plugin .gv-tersect-list thead {
     background: rgba(6, 54, 95, 0.35);
     display:block;
     width: 100%;
 }
 
-.gv-tersect-integration-plugin .gv-tersect-index-list tbody{
+.gv-tersect-integration-plugin .gv-tersect-list tbody{
     display:block;
     height:100px;
     overflow:auto;
     width:100%;
 }
 
-.gv-tersect-integration-plugin .gv-tersect-index-list tr:first-child td {
+.gv-tersect-integration-plugin .gv-tersect-list td{
+    overflow: hidden;
+}
+
+
+.gv-tersect-integration-plugin .gv-tersect-list tr:first-child td {
     background: rgba(6, 54, 95, 0.00);
     font-weight: normal;
     line-height: normal;
@@ -244,21 +251,23 @@ progress[value] {
 }
 
 
-#gv-tersect-gui-container td {
+#gv-tersect-gui-container td{
     padding: 5px 5px;
     margin: 2px 1px;
     display: inline-block;
-    border: 3px solid black;
+    border: 3px solid #4D6297;
     border-radius: 5px;
     background: #ebebeb;
     color: #000;
+    width: auto !important;
+    text-align: center;
 }
 
 #gv-tersect-gui-container body {
     font-family: Verdana, Helvetica, sans-serif;
 }
 
-#genomeTable {
+#genomeTable  {
     height: 200px;
     width: 300px;
     overflow: auto;
@@ -272,18 +281,36 @@ progress[value] {
     text-align: center;
 }
 
-#gv-tersect-gui-container venntooltip {
+.venntooltip {
     position: absolute;
     text-align: center;
-    width: 250px;
-    height: 200px;
+    height: 150px;
     background: #555;
     color: #fff;
     padding: 2px;
     border: 0px;
     border-radius: 8px;
     opacity: 0;
+    overflow: auto;
+    display: inline-block;
 }
+
+.venntooltip th {
+    position: sticky;
+    top: 0px;
+    text-align: center;
+    padding: 2px 2px;
+    margin: 2px 1px;
+    display: inline-block;
+    }
+
+    .venntooltip td {
+        padding: 1px 1px;
+        margin: 1px 1px;
+        display: inline-block;
+        width: auto !important;
+        text-align: center;
+    }
 
 #gv-tersect-gui-container .samples {
     cursor: -webkit-grab;
@@ -302,19 +329,14 @@ progress[value] {
 }
 
 #venn {
-    cursor: pointer;
-    height: 400px;
+    height: 450px;
     width: 100%;
-    display: inline-block;
-    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
 }
 
-#gv-tersect-gui-container .sidenav{
-    float:left;
-    width:30%;
-    overflow:hidden;
-
-}
 
 #tersectMenu{
     background-color: white;
@@ -331,4 +353,60 @@ progress[value] {
 
 #tersectMenu *{
     color: #0f0f0f;
+}
+
+#query{
+    text-align: right;}
+
+#onRight {
+    float: right;
+}
+#onLeft {
+    float: left;
+}
+
+#space {
+    padding-left: 400px;
+}
+
+input[type="radio"]{
+    margin: 0 10px 0 10px;
+}
+
+.CellComment{
+    position:absolute;
+    z-index:1;
+    border:1px;
+    background-color:white;
+    border-style:solid;
+    border-width:1px;
+    border-color:red;
+    padding:3px;
+    color:red;
+    top:20px;
+    left:20px;
+    visibility: hidden;
+
+}
+
+.CellWithComment:hover .CellComment{
+    display:block;
+    visibility: visible;
+
+}
+
+#tersectIndexMenu .gv-tersect-list tbody tr:nth-child(even){
+    background-color: rgba(6, 54, 95, 0.15);
+}
+#tersectIndexMenu .gv-tersect-list tbody td{
+    overflow: hidden;
+    cursor: pointer;
+}
+
+#queryMenu .gv-tersect-list tbody tr:nth-child(even){
+    background-color: rgba(6, 54, 95, 0.15);
+}
+#queryMenu .gv-tersect-list tbody td{
+    overflow: hidden;
+    cursor: pointer;
 }

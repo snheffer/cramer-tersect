@@ -1,7 +1,6 @@
 Genoverse.Plugins.tersectIntegration = function () {
-
     this.controls.push({
-        icon: '<h4>T</h4>',
+        icon: '<i class="fa fa-override"></i>',
         'class': 'gv-tersect-integration',
         name: 'Use Tersect Functionalities.',
         action: function (browser) {
@@ -36,14 +35,14 @@ Genoverse.Plugins.tersectIntegration = function () {
                             tersectIndexMenu.show();
 
                         } else {
-                            tersectIndexMenu = makeTersectIndexMenu().attr("id", "tersectIndexMenu");
-                            $('#tsi-locate-index', tersectIndexMenu).on('click', function () {
+                            tersectIndexMenu = makeTersectIndexMenu().attr("id","tersectIndexMenu");
+                            $('#tsi-locate-index',tersectIndexMenu).on('click',function () {
                                 tersectFileMenu = $(this).data("tersectFileMenu");
                                 if (tersectFileMenu) {
                                     tersectFileMenu.show();
                                 } else {
-                                    tersectFileMenu = makeTersectFileMenu().attr("id", "tersectFileMenu");
-                                    $('#tsi-locate-index', tersectIndexMenu).on('click', indexPopulator("#tersectIndexMenu .gv-tersect-list tbody", "/index/tersectUpload", "#queryMenu .gv-tersect-list tbody", "/index/tersectQueries"))
+                                    tersectFileMenu = makeTersectFileMenu().attr("id","tersectFileMenu");
+                                    $('#tsi-locate-index',tersectIndexMenu).on('click',indexPopulator("#tersectIndexMenu .gv-tersect-list tbody","/index/tersectUpload","#queryMenu .gv-tersect-list tbody", "/index/tersectQueries"))
 
                                     $(this).data("tersectFileMenu", tersectFileMenu);
                                 }
@@ -59,11 +58,11 @@ Genoverse.Plugins.tersectIntegration = function () {
                                 }
                             });
 
-                            $(this).data("tersectIndexMenu", tersectIndexMenu);
+                            $(this).data("tersectIndexMenu",tersectIndexMenu);
                             var queryMenu = $("body").data('queryMenu');
-                            if (!queryMenu) {
-                                queryMenu = makeQueryMenu().attr("id", "queryMenu").hide();
-                                $("body").data("queryMenu", queryMenu);
+                            if(!queryMenu){
+                                queryMenu = makeQueryMenu().attr("id","queryMenu").hide();
+                                $("body").data("queryMenu",queryMenu);
 
                             }
                         }
@@ -71,16 +70,23 @@ Genoverse.Plugins.tersectIntegration = function () {
                     $('#saved-queries').on('click', function () {
                         var queryMenu = $("body").data('queryMenu');
 
-                        if (queryMenu) {
+                        if(queryMenu){
                             queryMenu.show();
                         } else {
-                            queryMenu = makeQueryMenu().attr("id", "queryMenu");
-                            $("body").data("queryMenu", queryMenu);
+                            queryMenu = makeQueryMenu().attr("id","queryMenu");
+                            $("body").data("queryMenu",queryMenu);
 
                         }
 
                     });
-
+                    $('#save-query').on('click', function () {
+                        $("#save-status").removeClass("fa-arrow-circle-right");
+                        $("#save-status").addClass("fa-spin fa-spinner");
+                        setTimeout(function () {
+                            $("#save-status").removeClass("fa-spin fa-spinner");
+                            $("#save-status").addClass("fa-arrow-circle-right")
+                        }, 3000)
+                    });
                     $('.gv-close', tersectMenu).on('click', function () {
                         $(tersectButton).removeClass('gv-active');
                     });
@@ -94,35 +100,32 @@ Genoverse.Plugins.tersectIntegration = function () {
             //makeMenu function declarations.
             function makeTersectMenu() {
                 var tersectMenu = browser.makeMenu({
-                    'Tersect Plugin': '',
-                    '</br><button class="btn btn-default btn-block" id="tsi-file">Select TSI File <i class="fa fa-folder-open"></i></button></br></br> \
-                        <input type="text" id="searchBox" placeholder="Search for samples..."/><span style="display:inline-block; width: 5px;"></span><div class="btn-group"><button class="btn btn-primary wild" id="wildA">Set A</button><button class="btn btn-primary wild" id="wildB">Set B</button><button class="btn btn-primary wild" id="wildC">Set C</button></div></br></br> \
-                        <div id="gv-tersect-gui-container" class="panel panel-default"><div class="panel-heading"><h4 class="panel-title">Samples in TSI</h4></div><table id="genomeTable"></table><div class="panel-footer"><span id="countA" class="badge">A: 0</span> <span style="display:inline-block; width: 5px;"></span> <span id="countB" class="badge">B: </span> <span style="display:inline-block; width: 5px;"></span> <span id="countC" class="badge">C: </span> <span style="display:inline-block; width: 5px;"></span><button class="btn btn-default btn-sm" id="clearSample">Clear Samples <i class="fa fa-eraser"></i></button></div></div> \
-                        </div><div class="panel panel-default" id="setnotation"> <div class="panel-heading"><h5 class="panel-title">Set notation</h5> </div><div class="panel-body"><div id="onLeft"><span id="notation" class="badge"></span> </div><div id="onRight"><button class="btn btn-default btn-xs" id="clearOperations">Clear Operations <i class="fa fa-eraser"></i></button></div></div></div>\
-                        <div><input type="text" id="filepath" />&nbsp;&nbsp;<button class="btn btn-primary" id="submit">Submit Query <i class="fa fa-download"></i></button>\
+                    'Tersect: File Selection:': '',
+                    '</br><span><a class="gv-tersect-integration-text gv-tersect-integration-input gv-tersect-integration-select-button" id="tsi-file">Select TSI File <i class="fa fa-arrow-circle-right"></i></a></span></br></br> \
+                        <input type="text" id="searchBox" placeholder="Search for samples..."><span style="display:inline-block; width: 5px;"></span><button id="wildbutton" type="submit">Add Group</button></br></br> \
+                        <label for="A">Set A</label><span style="display:inline-block; width: 5px;"></span><input type="radio" name="fileset" id="A" value="File A"><label for="B">Set B</label><span style="display:inline-block; width: 5px;"></span><input type="radio" name="fileset" id="B" value="File B"><label for="C">Set C</label><span style="display:inline-block; width: 5px;"></span><input type="radio" name="fileset" id="C" value="File C">\
+                        <div id="gv-tersect-gui-container"><table id="genomeTable"></table></div> \
+                        <div id="sampleCount"> <h4>Sample Count</h4> <span id="countA">A: </span> <span style="display:inline-block; width: 5px;"></span> <span id="countB">B: </span> <span style="display:inline-block; width: 5px;"></span> <span id="countC">C: </span> </div> <div id="setnotation"> <h4>Set notation:</h4> <p id="notation"></p> </div>\
+                        <div><span class="gv-tersect-integration-span" id="clearFile"><a class="gv-tersect-integration-text ">Clear Files <i class="fa fa-arrow-circle-right"></i></a></span> <span class="gv-tersect-integration-span" id="clearOperations"><a class="gv-tersect-integration-text">Clear Operations <i class="fa fa-arrow-circle-right"></i></a></span></div></br> \
+                        <div><span class="gv-tersect-integration-span" id="save-query"><a class="gv-tersect-integration-text ">Save Query <i id="save-status" class="fa fa-arrow-circle-right"></i></a></span> <span class="gv-tersect-integration-span" id="saved-queries"><a class="gv-tersect-integration-text">Saved Queries <i class="fa fa-arrow-circle-right"></i></a></span></div></br> \
+                        <div><input type="text" id="filepath" />&nbsp;&nbsp;<span><a class="gv-tersect-integration-text" id="submit">Submit Query <i class="fa fa-arrow-circle-right"></i></a></span></div>\
                         <div id="tooltipdiv">\
                             <table id="sampleA" class="venntooltip">\
-                            <tbody>\
                                 <tr>\
-                                <th><button class="btn btn-primary" id="hideA">Samples in A <i class="fa fa-times-circle"></i></button></th>\
+                                    <th><button id="hideA">&times;</button> Samples in A </th>\
                                 </tr>\
-                                </tbody>\
+                            <tr id="hereA"></tr>\
                             </table>\
                             <table id="sampleB" class="venntooltip">\
-                            <tbody>\
                                 <tr>\
-                                <th><button class="btn btn-primary" id="hideB">Samples in B <i class="fa fa-times-circle"></i></button></th>\
+                                    <th><button id="hideB">&times;</button> Samples in B</th>\
                                 </tr>\
-                                </tbody>\
-                            </table>\
+                            <tr id="hereB"></tr>\
                             <table id="sampleC" class="venntooltip">\
-                            <tbody>\
                                 <tr>\
-                                <th><button class="btn btn-primary" id="hideC">Samples in C <i class="fa fa-times-circle"></i></button></th>\
+                                    <th><button id="hideC">&times;</button> Samples in C</th>\
                                 </tr>\
-                                </tbody>\
-                            </table>\ </div>': '<div id="venn"></div><div id="venncontrols" class="panel panel-default"><div class="panel-heading"><h5 class="panel-title">Set Controls</h5></div><div class="panel-body"> <button class="btn btn-primary btn-sm" id="addCircle">Add Circle <i class="fa fa-plus"></i></button> <span style="display:inline-block; width: 15px;"></span> <input id="circleName" type="text" placeholder="Input circle..." size="12"/>&nbsp;&nbsp;<button id="removeCircle" class="btn btn-primary btn-sm">Remove Circle <i class="fa fa-trash"></i></button></div></div></br></br>\
-                            <div id="query"><span style="display:inline-block; width: 20px;"></span><button class="btn btn-default btn-xs" id="saved-queries">Saved Queries <i class="fa fa-folder-open"></i></button></div></div>',
+                            <tr id="hereC"></tr></table> </div>': '<div id="right"><div id="venn"></div></br><div id="venncontrols"> <button id="addCircle">Add Circle</button> <span style="display:inline-block; width: 20px;"></span> <input id="circleName" type="text" placeholder="Input name of circle..." /> <button id="removeCircle">Remove Circle</button></div></div>',
 
                 }).addClass('gv-tersect-integration-menu');
                 vennInit();
@@ -132,15 +135,13 @@ Genoverse.Plugins.tersectIntegration = function () {
 
             function makeTersectIndexMenu() {
                 var indexMenu = browser.makeMenu({
-                    '<div>Choose Tersect Index File:</div>': '',
-                    '<table class="gv-tersect-integration-text gv-tersect-list"><thead><tr><td>Name</td><td>Instance</td><td>&emsp;&emsp;&emsp;</td></tr></thead><tbody></tbody></table>': '',
-                    '<button class="btn btn-primary" id="tsi-refresh">Refresh List <i class="fa fa-retweet"></i></button>': '',
-                    '<button class="btn btn-primary" id="tsi-locate-index">Locate TSI Index <i class="fa fa-arrow-circle-right"></i></button>': '',
-                    '<button class="btn btn-primary" id="generate-new-button">Generate New Index <i class="fa fa-arrow-circle-right"></i></button>': '',
-
+                    '<div>Choose Tersect Index File:</div>':'',
+                    '<span class="gv-tersect-integration-span" id="tsi-refresh"><a class="gv-tersect-integration-text">Refresh List <i class="fa fa-arrow-circle-right"></i></a></span>':'',
+                    '<table class="gv-tersect-integration-text gv-tersect-list"><thead><tr><td>Name</td><td>Instance</td><td>Local?</td><td>&emsp;&emsp;&emsp;</td></tr></thead><tbody></tbody></table>':'',
+                    '<span class="gv-tersect-integration-span" id="tsi-locate-index"><a class="gv-tersect-integration-text">Locate TSI Index <i class="fa fa-arrow-circle-right"></i></a></span>':'',
+                    '<span class="gv-tersect-integration-span" id="generate-new-button"><a class="gv-tersect-integration-text">Generate New Index <i class="fa fa-arrow-circle-right"></i></a></span>':''
                 }).addClass('gv-tersect-integration-file-menu');
-                $('#tsi-refresh', indexMenu).on('click', function () { indexPopulator("#tersectIndexMenu .gv-tersect-list tbody", "/index/tersectUpload", "#queryMenu .gv-tersect-list tbody", "/index/tersectQueries") })
-                $('#tsi-refresh', indexMenu).click();
+                $('#tsi-refresh',indexMenu).on('click',function(){indexPopulator("#tersectIndexMenu .gv-tersect-list tbody","/index/tersectUpload","#queryMenu .gv-tersect-list tbody","/index/tersectQueries")})
                 return indexMenu;
             }
 
@@ -149,19 +150,19 @@ Genoverse.Plugins.tersectIntegration = function () {
                     '<div>Generate A New Tersect Index File:</div>': '',
                     '<div class="gv-tersect-dropzone"><a id="select-vcf">Select</a> Or Drop Files Here</div><input class="gv-tersect-integration-input gv-tersect-file-input" type="file" id="vcf-file-chooser" name="vcf file chooser" multiple>': '',
                     '': '',
-                    '<button class="btn btn-primary" id="submit-new-button">Generate New Index <i class="fa fa-arrow-circle-right"></i></button>': ''
+                    '<span class="gv-tersect-integration-span" id="submit-new-button"><a class="gv-tersect-integration-text">Generate New Index <i class="fa fa-arrow-circle-right"></i></a></span>': ''
                 }).addClass('gv-tersect-integration-file-menu');
-                vcfUploader(generationMenu, '#submit-new-button', "#vcf-file-chooser", "#select-vcf", "vcf", "/index/vcfUpload/new")
+                vcfUploader(generationMenu, '#submit-new-button', "#vcf-file-chooser", "#select-vcf", "vcf", "/index/vcfUpload")
                 return generationMenu;
             }
 
             function makeTersectFileMenu() {
                 var fileMenu = browser.makeMenu({
                     '<div>Choose Tersect Index Files:</div>': '',
-                    '<div id="names" class="gv-tersect-integration-text">Select Local TSI File</div>': '',
-                    '<input class="gv-tersect-integration-input gv-tersect-file-input" type="file" id="local-file-chooser" name="local file chooser" multiple><div class="progressbar-border"> <div id="local-file-progress" class="progressbar-fill"></div></div>': '',
-                    '<button id="tsi-submit-local" class="btn btn-primary"><a id="tsi-submit-local-text" class="gv-tersect-integration-text">Submit File <i class="fa fa-upload"></i></a></button>': '',
-                    '<button class="btn btn-primary" id="generate-new-button">Generate New Index <i class="fa fa-arrow-circle-right"></i></button>': ''
+                    '<div id="names" class="gv-tersect-integration-text">Local File Selection Here</div>': '<div class="gv-tersect-integration-text">Remote File Selection Here</div> <div class="gv-tersect-integration-text">(FTP etc.)</div>',
+                    '<input class="gv-tersect-integration-input gv-tersect-file-input" type="file" id="local-file-chooser" name="local file chooser" multiple><div class="progressbar-border"> <div id="local-file-progress" class="progressbar-fill"></div></div>': '<input class="gv-tersect-integration-input" type="file" id="remote-file-chooser" name="remote file chooser" multiple>',
+                    '<span id="tsi-submit-local" class="gv-tersect-integration-span"><a id="tsi-submit-local-text" class="gv-tersect-integration-text">Submit <i class="fa fa-arrow-circle-right"></i></a></span>': '<span class="gv-tersect-integration-span" id="tsi-submit-remote"><a class="gv-tersect-integration-text">Submit <i class="fa fa-arrow-circle-right"></i></a></span>',
+                    '<span class="gv-tersect-integration-span" id="generate-new-button"><a class="gv-tersect-integration-text">Generate New Index <i class="fa fa-arrow-circle-right"></i></a></span>': ''
                 }).addClass('gv-tersect-integration-file-menu');
                 $('#tsi-submit-local', fileMenu).on('click', function () { fileUploader(fileMenu, "#tsi-submit-local-text", "#local-file-progress", "#local-file-chooser", "tsi", ".gv-tersect-index-list tbody", "/index/tersectUpload/new") });
                 return fileMenu;
@@ -170,17 +171,13 @@ Genoverse.Plugins.tersectIntegration = function () {
 
             function makeQueryMenu() {
                 var queryMenu = browser.makeMenu({
-                    '<div>Choose Query VCF</div>': '',
-                    '<span class="gv-tersect-integration-span" id="query-refresh"><a class="gv-tersect-integration-text">Refresh List <i class="fa fa-arrow-circle-right"></i></a></span>': '',
-                    '<table class="gv-tersect-integration-text gv-tersect-list"><thead><tr><td>File Name</td><td>Command</td></tr></thead><tbody></tbody></table>': '',
-                    '<button class="btn btn-primary" id="add-tracks">Add tracks to Instance <i class="fa fa-arrow-circle-right"></i></button>': '<label for="gv-tersect-query-vcf">VCF Track:</label>&nbsp;<input type="checkbox" id="gv-tersect-query-vcf">&emsp;<label for="gv-tersect-query-density">Density Track: </label>&nbsp;<input type="checkbox" id="gv-tersect-query-density">'
-
+                    '<div>Choose Query VCF</div>':'',
+                    '<span class="gv-tersect-integration-span" id="query-refresh"><a class="gv-tersect-integration-text">Refresh List <i class="fa fa-arrow-circle-right"></i></a></span>':'',
+                    '<table class="gv-tersect-integration-text gv-tersect-list"><thead><tr><td>File Name</td><td>Command</td></tr></thead><tbody></tbody></table>':'',
                 }).addClass('gv-tersect-integration-file-menu');
-                $('#query-refresh').on('click', function () {
-                    if ($(document).data('query-id')) {
-                        queryPopulator('#queryMenu .gv-tersect-list tbody', $(document).data('query-id'), '/index/tersectQueries');
-                    }
-                });
+                $('#query-refresh').on('click', function(){if($(document).data('query-id')){
+                    queryPopulator('#queryMenu .gv-tersect-list tbody',$(document).data('query-id'),'/index/tersectQueries');
+                }});
                 return queryMenu;
             }
 
@@ -269,13 +266,7 @@ function fileUploader(parent, submit_link_text, progress_bar, chooser, extension
                 },
                 error: function (xhr, status, error) {
                     xhr.abort();
-                    new Noty({
-                        type: 'error',
-                        layout: 'topRight',
-                        text: "Error Uploading. You Must be logged in.",
-                        timeout: '4000',
-                        theme: 'light',
-                    }).show();
+                    alert(xhr.responseText);
                 }
             });
         }
@@ -283,157 +274,54 @@ function fileUploader(parent, submit_link_text, progress_bar, chooser, extension
     });
 }
 
-function indexPopulator(index_list, url, query_list, query_url) {
-    var instanceName = $('h1')[0].childNodes[0].nodeValue;
+function indexPopulator(index_list,url,query_list,query_url){
     console.log("event fired successfully!");
     $(index_list).empty();
     $.ajax({
-        type: 'POST',
-        data: { instanceName: instanceName },
+        type: 'GET',
         url: url,
         success: function (data) {
             console.log("latest value" + this);
             $.each(data, function () {
-                $(index_list).append('<tr data-id="' + this._id + '"><td><a class="gv-tersect-index-name">' + this.name + '</a></td><td><span>' + this.instance + '</span></td><td><a class="gv-tersect-index-delete">delete</a></td></tr>');
+                $(index_list).append('<tr data-id="' + this._id + '"><td><a class="gv-tersect-index-name">' + this.name + '</a></td><td><span>' + this.instance + '</span></td><td><span>' + this.local + '</span></td><td><a class="gv-tersect-index-delete">delete</a></td></tr>');
             });
 
 
-            $(index_list).parent().off().on('click', '.gv-tersect-index-delete', function () {
-                console.log("delete event fired at: " + Date.now());
+            $(index_list).parent().off().on('click','.gv-tersect-index-delete',function(){
+                console.log("delete event fired at: "+Date.now());
                 $.ajax({
                     type: 'DELETE',
                     url: url + "/" + $(this).parent().parent().data("id"),
-                    statusCode: {
-                        403: function (xhr) {
-                            new Noty({
-                                type: 'error',
-                                layout: 'topRight',
-                                text: "You Must be logged in.",
-                                timeout: '4000',
-                                theme: 'light',
-                            }).show();
-                        }
+                    success: function(data){
+                        alert("Item Deleted!");
+                        indexPopulator(index_list,url,query_list,query_url);
                     },
-                    success: function (data) {
-                        indexPopulator(index_list, url, query_list, query_url);
-                    },
-                    error: function (err) {
+                    error: function(err){
                         console.error(err);
                     }
                 })
             });
-            $(index_list).parent().on('click', '.gv-tersect-index-name', function () { indexGetter(index_list, $(this).parent().parent().data('id'), url) });
-            $(index_list).parent().on('click', '.gv-tersect-index-name', function () { $(document).data('query-id', $(this).parent().parent().data('id')) });
-            $(index_list).parent().on('click', '.gv-tersect-index-name', function () { queryPopulator(query_list, $(this).parent().parent().data('id'), query_url) })
+            $(index_list).parent().on('click','.gv-tersect-index-name',function(){indexGetter(index_list,$(this).parent().parent().data('id'),url)});
+            $(index_list).parent().on('click','.gv-tersect-index-name',function(){$(document).data('query-id',$(this).parent().parent().data('id'))});
+            $(index_list).parent().on('click','.gv-tersect-index-name',function(){queryPopulator(query_list,$(this).parent().parent().data('id'),query_url)})
         },
         dataType: "json"
     });
 }
 
-var idsForTracks = [];
-var vcfFlag = false;
-var densityFlag = false;
-
-function queryPopulator(query_list, id, query_url) {
+function queryPopulator(query_list,id,url){
     $(query_list).empty();
     $.ajax({
         type: 'POST',
-        data: { idToGet: id },
-        url: query_url,
-        success: function (data) {
-            $.each(data, function () {
-                $(query_list).append('<tr data-id="' + this._id + '"><td><a class="gv-tersect-query-name">' + this.name + '</a></td><td class="CellWithComment"><span class="CellComment">' + decodeURIComponent(this.command) + '</span><span>' + decodeURIComponent(this.command) + '</span></td><td><a class="gv-tersect-query-download">Download</a></td><td><a class="gv-tersect-query-delete">delete</a></td></tr>');
+        data: {idToGet:id},
+        url: url,
+        success: function(data){
+            $.each(data, function(){
+                $(query_list).append('<tr data-id="'+this._id+'"><td><a class="gv-tersect-query-name">'+this.name+'</a></td><td class="CellWithComment"><span class="CellComment">'+decodeURIComponent(this.command)+'</span><span>'+decodeURIComponent(this.command)+'</span></td><td><td><a class="gv-tersect-query-delete">delete</a></td></tr>');
             });
 
 
-            $(query_list).parent().off().on('click', '.gv-tersect-query-name', function () {
-                if ($(this).hasClass("active")) {
-                    $(this).removeClass("active");
-                    $(this).css("border", "none");
-                    var index = idsForTracks.indexOf($(this).parent().parent().data('id'));
-                    if (index !== -1) idsForTracks.splice(index, 1);
-                } else {
-                    $(this).addClass("active");
-                    $(this).css("border", "5px solid white");
-                    idsForTracks.push($(this).parent().parent().data('id'));
-                }
-            });
-            $(query_list).parent().on('click', '.gv-tersect-query-delete', function () {
-                console.log("delete event fired at: " + Date.now());
-                $.ajax({
-                    type: 'DELETE',
-                    url: query_url + "/" + $(this).parent().parent().data("id"),
-                    statusCode: {
-                        403: function (xhr) {
-                            new Noty({
-                                type: 'error',
-                                layout: 'topRight',
-                                text: "You Must be logged in.",
-                                timeout: '4000',
-                                theme: 'light',
-                            }).show();
-                        }
-                    },
-                    success: function (data) {
-                        alert("Item Deleted!");
-                        queryPopulator(query_list, id, query_url);
-                    },
-                    error: function (err) {
-                        console.error(err);
-                    }
-                })
-            });
-
-            $(query_list).parent().on('click', '.gv-tersect-query-download', function () {
-                var form = $('<form>', { action: query_url + "/" + $(this).parent().parent().data("id") + "/download", method: 'POST' });
-                $(document.body).append(form);
-                form.submit();
-            });
-
-            $("#gv-tersect-query-vcf").off().on('click', function () {
-                if ($(this).prop('checked') == true) {
-                    vcfFlag = 1;
-                } else {
-                    vcfFlag = 0;
-                }
-            });
-
-            $("#gv-tersect-query-density").off().on('click', function () {
-                if ($(this).prop('checked') == true) {
-                    densityFlag = 1;
-                } else {
-                    densityFlag = 0;
-                }
-            });
-
-            $('#add-tracks').off().on('click', function () {
-                var instanceName = $('h1')[0].childNodes[0].nodeValue;
-                if (idsForTracks && (vcfFlag || densityFlag)) {
-                    $.ajax({
-                        url: query_url + '/newTracks',
-                        type: 'POST',
-                        statusCode: {
-                            403: function (xhr) {
-                                new Noty({
-                                    type: 'error',
-                                    layout: 'topRight',
-                                    text: "You Must be logged in.",
-                                    timeout: '4000',
-                                    theme: 'light',
-                                }).show();
-                            }
-                        },
-                        data: { idsForTracks: idsForTracks, instanceName: instanceName, vcfFlag: vcfFlag, densityFlag: densityFlag },
-                        success: function (data) {
-                            $('a', query_list).css('border', 'none');
-                            location.reload(true)
-                        }
-                    })
-                } else {
-                    alert("Select Both Query VCFs and track types.")
-                }
-
-            })
+            //$(index_list).parent().off().on('click','.gv-tersect-index-delete',function(){indexDeleter(index_list,$(this).parent().parent().data("id"),url)});
             //$(index_list).parent().on('click','.gv-tersect-index-name',function(){indexGetter(index_list,$(this).parent().parent().data("id"),url)});
         },
         dataType: "json"
@@ -565,15 +453,7 @@ function vcfUploader(parent, submit_link, chooser, chooser_link, extension, url)
                     },
                     error: function (xhr, status, error) {
                         xhr.abort();
-                        new Noty({
-                            type: 'error',
-                            layout: 'topRight',
-                            text: "Error Uploading. You Must be logged in.",
-                            timeout: '4000',
-                            theme: 'light',
-                        }).show();
-                        $(".progressbar-border", parent).remove();
-                        $(".remove", parent).remove();
+                        alert(xhr.responseText);
                     }
                 });
             }
@@ -701,7 +581,7 @@ function indexGetter(parent, idToGet, url) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Tersect GUI from this point onward
+// Tersect GUI from this point onward. Not properly integrated into the program as of yet.
 //
 //
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -728,10 +608,13 @@ var tooltipA;
 var tooltipB;
 var tooltipC;
 
+//returns array of circles displayed
 
 
 //sets for making venn diagram
 var sets = [{ sets: ['A'], size: 12 }];
+
+
 
 
 /**allows mouseover event to fire during drag and drop and not after
@@ -745,18 +628,18 @@ var DragDrop = {
     },
     add: function () {
         if (this.droppable[0] == 'A') {
-            $('#sampleA > tbody:last-child').append(`<tr><td id="table${this.dragged.id}"><button class="tableButton btn btn-default" id="A${this.dragged.id}">${this.dragged.innerText} <i class="fa fa-trash"></i></button></td></tr>`);
+            $('#hereA').append(`<td id="table${this.dragged.id}">${this.dragged.innerText}<button class="tableButton" id="A${this.dragged.id}">&times;</button></td>`);
             filesetA.push(`'` + this.dragged.innerText + `'`);
             sampleCountA++;
             $("#countA").text("A: " + sampleCountA);
 
         } else if (this.droppable[0] == 'B') {
-            $('#sampleB > tbody:last-child').append(`<tr><td id="table${this.dragged.id}"><button class="tableButton btn btn-default" id="B${this.dragged.id}">${this.dragged.innerText} <i class="fa fa-trash"></i></button></td></tr>`);
+            $('#hereB').append(`<td id="table${this.dragged.id}">${this.dragged.innerText}<button class="tableButton" id="B${this.dragged.id}">&times;</button></td>`);
             filesetB.push(`'` + this.dragged.innerText + `'`);
             sampleCountB++;
             $("#countB").text("B: " + sampleCountB);
         } else if (this.droppable[0] == 'C') {
-            $('#sampleC > tbody:last-child').append(`<tr><td id="table${this.dragged.id}"><button class="tableButton btn btn-default" id="C${this.dragged.id}">${this.dragged.innerText} <i class="fa fa-trash"></i></button></td></tr>`);
+            $('#hereC').append(`<td id="table${this.dragged.id}">${this.dragged.innerText}<button class="tableButton" id="C${this.dragged.id}">&times;</button></td>`);
             filesetC.push(`'` + this.dragged.innerText + `'`);
             sampleCountC++;
             $("#countC").text("C: " + sampleCountC);
@@ -767,9 +650,8 @@ var DragDrop = {
 
 function vennInit() {
 
-    $("#wildB, #wildC").prop('disabled', true)
-
-    $("#countB, #countC").hide();
+    //hide radiobuttons and labels and counts
+    $("label[for=B], #B, #countB, label[for=C], #C, #countC").hide();
 
     $("#countA").text("A: " + sampleCountA);
     $("#countB").text("B: " + sampleCountB);
@@ -809,21 +691,10 @@ function vennInit() {
             }
             sets.push({ sets: [newCircle], size: 12 });
             var disp = circlesDisplayed();
-            disp.forEach(function (elem) {
-                $("#wild" + elem).prop('disabled', false);
-                $("#count" + elem).show();
-                $("#sample" + elem).hide();
-            });
+            disp.forEach(elem => $("label[for=" + elem + "], #" + elem + ", #count" + elem).show());
             redraw();
         } else {
-            new Noty({
-                type: 'error',
-                layout: 'center',
-                text: `No more circles can be added!`,
-                timeout: '2000',
-                theme: 'light',
-                closeWith: ['click'],
-            }).show();
+            alert(`No more circles can be added!`)
         }
     });
     $('#removeCircle').click(function () {
@@ -833,6 +704,7 @@ function vennInit() {
 
             if (currentCircles.find(circle => circle == delCircle)) {
 
+                //could change to for each
                 for (i = 0; i < sets.length; i++) {
                     if (sets[i].sets.find(set => set == delCircle)) {
                         sets.splice(i, 1);
@@ -841,28 +713,13 @@ function vennInit() {
                     }
 
                 }
-                $("#wild" + delCircle).prop('disabled', true);
-                $("#count" + delCircle).hide();
+                $("label[for=" + delCircle + "], #" + delCircle + ", #count" + delCircle).hide();
                 redraw();
             } else {
-                new Noty({
-                    type: 'error',
-                    layout: 'center',
-                    text: `Circle ${$("#circleName").val().toUpperCase()} does not exist!`,
-                    timeout: '2000',
-                    theme: 'light',
-                    closeWith: ['click'],
-                }).show();
+                alert(`Circle ${$("#circleName").val().toUpperCase()} does not exist!`)
             }
         } else {
-            new Noty({
-                type: 'error',
-                layout: 'center',
-                text: 'Cannot remove all circles!',
-                timeout: '2000',
-                theme: 'light',
-                closeWith: ['click'],
-            }).show();
+            alert('Cannot remove all circles!');
         }
         $("#circleName").val("");
     });
@@ -882,7 +739,7 @@ function vennInit() {
             d3.event.preventDefault();
             $('#sampleA').show();
             tooltipA.transition().duration(400).style("opacity", .9);
-            tooltipA.style("left", (d3.event.pageX - 250) + "px")
+            tooltipA.style("left", (d3.event.pageX - 250 )+ "px")
                 .style("top", (d3.event.pageY - 100) + "px");
 
         })
@@ -894,67 +751,36 @@ function vennInit() {
             area.push(d.sets);
         });
 
-    $('.wild').click(function () {
-
-
-
-
-
-        function duplicate() {
-            if ($(".venntooltip td").length !== 0) {
-                var check = [];
-                $(".venntooltip").find("tr").find("td").each(function () {
-                    var add = $(this).attr("id").substr(5).split(',')
-                    check = check.concat(add)
-
-                })
-                var curr = [];
-                $("#genomeTable").find("td:visible").each(function () {
-                    var add = $(this).attr("id")
-                    curr = curr.concat(add)
-
-                })
-                if (check.some(elem => curr.includes(elem))) {
-                    return false;
-                } else {
-                    return true;
+    $('#wildbutton').click(function () {
+        if (wildcardgroup !== undefined) {
+            var group = wildcardgroup + '*';
+            if ($("fileset").prop("checked", true)) {
+                var radButton = $('input[name=fileset]:checked').val();
+                if (radButton == 'File A') {
+                    addSample(group, filesetA)
+                    //add number of samples to count
+                    sampleCountA = sampleCountA + groupNum;
+                    $("#countA").text("A: " + sampleCountA);
+                }
+                else if (radButton == 'File B') {
+                    addSample(group, filesetB);
+                    //add number of samples to count
+                    sampleCountB = sampleCountB + groupNum;
+                    $("#countB").text("B: " + sampleCountB);
+                }
+                else if (radButton == 'File C') {
+                    addSample(group, filesetC);
+                    //add number of samples to count
+                    sampleCountC = sampleCountC + groupNum;
+                    $("#countC").text("C: " + sampleCountC);
                 }
 
             } else {
-                return true;
+                alert("Please select a radio button!");
             }
-        }
-        if (wildcardgroup !== undefined && duplicate()) {
-            var group = wildcardgroup + '*';
-
-            if (this.id == "wildA") {
-                addSample(group, filesetA);
-                sampleCountA = sampleCountA + groupNum;
-                $("#countA").text("A: " + sampleCountA);
-            } else if (this.id == "wildB") {
-                addSample(group, filesetB);
-                sampleCountB = sampleCountB + groupNum;
-                $("#countB").text("B: " + sampleCountB);
-            } else if (this.id == "wildC") {
-                addSample(group, filesetC);
-                sampleCountC = sampleCountC + groupNum;
-                $("#countC").text("C: " + sampleCountC);
-            }
-        } else {
-
-            new Noty({
-                type: 'error',
-                layout: 'center',
-                text: "Please enter a valid wildcard pattern to find samples",
-                theme: 'light',
-                closeWith: ['button'],
-            }).show();
 
         }
-
     });
-
-
 
     //remove sample if close button is clicked in tooltip
     $("#tooltipdiv").on('click', '.tableButton', function () {
@@ -1003,19 +829,18 @@ function vennInit() {
         }
     });
 
-    $(".venntooltip button").on('click', function () {
-        if (this.id == "hideA") {
-            $('#sampleA').hide();
-        } else if (this.id == "hideB") {
-            $('#sampleB').hide();
-        } else if (this.id == "hideC") {
-            $('#sampleC').hide();
-        }
+    $("#tooltipdiv").on('click', '#hideA', function () {
+        $('#sampleA').hide();
+    });
+    $("#tooltipdiv").on('click', '#hideB', function () {
+        $('#sampleB').hide();
+    });
+    $("#tooltipdiv").on('click', '#hideC', function () {
+        $('#sampleC').hide();
     });
 
 
-
-    $('#clearSample').click(function () {
+    $('#clearFile').click(function () {
         filesetA = [];
         filesetB = [];
         filesetC = [];
@@ -1026,7 +851,7 @@ function vennInit() {
         $("#countB").text("B: " + sampleCountB);
         $("#countC").text("C: " + sampleCountC);
         $('#genomeTable td').draggable('option', 'disabled', false);
-        $('.venntooltip tr').remove();
+        $('.venntooltip td').remove();
 
     });
 
@@ -1047,6 +872,7 @@ function vennInit() {
             }
         }
         getNotation();
+        //alert("command:" +command+"filepath: "+$("#filepath").val()+"hassamples: "+ hasSamples2(files));
 
         if (command && $("#filepath").val() && hasSamples()) {
 
@@ -1066,7 +892,7 @@ function vennInit() {
 
 
 
-            $.post("/index/tersectQueries/generate", operations, function (data) {
+            $.post("/index/generate", operations, function (data) {
                 var loc = data.location;
 
 
@@ -1080,7 +906,10 @@ function vennInit() {
                 }).show();
 
 
-                queryPopulator('#queryMenu .gv-tersect-list tbody', operations.idToGet, '/index/tersectQueries')
+                //$('#genomeTable td').draggable('option', 'disabled', false);
+                //$('.venntooltip td').remove();
+                //$("#filepath").val("");
+                queryPopulator('#queryMenu .gv-tersect-list tbody',operations.idToGet,'/index/tersectQueries')
             });
             //if conditions were not fulfilled, display warnings
         } else {
@@ -1144,6 +973,13 @@ function vennInit() {
 
         }
 
+        //resetVenn();
+        //operations={};
+        //filesetA = [];
+        //filesetB = [];
+        //$('#genomeTable td').draggable('option', 'disabled', false);
+        //$('.venntooltip td').remove();
+        //$("#filepath").val("")
     });
 };
 //resets venn to original appearance
@@ -1183,12 +1019,23 @@ function addSample(input, fset) {
     });
     //number of samples in wildcard
     groupNum = $('#genomeTable td:visible').length;
-    $('#sample' + set + ' > tbody:last-child').append(`<tr><td id="table${wildcardID}"><button class="tableButton btn btn-default" id="${set + wildcardID}" name="${groupNum}">${input}  <i class="fa fa-trash"></i></button></td></tr>`);
+    $('#here' + set).append(`<td id="table${wildcardID}">${input}<button class="tableButton" name="${groupNum}"  id="${set + wildcardID}">&times;</button></td>`);
     wildcardID = [];
 
 }
 
 
+function hasSamples2(collection) {
+    collection.forEach(function (elem) {
+        if (elem == "A") {
+            return filesetA;
+        } else if (elem == "B") {
+            return filesetB;
+        } else if (elem == "C") {
+            return filesetC;
+        }
+    });
+}
 
 function customiseVenn() {
     var colours = ["#D81B60", "#1E88E5", "#FFC107"];
@@ -1327,17 +1174,17 @@ function redraw() {
                 if (d.sets[0] == 'A') {
                     $('#sampleA').show();
                     tooltipA.transition().duration(400).style("opacity", .9);
-                    tooltipA.style("left", (d3.event.pageX - 250) + "px")
+                    tooltipA.style("left", (d3.event.pageX - 250 )+ "px")
                         .style("top", (d3.event.pageY - 100) + "px");
                 } else if (d.sets[0] == 'B') {
                     $('#sampleB').show();
                     tooltipB.transition().duration(400).style("opacity", .9);
-                    tooltipB.style("left", (d3.event.pageX - 250) + "px")
+                    tooltipB.style("left", (d3.event.pageX - 250 ) + "px")
                         .style("top", (d3.event.pageY - 100) + "px");
                 } else if (d.sets[0] == 'C') {
                     $('#sampleC').show();
                     tooltipC.transition().duration(400).style("opacity", .9);
-                    tooltipC.style("left", (d3.event.pageX - 250) + "px")
+                    tooltipC.style("left", (d3.event.pageX - 250 ) + "px")
                         .style("top", (d3.event.pageY - 100) + "px");
                 }
             }
@@ -1441,11 +1288,11 @@ function getNotation() {
                         case 1:
                             var other = circleD.filter(elem => elem !== area[0]);
                             $('#notation').html(area[0] + " &minus; " + other[0]);
-                            command = area[0][0] + "\\" + other[0];
+                            command =  area[0][0] + "\\" +  other[0];
                             break;
                         case 2:
                             $("#notation").html(area[0][0] + " &cap; " + area[0][1]);
-                            command = area[0][0] + " & " + area[0][1];
+                            command =  area[0][0] + " & " +  area[0][1];
                             break;
                     }
                     break;
@@ -1453,17 +1300,17 @@ function getNotation() {
                     switch (area.every(elem => elem.length == 1)) {
                         case true:
                             $("#notation").html(area[0][0] + " &#8710; " + area[1][0]);
-                            command = area[0][0] + " ^ " + area[1][0];
+                            command =  area[0][0] + " ^ " +  area[1][0];
                             break;
                         case false:
                             $("#notation").html(single[0][0]);
-                            command = single[0][0];
+                            command =  single[0][0];
                             break;
                     }
                     break;
                 case 3:
                     $("#notation").html(single[0][0] + " &cup; " + single[1][0]);
-                    command = single[0][0] + " | " + single[1][0];
+                    command =  single[0][0] + " | " +  single[1][0];
                     break;
             }
             break;
@@ -1480,15 +1327,15 @@ function getNotation() {
                         case 1:
                             var other = circleD.filter(elem => elem !== area[0]);
                             $('#notation').html(area[0] + " &minus; " + other[0] + " &minus; " + other[1]);
-                            command = area[0][0] + " \\ " + other[0] + " \\ " + other[1]
+                            command =  area[0][0] + " \\ " +  other[0] + " \\ " +  other[1]
                             break;
                         case 2:
                             $('#notation').html(area[0][0] + " &cap; " + area[0][1]);
-                            command = area[0][0] + " & " + area[0][1];
+                            command =  area[0][0] + " & " +  area[0][1];
                             break;
                         case 3:
                             $('#notation').html(circleD[0] + " &cap; " + circleD[1] + " &cap; " + circleD[2]);
-                            command = circleD[0] + " & " + circleD[1] + " & " + circleD[2];
+                            command =  circleD[0] + " & " +  circleD[1] + " & " +  circleD[2];
                             break;
                     }
                     break;
@@ -1498,7 +1345,7 @@ function getNotation() {
                             //W2
                             var other = circleD.filter(elem => !area.join().includes(elem));
                             $('#notation').html("(" + area[0] + " &#8710; " + area[1] + ") &minus; " + other[0]);
-                            command = "(" + area[0][0] + " ^ " + area[1][0] + ") \\ " + other[0];
+                            command = "(" +  area[0][0] + " ^ " +  area[1][0] + ") \\ " +  other[0];
                             break;
                         case false:
                             switch (area.every(elem => elem.length == 1 || elem.length == 3)) {
@@ -1507,8 +1354,8 @@ function getNotation() {
                                     var other = circleD.filter(elem => !single.join().includes(elem));
                                     $('#notation').html("(" + single[0] + " &minus; " + other[0] + " &minus; " + other[1] + ") &cup; ("
                                         + circleD[0] + " & " + circleD[1] + " & " + circleD[2] + ")");
-                                    command = "(" + single[0][0] + " \\ " + other[0] + " \\ " + other[1] + ") | ("
-                                        + circleD[0] + " & " + circleD[1] + " & " + circleD[2] + ")";
+                                    command = "(" +  single[0][0] + " \\ " +  other[0] + " \\ " +  other[1] + ") | ("
+                                        +  circleD[0] + " & " +  circleD[1] + " & " +  circleD[2] + ")";
                                     break;
                                 case false:
                                     switch (area.every(elem => elem.length == 2)) {
@@ -1517,7 +1364,7 @@ function getNotation() {
                                             var common = area[0].filter(elem => area[1].includes(elem));
                                             var other = circleD.filter(elem => !common.includes(elem));
                                             $('#notation').html("(" + other[0] + " &cup; " + other[1] + ") &cap; " + common[0]);
-                                            command = "(" + other[0] + " | " + other[1] + ") & " + common[0][0];
+                                            command = "(" +  other[0] + " | " +  other[1] + ") & " +  common[0][0];
                                             break;
                                         case false:
                                             switch (area.every(elem => elem.length == 2 || elem.length == 3)) {
@@ -1526,7 +1373,7 @@ function getNotation() {
                                                     var int = area.filter(elem => elem.length == 2);
                                                     var uns = circleD.filter(elem => !int.join().includes(elem));
                                                     $('#notation').html("(" + int[0][0] + " &cap; " + int[0][1] + ") &minus; " + uns[0]);
-                                                    command = "(" + int[0][0] + " & " + int[0][1] + ") \\ " + uns[0];
+                                                    command = "(" +  int[0][0] + " & " +  int[0][1] + ") \\ " +  uns[0];
                                                     break;
                                                 case false:
                                                     //WX
@@ -1534,11 +1381,11 @@ function getNotation() {
                                                         case true:
                                                             var uns = circleD.filter(elem => !double.join().includes(elem));
                                                             $('#notation').html("(" + single[0] + " &minus; " + uns[0] + ") &cup; (" + double[0][0] + " &cap; " + double[0][1] + ")");
-                                                            command = "(" + single[0][0] + " \\ " + uns[0] + ") | (" + double[0][0] + " & " + double[0][1] + ")";
+                                                            command = "(" +  single[0][0] + " \\ " +  uns[0] + ") | (" +  double[0][0] + " & " +  double[0][1] + ")";
                                                             break;
                                                         case false:
                                                             $('#notation').html("(" + single[0] + " &minus; " + double[0][0] + " &minus; " + double[0][1] + ") &cup; (" + double[0][0] + " &cap; " + double[0][1] + ")");
-                                                            command = "(" + single[0][0] + " \\ " + double[0][0] + " \\ " + double[0][1] + ") | (" + double[0][0] + " & " + double[0][1] + ")";
+                                                            command = "(" +  single[0][0] + " \\ " +  double[0][0] + " \\ " +  double[0][1] + ") | (" +  double[0][0] + " & " +  double[0][1] + ")";
                                                             break;
                                                     }
                                                     break;
@@ -1555,7 +1402,7 @@ function getNotation() {
                         case true:
                             //W3
                             $('#notation').html(area[0] + " &#8710; " + area[1] + " &#8710; " + area[2]);
-                            command = area[0][0] + " ^ " + area[1][0] + " ^ " + area[2][0];
+                            command =  area[0][0] + " ^ " +  area[1][0] + " ^ " +  area[2][0];
                             break;
                         case false:
                             switch (area.every(elem => elem.length == 2)) {
@@ -1563,8 +1410,8 @@ function getNotation() {
                                     //X3
                                     $('#notation').html("(" + area[0][0] + " &cap; " + area[0][1] + ") &cup; (" + area[1][0] + " &cap; " + area[1][1] + ") &cup; ("
                                         + area[2][0] + " &cap; " + area[2][1] + ")");
-                                    command = "(" + area[0][0] + " & " + area[0][1] + ") | (" + area[1][0] + " & " + area[1][1] + ") | ("
-                                        + area[2][0] + " & " + area[2][1] + ")";
+                                    command = "(" +  area[0][0] + " & " +  area[0][1] + ") | (" +  area[1][0] + " & " +  area[1][1] + ") | ("
+                                        +  area[2][0] + " & " +  area[2][1] + ")";
                                     break;
                                 case false:
                                     switch (area.every(elem => elem.length == 1 || elem.length == 3)) {
@@ -1573,8 +1420,8 @@ function getNotation() {
                                             var other = circleD.filter(elem => !single.join().includes(elem));
                                             $('#notation').html("( (" + single[0][0] + " &#8710; " + single[1][0] + ") &minus; " + other[0]
                                                 + " ) &cup; (" + circleD[0] + " &cap; " + circleD[1] + " &cap; " + circleD[2] + ")");
-                                            command = "( (" + single[0][0] + " ^ " + single[1][0] + ") \\ " + other[0]
-                                                + " ) | (" + circleD[0] + " & " + circleD[1] + " & " + circleD[2] + ")";
+                                            command = "( (" +  single[0][0] + " ^ " +  single[1][0] + ") \\ " +  other[0]
+                                                + " ) | (" +  circleD[0] + " & " +  circleD[1] + " & " +  circleD[2] + ")";
                                             break;
                                         case false:
                                             switch (area.every(elem => elem.length == 2 || elem.length == 3)) {
@@ -1582,8 +1429,8 @@ function getNotation() {
                                                     //Z2
                                                     $('#notation').html("(" + double[0][0] + " &cap; " + double[0][1] + ") &#8710; (" + double[1][0] +
                                                         " &cap; " + double[1][1] + ")");
-                                                    command = "(" + double[0][0] + " & " + double[0][1] + ") ^ (" + double[1][0] +
-                                                        " & " + double[1][1] + ")";
+                                                    command = "(" +  double[0][0] + " & " +  double[0][1] + ") ^ (" +  double[1][0] +
+                                                        " & " +  double[1][1] + ")";
                                                     break;
                                                 case false:
                                                     switch (area.filter(elem => elem.length == 1).length) {
@@ -1596,13 +1443,13 @@ function getNotation() {
                                                                         case true:
                                                                             var uns = circleD.filter(elem => !double.join().includes(elem));
                                                                             $('#notation').html(single[0] + " &minus; " + uns[0]);
-                                                                            command = single[0][0] + " \\ " + uns[0]
+                                                                            command =  single[0][0] + " \\ " +  uns[0]
                                                                             break;
                                                                         case false:
                                                                             $('#notation').html("(" + single[0] + " &minus; " + double[0][0] + " &minus; " + double[0][1] +
                                                                                 ") &cup; ( (" + double[0][0] + " &cap; " + double[0][1] + ") &minus; " + single[0] + ")");
-                                                                            command = "(" + single[0][0] + " \\ " + double[0][0] + " \\ " + double[0][1] +
-                                                                                ") | ( (" + double[0][0] + " & " + double[0][1] + ") \\ " + single[0][0] + ")";
+                                                                            command = "(" +  single[0][0] + " \\ " +  double[0][0] + " \\ " +  double[0][1] +
+                                                                                ") | ( (" +  double[0][0] + " & " +  double[0][1] + ") \\ " +  single[0][0] + ")";
                                                                             break;
 
                                                                     }
@@ -1612,7 +1459,7 @@ function getNotation() {
                                                                     switch (double.every(elem => elem.join().includes(single))) {
                                                                         case true:
                                                                             $('#notation').html(single[0]);
-                                                                            command = single[0][0];
+                                                                            command =  single[0][0];
                                                                             break;
                                                                         case false:
                                                                             var unq = double.filter(elem => !elem.join().includes(single));
@@ -1620,8 +1467,8 @@ function getNotation() {
                                                                             var uni = circleD.filter(elem => !non.join().includes(elem));
                                                                             $('#notation').html("(" + single[0] + " &minus; " + uni[0] + ") &cup; (" +
                                                                                 unq[0][0] + " &cap; " + unq[0][1] + ")");
-                                                                            command = "(" + single[0][0] + " \\ " + uni[0] + ") | (" +
-                                                                                unq[0][0] + " & " + unq[0][1] + ")"
+                                                                            command = "(" +  single[0][0] + " \\ " +  uni[0] + ") | (" +
+                                                                                 unq[0][0] + " & " +  unq[0][1] + ")"
                                                                             break;
                                                                     }
 
@@ -1633,8 +1480,8 @@ function getNotation() {
                                                             var uns = circleD.filter(elem => !single2.join().includes(elem));
                                                             $('#notation').html("( (" + single[0] + " &#8710; " + single[1] + ") &minus; " +
                                                                 uns[0] + ") &cup; (" + double[0][0] + " &cap; " + double[0][1] + ")");
-                                                            command = "( (" + single[0][0] + " ^ " + single[1][0] + ") \\" +
-                                                                uns[0] + ") | (" + double[0][0] + " & " + double[0][1] + ")";
+                                                            command = "( (" +  single[0][0] + " ^ " +  single[1][0] + ") \\" +
+                                                                 uns[0] + ") | (" +  double[0][0] + " & " +  double[0][1] + ")";
                                                             break;
 
                                                     }
@@ -1658,14 +1505,14 @@ function getNotation() {
                                             switch (single.every(elem => double.join().includes(elem))) {
                                                 case true:
                                                     $('#notation').html("(" + single[0] + " &cup; " + single[1] + ") &minus; " + uns[0]);
-                                                    command = "(" + single[0][0] + " | " + single[1][0] + ") \\ " + uns[0];
+                                                    command = "(" +  single[0][0] + " | " +  single[1][0] + ") \\ " +  uns[0];
 
                                                     break;
                                                 case false:
                                                     var s1 = single.filter(elem => double.join().includes(elem));
                                                     var s2 = single.filter(elem => !double.join().includes(elem));
                                                     $('#notation').html(s1[0] + " &#8710; (" + s2[0] + " &minus; " + uns[0] + ")");
-                                                    command = s1[0][0] + " ^ (" + s2[0][0] + " \\ " + uns[0] + ")"
+                                                    command =  s1[0][0] + " ^ (" +  s2[0][0] + " \\ " +  uns[0] + ")"
                                                     break;
                                             }
 
@@ -1675,13 +1522,13 @@ function getNotation() {
                                             switch (double.every(elem => elem.join().includes(single[0]))) {
                                                 case true:
                                                     $('#notation').html(single[0] + " &minus; (" + circleD[0] + " &cap; " + circleD[1] + " &cap; " + circleD[2] + ")");
-                                                    command = single[0][0] + " \\ (" + circleD[0] + " & " + circleD[1] + " & " + circleD[2] + ")";
+                                                    command =  single[0][0] + " \\ (" +  circleD[0] + " & " +  circleD[1] + " & " +  circleD[2] + ")";
                                                     break;
                                                 case false:
                                                     var unec = double.filter(elem => !elem.join().includes(single));
                                                     var other = intersect.filter(elem => !double.join().includes(elem));
                                                     $('#notation').html("(" + single[0] + " &cup; (" + unec[0][0] + " &cap; " + unec[0][1] + ")  ) &minus; (" + other[0][0] + " &cap; " + other[0][1] + ")");
-                                                    command = "(" + single[0][0] + " | (" + unec[0][0] + " & " + unec[0][1] + ")  ) \\ (" + other[0][0] + " & " + other[0][1] + ")";
+                                                    command = "(" +  single[0][0] + " | (" +  unec[0][0] + " & " +  unec[0][1] + ")  ) \\ (" +  other[0][0] + " & " +  other[0][1] + ")";
                                                     break;
                                             }
                                             break;
@@ -1689,8 +1536,8 @@ function getNotation() {
                                             //Z3
                                             $('#notation').html("(" + double[0][0] + " &cap; " + double[0][1] + ") &#8710; (" + double[1][0] + " &cap; " + double[1][1] +
                                                 ") &#8710; (" + double[2][0] + " &cap; " + double[2][1] + ")");
-                                            command = "(" + double[0][0] + " & " + double[0][1] + ") ^ (" + double[1][0] + " & " + double[1][1] +
-                                                ") ^ (" + double[2][0] + " & " + double[2][1] + ")";
+                                            command = "(" +  double[0][0] + " & " +  double[0][1] + ") ^ (" +  double[1][0] + " & " +  double[1][1] +
+                                                ") ^ (" +  double[2][0] + " & " +  double[2][1] + ")";
                                             //command = $('#notation').html().replace(/&cup;/g, "|").replace(/&cap;/g, "&").replace(/&minus;/g, "\\").replace(/&#8710;/g, "^");
                                             break;
                                     }
@@ -1701,8 +1548,8 @@ function getNotation() {
                                             //W3X
                                             $('#notation').html("(" + circleD[0] + " &#8710; " + circleD[1] + " &#8710; " + circleD[2] +
                                                 ") &cup; (" + double[0][0] + " &cap; " + double[0][1] + ")");
-                                            command = "(" + circleD[0] + " ^ " + circleD[1] + " ^ " + circleD[2] +
-                                                ") | (" + double[0][0] + " & " + double[0][1] + ")";
+                                            command = "(" +  circleD[0] + " ^ " +  circleD[1] + " ^ " +  circleD[2] +
+                                                ") | (" +  double[0][0] + " & " +  double[0][1] + ")";
                                             break;
                                         case 2:
                                             //W2X2
@@ -1712,11 +1559,11 @@ function getNotation() {
                                                     var s1 = single.filter(elem => !double[0].join().includes(elem) || !double[1].join().includes(elem));
                                                     var s2 = single.filter(elem => !s1.includes(elem));
                                                     $('#notation').html("(" + s1[0] + " &minus; " + uns[0] + ") &cup; " + s2[0]);
-                                                    command = "(" + s1[0][0] + " \\ " + uns[0] + ") | " + s2[0][0];
+                                                    command = "(" +  s1[0][0] + " \\ " +  uns[0] + ") | " +  s2[0][0];
                                                     break;
                                                 case false:
                                                     $('#notation').html("(" + single[0] + " &#8710; " + single[1] + ") &cup; (" + double[0][0] + " &cap; " + double[0][1] + ")");
-                                                    command = "(" + single[0][0] + " ^ " + single[1][0] + ") | (" + double[0][0] + " & " + double[0][1] + ")";
+                                                    command = "(" +  single[0][0] + " ^ " +  single[1][0] + ") | (" +  double[0][0] + " & " +  double[0][1] + ")";
                                                     break;
                                             }
 
@@ -1725,7 +1572,7 @@ function getNotation() {
                                             //WX3
                                             var unq = double.filter(elem => !elem.join().includes(single));
                                             $('#notation').html(single[0] + " &cup; (" + unq[0][0] + " &cap; " + unq[0][1] + ")");
-                                            command = single[0][0] + " | (" + unq[0][0] + " & " + unq[0][1] + ")";
+                                            command =  single[0][0] + " | (" +  unq[0][0] + " & " +  unq[0][1] + ")";
                                             break;
                                     }
                                     break;
@@ -1736,8 +1583,8 @@ function getNotation() {
                             $('#notation').html("(" + circleD[0] + " &#8710; " + circleD[1] + " &#8710; " + circleD[2] +
                                 ") &cup; (" + circleD[0] + " &cap; " + circleD[1] + " &cap; " + circleD[2] +
                                 ")");
-                            command = "(" + circleD[0] + " ^ " + circleD[1] + " ^ " + circleD[2] +
-                                ") | (" + circleD[0] + " & " + circleD[1] + " & " + circleD[2] +
+                            command = "(" +  circleD[0] + " ^ " +  circleD[1] + " ^ " +  circleD[2] +
+                                ") | (" +  circleD[0] + " & " +  circleD[1] + " & " +  circleD[2] +
                                 ")"
                             break;
                     }
@@ -1750,7 +1597,7 @@ function getNotation() {
                                     //W3Z
                                     var other = circleD.filter(elem => !double.join().includes(elem));
                                     $('#notation').html("(" + double[0][0] + " &cup; " + double[0][1] + ") &#8710; " + other[0]);
-                                    command = "(" + double[0][0] + " | " + double[0][1] + ") ^ " + other[0];
+                                    command = "(" +  double[0][0] + " | " +  double[0][1] + ") ^ " +  other[0];
                                     break;
                                 case 2:
                                     //W2Z2
@@ -1758,11 +1605,11 @@ function getNotation() {
                                         case true:
                                             var unq = intersect.filter(elem => !double.join().includes(elem));
                                             $('#notation').html("(" + single[0] + " &cup; " + single[1] + ") &minus; (" + unq[0][0] + " &cap; " + unq[0][1] + ")");
-                                            command = "(" + single[0][0] + " | " + single[1][0] + ") \\ (" + unq[0][0] + " & " + unq[0][1] + ")";
+                                            command = "(" +  single[0][0] + " | " +  single[1][0] + ") \\ (" +  unq[0][0] + " & " +  unq[0][1] + ")";
                                             break;
                                         case false:
                                             $('#notation').html(single[0] + " &#8710; " + single[1]);
-                                            command = single[0][0] + " ^ " + single[1][0];
+                                            command =  single[0][0] + " ^ " +  single[1][0];
                                             break;
                                     }
                                     break;
@@ -1771,7 +1618,7 @@ function getNotation() {
                                     var others = double.filter(elem => !elem.join().includes(single));
                                     $('#notation').html("(" + single[0] + " &cup;  (" + others[0][0] + " &cap; " + others[0][1] + ") ) &minus; (" + circleD[0] + " &cap; " + circleD[1] + " &cap; " + circleD[2] +
                                         ")");
-                                    command = "(" + single[0][0] + " |  (" + others[0][0] + " & " + others[0][1] + ") ) \\ (" + circleD[0] + " & " + circleD[1] + " & " + circleD[2] +
+                                    command = "(" +  single[0][0] + " |  (" +  others[0][0] + " & " +  others[0][1] + ") ) \\ (" +  circleD[0] + " & " +  circleD[1] + " & " +  circleD[2] +
                                         ")";
                                     //  $('#notation').append("(" + single[0] + " &minus;  (" + others[0][0] + " &cap; " + others[0][1] + ") ) &cup; ( (" + others[0][0] + " &cap; " + others[0][1] + ") &minus; " + single[0] +
                                     //    ")");
@@ -1785,12 +1632,12 @@ function getNotation() {
                                     var other = intersect.filter(elem => !double.join().includes(elem));
                                     var singCirc = circleD.filter(elem => !other.join().includes(elem));
                                     $('#notation').html("(" + other[0][0] + " &#8710; " + other[0][1] + ") &cup; " + singCirc[0]);
-                                    command = "(" + other[0][0] + " ^ " + other[0][1] + ") | " + singCirc[0];
+                                    command = "(" +  other[0][0] + " ^ " +  other[0][1] + ") | " +  singCirc[0];
                                     break;
                                 case 3:
                                     //W2X3
                                     $('#notation').html(single[0] + " &cup; " + single[1]);
-                                    command = single[0][0] + " | " + single[1][0];
+                                    command =  single[0][0] + " | " +  single[1][0];
                                     break;
                             }
                             break;
@@ -1805,22 +1652,22 @@ function getNotation() {
                                     var other = intersect.filter(elem => !double.join().includes(elem));
                                     $('#notation').html("(" + circleD[0] + " &cup; " + circleD[1] + " &cup; " + circleD[2] +
                                         ") &minus; (" + other[0][0] + " &cap; " + other[0][1] + ")");
-                                    command = "(" + circleD[0] + " | " + circleD[1] + " | " + circleD[2] +
-                                        ") \\ (" + other[0][0] + " & " + other[0][1] + ")";
+                                    command = "(" +  circleD[0] + " | " +  circleD[1] + " | " +  circleD[2] +
+                                        ") \\ (" +  other[0][0] + " & " +  other[0][1] + ")";
                                     break;
                                 case 3:
                                     //W2Z3
                                     $('#notation').html("(" + single[0] + " &cup; " + single[1] + ") &minus; (" + circleD[0] +
                                         " &cap; " + circleD[1] + " &cap; " + circleD[2] + ")");
-                                    command = "(" + single[0][0] + " | " + single[1][0] + ") \\ (" + circleD[0] +
-                                        " & " + circleD[1] + " & " + circleD[2] + ")";
+                                    command = "(" +  single[0][0] + " | " +  single[1][0] + ") \\ (" +  circleD[0] +
+                                        " & " +  circleD[1] + " & " +  circleD[2] + ")";
                                     break;
                             }
                             break;
                         case false:
                             //W3X3
                             $('#notation').html(circleD[0] + " &cup; " + circleD[1] + " &cup; " + circleD[2]);
-                            command = circleD[0] + " |" + circleD[1] + " | " + circleD[2];
+                            command =  circleD[0] + " |" +  circleD[1] + " | " +  circleD[2];
                             break;
                     }
 
@@ -1830,8 +1677,8 @@ function getNotation() {
                     $('#notation').html("(" + circleD[0] + " &cup; " + circleD[1] + " &cup; " + circleD[2] +
                         ") &minus; (" + circleD[0] + " &cap; " + circleD[1] + " &cap; " + circleD[2] +
                         ")");
-                    command = "(" + circleD[0] + " | " + circleD[1] + " | " + circleD[2] +
-                        ") \\ (" + circleD[0] + " & " + circleD[1] + " & " + circleD[2] +
+                    command = "(" +  circleD[0] + " | " +  circleD[1] + " | " +  circleD[2] +
+                        ") \\ (" +  circleD[0] + " & " +  circleD[1] + " & " +  circleD[2] +
                         ")";
                     break;
 
