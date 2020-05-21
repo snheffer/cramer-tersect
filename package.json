@@ -38,7 +38,7 @@
   "devDependencies": {
     "ip": "^1.1.5",
     "nodemon": "^1.19.1",
-    "webpack": "3.11"
+    "webpack": "^3.11.0"
   },
   "resolutions": {
     "**/**/node-gyp": "5.0.0"
