@@ -1,9 +1,17 @@
 var mongoose = require('mongoose');
-
+var dotenv = require("dotenv");
+dotenv.config();
 var track = new mongoose.Schema({
     name: {type: String},
     description: {type: String},
     data: {type: String}
+});
+
+track.pre('init', function (doc) {
+    console.error("Track INIT hook called");
+    // Failures with this middleware will result in a 500 server error, without crashing the system.
+    doc.data = doc.data.replace(/~protocol~/g,process.env.FILESERVERPROTOCOL);
+    doc.data = doc.data.replace(/~address~/g,process.env.FILESERVERIP)
 });
 
 var trackSchema = new mongoose.Schema({

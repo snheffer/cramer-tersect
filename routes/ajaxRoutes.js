@@ -270,7 +270,8 @@ router.post('/tersectQueries/newTracks',isTersectAuthenticated,function(req,res,
                                     track.trackChildren.push({
                                         "name": current.name,
                                         "description": current.command,
-                                        'data': 'Genoverse.Track.File.VCF.extend({\nname: "' + current.name + '",\ninfo: "' + current.command + '",\nmodel: Genoverse.Track.Model.File.VCF.extend({\nurl: "http://'+ip.address()+':'+process.env.PORT+'/index/request?chr=__CHR__&start=__START__&end=__END__&type=tabix",\nlargeFile: true,\nurlParams: {file: "' + current.route + '"}\n})\n})'
+                                        'data': 'Genoverse.Track.File.VCF.extend({\nname: "' + current.name + '",\ninfo: "' + current.command + '",\nmodel: Genoverse.Track.Model.File.VCF.extend({\nurl: "~protocol~'+'://'+'~address~'+'/index/request?chr=__CHR__&start=__START__&end=__END__&type=tabix",\nlargeFile: true,\nurlParams: {file: "' + current.route + '"}\n})\n})'
+                                        //'data': 'Genoverse.Track.File.VCF.extend({\nname: "' + current.name + '",\ninfo: "' + current.command + '",\nmodel: Genoverse.Track.Model.File.VCF.extend({\nurl: "http://'+ip.address()+':'+process.env.PORT+'/index/request?chr=__CHR__&start=__START__&end=__END__&type=tabix",\nlargeFile: true,\nurlParams: {file: "' + current.route + '"}\n})\n})'
                                     })
 
                                 })
@@ -285,7 +286,8 @@ router.post('/tersectQueries/newTracks',isTersectAuthenticated,function(req,res,
                                     track.trackChildren.push({
                                         "name": current.name,
                                         "description": current.command,
-                                        'data': 'Genoverse.Track.SNPDensity.extend({\nname: "' + current.name + '",\ninfo: "' + current.command + '",\nmodel: Genoverse.Track.Model.SNPDensity.extend({\nurl: "http://'+ip.address()+':'+process.env.PORT+'/index/request?chr=__CHR__&start=__START__&end=__END__&type=tabix",\nlargeFile: true,\nurlParams: {file: "' + current.route + '"}\n})\n})'
+                                        'data': 'Genoverse.Track.SNPDensity.extend({\nname: "' + current.name + '",\ninfo: "' + current.command + '",\nmodel: Genoverse.Track.Model.File.VCF.extend({\nurl: "~protocol~'+'://'+'~address~'+'/index/request?chr=__CHR__&start=__START__&end=__END__&type=tabix",\nlargeFile: true,\nurlParams: {file: "' + current.route + '"}\n})\n})'
+                                        //'data': 'Genoverse.Track.SNPDensity.extend({\nname: "' + current.name + '",\ninfo: "' + current.command + '",\nmodel: Genoverse.Track.Model.SNPDensity.extend({\nurl: "http://'+ip.address()+':'+process.env.PORT+'/index/request?chr=__CHR__&start=__START__&end=__END__&type=tabix",\nlargeFile: true,\nurlParams: {file: "' + current.route + '"}\n})\n})'
                                     })
 
                                 })
@@ -446,7 +448,7 @@ router.post('/tersectQueries/generate',function(req,res,next){
 
 
     var id = req.body.idToGet;
-    var file = req.body.filepath.replace(/ /g,"_");
+    var file = req.body.filepath.replace(/\W/g,"_");
     var newPath = path.join(__dirname, "../newVCF/"+uuid()+"/");
     var filepath = path.join(newPath+ file);
 
@@ -477,7 +479,7 @@ router.post('/tersectQueries/:id/download', function(req, res, next){
         }
         else {
             var file = entry.route;
-            res.set('Content-Type', 'application/gzip')
+            res.set('Content-Type', 'application/gzip');
 
             res.download(file);
         }
