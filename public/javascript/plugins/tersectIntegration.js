@@ -173,7 +173,8 @@ Genoverse.Plugins.tersectIntegration = function () {
                     '<div>Choose Query VCF</div>': '',
                     '<span class="gv-tersect-integration-span" id="query-refresh"><a class="gv-tersect-integration-text">Refresh List <i class="fa fa-arrow-circle-right"></i></a></span>': '',
                     '<table class="gv-tersect-integration-text gv-tersect-list"><thead><tr><td>File Name</td><td>Command</td></tr></thead><tbody></tbody></table>': '',
-                    '<button class="btn btn-primary" id="add-tracks">Add tracks to Instance <i class="fa fa-arrow-circle-right"></i></button>': '<label for="gv-tersect-query-vcf">VCF Track:</label>&nbsp;<input type="checkbox" id="gv-tersect-query-vcf">&emsp;<label for="gv-tersect-query-density">Density Track: </label>&nbsp;<input type="checkbox" id="gv-tersect-query-density">'
+                    '<button class="btn btn-primary" id="add-tracks">Add tracks to Instance <i class="fa fa-arrow-circle-right"></i></button>': '<label for="gv-tersect-query-vcf">VCF Track:</label>&nbsp;<input type="checkbox" id="gv-tersect-query-vcf">&emsp;<label for="gv-tersect-query-density">Density Track: </label>&nbsp;<input type="checkbox" id="gv-tersect-query-density">',
+                    '<button class="btn btn-danger" id="purge-queries">Purge Query DB <i class="fa fa-arrow-circle-right"></i></button>': ''
 
                 }).addClass('gv-tersect-integration-file-menu');
                 $('#query-refresh').on('click', function () {
@@ -181,11 +182,31 @@ Genoverse.Plugins.tersectIntegration = function () {
                         queryPopulator('#queryMenu .gv-tersect-list tbody', $(document).data('query-id'), '/index/tersectQueries');
                     }
                 });
+                $('#purge-queries').on('click', function(){
+                    $.ajax({
+                        type: 'DELETE',
+                        url: '/index/delete-query-vcfs',
+                        statusCode: {
+                            403: function (xhr) {
+                                new Noty({
+                                    type: 'error',
+                                    layout: 'topRight',
+                                    text: "You Must be logged in.",
+                                    timeout: '4000',
+                                    theme: 'light',
+                                }).show();
+                            }
+                        },
+                        success: function (data) {
+                            $('#query-refresh').click();
+                        },
+                        error: function (err) {
+                            console.error(err);
+                        }
+                    })
+                });
                 return queryMenu;
             }
-
-
-
         }
     });
 };

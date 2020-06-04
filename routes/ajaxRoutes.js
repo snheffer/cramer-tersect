@@ -5,13 +5,15 @@ var formidable = require('formidable');
 var rimraf = require('rimraf');
 var ip = require('ip');
 var fs = require('fs');
-var dir = process.cwd();
 var GenoverseInstance = require('../models/GenoverseInstance.js');
 var TersectIntegration = require('../models/tersectIntegration.js');
 var TersectVCF = require('../models/TersectVCF.js');
 var utils = require('../routes/utils.js');
 var { v4: uuid } = require('uuid');
 const {spawn} = require('child_process');
+
+var dir = path.join(__dirname,"..");
+
 
 try {
     if (!fs.existsSync(path.join(dir+"/vcf"))){
