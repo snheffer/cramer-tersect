@@ -1,4 +1,4 @@
-var object = document.currentScript.getAttribute('data');
+var object = document.getElementById("configGenoverse").getAttribute('data');
 var data = JSON.parse(object);
 var plugins = [];
 var plugin;

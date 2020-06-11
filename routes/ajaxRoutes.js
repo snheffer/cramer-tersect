@@ -16,15 +16,15 @@ var dir = path.join(__dirname,"..");
 
 
 try {
-    if (!fs.existsSync(path.join(dir+"/vcf"))){
-        fs.mkdirSync(path.join(dir+"/vcf"))
+    if (!fs.existsSync(path.join(dir,"vcf"))){
+        fs.mkdirSync(path.join(dir,"vcf"))
     }
 } catch(err) {
     console.error(err)
 }
 try {
-    if (!fs.existsSync(path.join(dir+"/newVCF"))) {
-        fs.mkdirSync(path.join(dir+"/newVCF"))
+    if (!fs.existsSync(path.join(dir,"newVCF"))) {
+        fs.mkdirSync(path.join(dir,"newVCF"))
     }
 } catch(err) {
     console.error(err)
@@ -54,8 +54,8 @@ isTersectAuthenticated = function (req, res, next) {
 router.post('/tersectUpload/new',isUploadAuthenticated, function(req,res,next){
         // create an incoming form object
         var form = new formidable.IncomingForm();
-        var instanceName = [];
-        // specify that we want to allow the user to upload multiple files in a single request
+        var fields = {};  
+        // specify that we dont want to allow the user to upload multiple files in a single request
         form.multiples = false;
         form.maxFileSize = 5 * 1024 * 1024 * 1024;
 
@@ -64,7 +64,7 @@ router.post('/tersectUpload/new',isUploadAuthenticated, function(req,res,next){
         // every time a file has been uploaded successfully,
         // rename it to it's original name
         form.on('field',function(name,field){
-            instanceName.push(field);
+            fields[name] = field;
 
         });
         form.on('file', function(field, file) {
@@ -72,8 +72,8 @@ router.post('/tersectUpload/new',isUploadAuthenticated, function(req,res,next){
             newPath = path.join(form.uploadDir,(path.basename(newPath).replace(/\.[^/.]+$/, "")+"_"+uuid()+path.extname(newPath)));
             fs.renameSync(file.path, newPath);
             console.error(file.path);
-            console.error(instanceName[0]);
-            var item = new TersectIntegration({ name: file.name, instance: instanceName[0].replace("CRAMER - ",""), local: true, route: newPath });
+            console.error(fields.instanceName);
+            var item = new TersectIntegration({ name: file.name, instance_id: fields.instanceID, local: true, route: newPath });
             item.save(function (err, item) {
                 if (err) {
                     next(err);
@@ -124,11 +124,11 @@ router.post('/vcfUpload/new',isUploadAuthenticated, function(req,res,next){
     });
     form.on ('fileBegin', function(name, file){
         //rename the incoming file to the file's name
-        if(file.name.endsWith("vcf")){
+        if(file.name.endsWith(".vcf")){
             file.path = form.uploadDir + "/" + path.basename(file.name)+"_"+uuid()+".vcf";
 
         }
-        if(file.name.endsWith("vcf.gz")){
+        if(file.name.endsWith(".vcf.gz")){
             file.path = form.uploadDir + "/" + path.basename(file.name)+"_"+uuid()+".vcf.gz";
 
         }
@@ -150,7 +150,7 @@ router.post('/vcfUpload/new',isUploadAuthenticated, function(req,res,next){
         console.error(JSON.stringify(fields, null, 4));
         console.error(JSON.stringify(files, null, 4));
         const newIndexName =  fields.newName+"_"+uuid()+ ".tsi";
-        const child = spawn("tersect", ["build", newIndexName,"../vcf/"+randomDirName+"/*"], {cwd: dir + "/indexes"});
+        const child = spawn("tersect", ["build", newIndexName,"../vcf/"+randomDirName+"/*"], {cwd: path.join(dir,"indexes")});
         child.on("error", err => {
             console.error(err)
             next(err);
@@ -159,9 +159,9 @@ router.post('/vcfUpload/new',isUploadAuthenticated, function(req,res,next){
 
                 var item = new TersectIntegration({
                     name: fields.newName,
-                    instance: fields.instanceName.replace("CRAMER - ",""),
+                    instance_id: fields.instanceID,
                     local: true,
-                    route: (dir + "/indexes/" + newIndexName)
+                    route: path.join(dir,"indexes",newIndexName)
                 });
                 item.save(function (err, item) {
                     if (err) {
@@ -179,8 +179,8 @@ router.post('/vcfUpload/new',isUploadAuthenticated, function(req,res,next){
 
 //populator route for updating the list of TSI files on the server.
 router.post('/tersectUpload', function(req,res,next){
-    var instanceName = req.body.instanceName.replace("CRAMER - ","")
-    var query = {instance:instanceName};
+    var instanceID = req.body.instanceID;
+    var query = {instance_id:instanceID};
     TersectIntegration.find(query, function(err,items){
         if(err){
             console.error(err)
@@ -197,10 +197,10 @@ router.post('/tersectQueries', function(req,res,next){
     var query = {parent_id:req.body.idToGet};
     TersectVCF.find(query,function(err,items){
         if(err){
-            console.error(err);
+            console.error("Error with query VCF population route: "+ err);
             next(err);
         } else {
-            console.error(JSON.stringify(items,null, 4));
+            //console.error(JSON.stringify(items,null, 4));
         }
         res.json(items)
 
@@ -227,11 +227,12 @@ router.post('/tersectUpload/view',function(req,res,next){
             });
             //prints error from running tersect
             getSamples.stderr.on('data', (data) => {
-                console.error(`tersect stderr: ${data}`);
+                console.error(`Error in retreiving samples within TSI file: ${data}`);
 
             });
             //prints after command is complete if there was an error
             getSamples.on('close', (code) => {
+                console.log(arr)
                 res.send({ "samples": arr });
 
                 if (code !== 0) {
@@ -254,8 +255,9 @@ router.post('/tersectQueries/newTracks',isTersectAuthenticated,function(req,res,
             next(err)
         }
         else {
-            var secondQuery = {name:req.body.instanceName.replace("CRAMER - ","")};
-            console.error("Instance Name: "+req.body.instanceName.replace("CRAMER - ",""));
+            var secondQuery = {_id:req.body.instanceID};
+            console.error("Instance Name: "+req.body.instanceName);
+            console.error("Instance ID: "+req.body.instanceID);
             console.error("Instance Name: "+req.body.idsForTracks);
             console.error("Instance VCF Flag: "+typeof(req.body.vcfFlag));
             console.error("Instance Density Flag: "+typeof(req.body.densityFlag));
@@ -330,22 +332,23 @@ router.delete('/tersectUpload/:id',isTersectAuthenticated, function(req,res,next
                 } else {
                     TersectVCF.find(childQuery,function(err,entries){
                         if(err){
-                            console.error("error with tersectVCF delete")
+                            console.error("error with tersectVCF delete:"+err)
                             next(err);
                         } else {
-                            entries.forEach(function(current){
-                                rimraf(path.dirname(current.route), function(err){
-                                    if(err){
-                                        console.error('error in /tersectUpload query VCF deletion: ' + err);
-                                        next(err);
-                                    }
-                                })
-                            })
                             TersectVCF.deleteMany(childQuery,function(err){
                                 if(err){
-                                    console.error('error in /tersectUpload query VCF database removal: ' + err);
+                                    console.error('TersectVCF deletion error: ' + err);
                                     next(err);
-                                } else res.send('success')
+                                } else {
+                                    entries.forEach(function(current){
+                                        rimraf(path.dirname(current.route), function(err){
+                                            if(err){
+                                                console.error('Error in /tersectUpload query VCF deletion: ' + err);
+                                                next(err);
+                                            }
+                                        })
+                                    })
+                                    res.send('success')}
                             })
                         }
                     })
@@ -360,12 +363,12 @@ router.delete('/tersectQueries/:id',isTersectAuthenticated, function(req,res,nex
     let query = {_id:req.params.id};
     TersectVCF.findOneAndDelete(query, function(err,entry){
         if (err){
-            console.error('File Deletion Error: Cant Find Ref: ' + err);
+            console.error('QueryVCF Deletion Error: Cant Find Ref: ' + err);
             next(err);
         } else {
             rimraf(path.dirname(entry.route),function(err){
                 if(err){
-                    console.error("Error in /tersectQueries Delete Route: " + err)
+                    console.error('Error in /tersectQueries query VCF deletion: ' + err)
                     next(err);
                 } else {
                     res.send('success')
@@ -380,60 +383,77 @@ router.delete('/tersectQueries/:id',isTersectAuthenticated, function(req,res,nex
 ////Query Generation Routes --------------------------------------------------------
 
 //add file path to tsi file to run
-function tersect(command, id, file, filepath) {
-    console.log(command);
-    query={_id:id};
+function tersect(command, id, file, instanceID) {
+    var query={_id:id};
+
     TersectIntegration.findOne(query, function(err,entry){
         if (err){
             console.error('Cant Find Ref: ' + err);
             next(err);
         } else {
-            console.log(entry.route);
-            var tcommand = spawn('tersect', ['view', entry.route, '"' + command +'"'], { shell: true });
-            var output = fs.createWriteStream(filepath);
-            tcommand.stdout.on('data', (data) => {
-                output.write(data);
-            });
-            tcommand.stderr.on('data', (data) => {
-                console.error(`tersect stderr: ${data}`);
-            });
-            tcommand.on('exit', (code) => {
-                if (code !== 0) {
-                    console.log(`tersect process exited with code ${code}`);
-                } else {
-                    console.log('done!');
-                    var bgzipcommand = spawn('bgzip',[filepath]);
-                    bgzipcommand.stderr.on('data', (data) => {console.error(`bgzip stderr: ${data}`);});
-                    bgzipcommand.on('exit', (code) => {
-                        if (code !== 0) {
-                            console.log(`bgzip process exited with code ${code}`);
-                        } else {
-                            var filePathForTabix = filepath+'.gz';
-                            var tabixcommand = spawn('tabix',[filePathForTabix]);
-                            tabixcommand.stderr.on('data', (data) => {console.error(`tabix stderr: ${data}`);});
-                            tabixcommand.on('close', (code) => {
-                                if (code !== 0) {
-                                    console.log(`tabix process exited with code ${code}`);
-                                } else {
-                                    var item = new TersectVCF({ name: file, command:encodeURIComponent(command), parent_id:id,  route: filePathForTabix});
-                                    item.save(function (err, item) {
-                                        if (err) {
-                                            return console.error(err);
-                                            next(err);
-                                        } else {
-                                            console.error("Query VCF added to TersectVCF");
-                                        }
-                                    });
 
+            var newPath = path.join(dir,"newVCF",instanceID,path.basename(entry.route,".tsi"),uuid());
+            var filepath = path.join(newPath,file);
+            fs.mkdir(newPath, { recursive: true }, (err) => {
+                if (err){
+                    console.error("Error in making tersect query directory: " + err);
+                    next(err)
+                } else {
+                    console.error("ID: " + id);
+                    console.error("Command: "+ command);
+                    console.error("newPath: "+ newPath);
+                    console.error("filepath: "+ filepath);
+
+                    console.log(entry.route);
+                    var tcommand = spawn('tersect', ['view', entry.route, command]);
+                    var output = fs.createWriteStream(filepath);
+                    tcommand.stdout.on('data', (data) => {
+                        output.write(data);
+                    });
+                    tcommand.stderr.on('data', (data) => {
+                        console.error(`tersect stderr: ${data}`);
+                    });
+                    tcommand.on('exit', (code) => {
+                        if (code !== 0) {
+                            console.log(`tersect process exited with code ${code}`);
+                        } else {
+                            console.log('done!');
+                            var bgzipcommand = spawn('bgzip',[filepath]);
+                            bgzipcommand.stderr.on('data', (data) => {console.error(`bgzip stderr: ${data}`);});
+                            bgzipcommand.on('exit', (code) => {
+                                if (code !== 0) {
+                                    console.log(`bgzip process exited with code ${code}`);
+                                } else {
+                                    var filePathForTabix = filepath+'.gz';
+                                    var tabixcommand = spawn('tabix',[filePathForTabix]);
+                                    tabixcommand.stderr.on('data', (data) => {console.error(`tabix stderr: ${data}`);});
+                                    tabixcommand.on('close', (code) => {
+                                        if (code !== 0) {
+                                            console.log(`tabix process exited with code ${code}`);
+                                        } else {
+                                            var item = new TersectVCF({ name: file, command:encodeURIComponent(command), instance_id: instanceID, parent_id:id,  route: filePathForTabix});
+                                            item.save(function (err, item) {
+                                                if (err) {
+                                                    return console.error(err);
+                                                    next(err);
+                                                } else {
+                                                    console.error("Query VCF added to TersectVCF");
+                                                }
+                                            });
+
+                                        }
+
+                                    });
                                 }
 
                             });
-                        }
 
+                        }
                     });
 
                 }
             });
+
         }
 })}
 
@@ -449,31 +469,19 @@ router.post('/tersectQueries/generate',function(req,res,next){
     });
 
 
+    var instanceID = req.body.instanceID;
     var id = req.body.idToGet;
-    var file = req.body.filepath.replace(/\W/g,"_");
-    var newPath = path.join(__dirname, "../newVCF/"+uuid()+"/");
-    var filepath = path.join(newPath+ file);
+    var file = req.body.filepath.replace(/[^\d\w-_.]/g,"_");
+    tersect(fullCommand,id, file,instanceID);
+    res.send({ "location": instanceID });
 
-    fs.mkdir(newPath, { recursive: true }, (err) => {
-        if (err){
-            console.error("Error in making tersect query directory: " + err)
-            next(err)
-        } else {
-            tersect(fullCommand,id, file,filepath);
-            console.error("ID: "+req.body.idToGet);
-            console.error("Command: "+ comm);
-            console.error("Fullcommand: "+fullCommand);
-            res.send({ "location": filepath });
-
-        }
-    });
 });
 
 ////Query VCF Download Route ---------------------------------
 
 router.post('/tersectQueries/:id/download', function(req, res, next){
     var query = {_id:req.params.id};
-    console.error(req.params.id)
+    console.error(req.params.id);
     TersectVCF.findOne(query,function(err,entry){
         if(err){
             console.error("Cant find file for download id.");
@@ -487,5 +495,26 @@ router.post('/tersectQueries/:id/download', function(req, res, next){
         }
     })
 });
+
+////Query VCF Purge Route ---------------------------------
+//Delete every query VCF file for the instance
+router.delete('/delete-query-vcfs/:instanceID', isTersectAuthenticated, function(req, res, next){
+    console.log("instanceID: "+ req.params.instanceID)
+    var query = {instance_id:req.params.instanceID};
+    TersectVCF.deleteMany(query, function(err){
+        if(err){
+            console.error("Error encountered purging instance query VCFs: "+err);
+            next(err);
+        }
+    });
+    rimraf(path.join(dir,"newVCF",req.params.instanceID),function(err){
+        if(err){
+            console.error('Error in /tersectQueries query VCF deletion: ' + err)
+            next(err);
+        } else {
+            res.send('success')
+        }
+    })
+})
 
 module.exports = router;

@@ -1,3 +1,8 @@
+//$(document).data('instanceName',$('h1')[0].childNodes[0].nodeValue);
+var configGenoverse=document.getElementById("configGenoverse").getAttribute('data');
+configGenoverse = JSON.parse(configGenoverse);
+var instance_id = configGenoverse._id;
+var instance_name = configGenoverse.name;
 Genoverse.Plugins.tersectIntegration = function () {
 
     this.controls.push({
@@ -133,7 +138,7 @@ Genoverse.Plugins.tersectIntegration = function () {
             function makeTersectIndexMenu() {
                 var indexMenu = browser.makeMenu({
                     '<div>Choose Tersect Index File:</div>': '',
-                    '<table class="gv-tersect-integration-text gv-tersect-list"><thead><tr><td>Name</td><td>Instance</td><td>&emsp;&emsp;&emsp;</td></tr></thead><tbody></tbody></table>': '',
+                    '<table class="gv-tersect-integration-text gv-tersect-list"><thead><tr><td>Name</td><td>&emsp;&emsp;&emsp;</td></tr></thead><tbody></tbody></table>': '',
                     '<button class="btn btn-primary" id="tsi-refresh">Refresh List <i class="fa fa-retweet"></i></button>': '',
                     '<button class="btn btn-primary" id="tsi-locate-index">Locate TSI Index <i class="fa fa-arrow-circle-right"></i></button>': '',
                     '<button class="btn btn-primary" id="generate-new-button">Generate New Index <i class="fa fa-arrow-circle-right"></i></button>': '',
@@ -183,9 +188,10 @@ Genoverse.Plugins.tersectIntegration = function () {
                     }
                 });
                 $('#purge-queries').on('click', function(){
-                    $.ajax({
+                    flag = confirm("This will delete all entries associated with this instance. Do you wish to continue?")
+                    if (flag = true) {$.ajax({
                         type: 'DELETE',
-                        url: '/index/delete-query-vcfs',
+                        url: '/index/delete-query-vcfs/'+instance_id,
                         statusCode: {
                             403: function (xhr) {
                                 new Noty({
@@ -203,7 +209,7 @@ Genoverse.Plugins.tersectIntegration = function () {
                         error: function (err) {
                             console.error(err);
                         }
-                    })
+                    })}
                 });
                 return queryMenu;
             }
@@ -240,7 +246,8 @@ function fileUploader(parent, submit_link_text, progress_bar, chooser, extension
             $(submit_link_text, parent).text('Submit 0%');
             $(progress_bar, parent).width("0%");
             var formData = new FormData();
-            formData.append("instanceName", $('h1')[0].childNodes[0].nodeValue);
+            formData.append("instanceName", instance_name);
+            formData.append("instanceID", instance_id)
             for (var i = 0; i < files.length; i++) {
                 var file = files[i];
                 // add the files to formData object for the data payload
@@ -305,17 +312,16 @@ function fileUploader(parent, submit_link_text, progress_bar, chooser, extension
 }
 
 function indexPopulator(index_list, url, query_list, query_url) {
-    var instanceName = $('h1')[0].childNodes[0].nodeValue;
     console.log("event fired successfully!");
     $(index_list).empty();
     $.ajax({
         type: 'POST',
-        data: { instanceName: instanceName },
+        data: { instanceName: instance_name, instanceID: instance_id },
         url: url,
         success: function (data) {
             console.log("latest value" + this);
             $.each(data, function () {
-                $(index_list).append('<tr data-id="' + this._id + '"><td><a class="gv-tersect-index-name">' + this.name + '</a></td><td><span>' + this.instance + '</span></td><td><a class="gv-tersect-index-delete">delete</a></td></tr>');
+                $(index_list).append('<tr data-id="' + this._id + '"><td><a class="gv-tersect-index-name">' + this.name + '</a></td><td><a class="gv-tersect-index-delete">delete</a></td></tr>');
             });
 
 
@@ -405,6 +411,7 @@ function queryPopulator(query_list, id, query_url) {
                 })
             });
 
+            //had to use this method to overcome the limitations on downloading via AJAX.
             $(query_list).parent().on('click', '.gv-tersect-query-download', function () {
                 var form = $('<form>', { action: query_url + "/" + $(this).parent().parent().data("id") + "/download", method: 'POST' });
                 $(document.body).append(form);
@@ -428,7 +435,6 @@ function queryPopulator(query_list, id, query_url) {
             });
 
             $('#add-tracks').off().on('click', function () {
-                var instanceName = $('h1')[0].childNodes[0].nodeValue;
                 if (idsForTracks && (vcfFlag || densityFlag)) {
                     $.ajax({
                         url: query_url + '/newTracks',
@@ -444,7 +450,7 @@ function queryPopulator(query_list, id, query_url) {
                                 }).show();
                             }
                         },
-                        data: { idsForTracks: idsForTracks, instanceName: instanceName, vcfFlag: vcfFlag, densityFlag: densityFlag },
+                        data: { idsForTracks: idsForTracks, instanceName: instance_name, instanceID: instance_id, vcfFlag: vcfFlag, densityFlag: densityFlag },
                         success: function (data) {
                             $('a', query_list).css('border', 'none');
                             location.reload(true)
@@ -463,7 +469,8 @@ function queryPopulator(query_list, id, query_url) {
 
 function vcfUploader(parent, submit_link, chooser, chooser_link, extension, url) {
     var formData = new FormData();
-    formData.append("instanceName", $('h1')[0].childNodes[0].nodeValue);
+    formData.append("instanceName", instance_name);
+    formData.append("instanceID", instance_id);
 
     $(document).data("vcfFormData", formData);
     console.log(JSON.stringify($(document).data("vcfFormData"), null, 4));
@@ -656,6 +663,7 @@ function indexGetter(parent, idToGet, url) {
     $.post(url + "/view", { "tsifile": idToGet }, function (data) {
         operations.idToGet = idToGet;
         var samples = data.samples;
+        console.log(samples)
         $('#genomeTable').empty();
         $('#genomeTable').append('<tr>');
         for (i = 0; i < samples.length; i++) {
@@ -1078,6 +1086,8 @@ function vennInit() {
             operations.setC = JSON.stringify(filesetC);
 
             operations.command = command;
+            operations.instanceName = instance_name;
+            operations.instanceID = instance_id;
             //check file name ends with vcf
             if ($("#filepath").val().endsWith(".vcf")) {
                 operations.filepath = $("#filepath").val();
