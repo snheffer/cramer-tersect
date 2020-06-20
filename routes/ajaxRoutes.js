@@ -150,7 +150,7 @@ router.post('/vcfUpload/new',isUploadAuthenticated, function(req,res,next){
         console.error(JSON.stringify(fields, null, 4));
         console.error(JSON.stringify(files, null, 4));
         const newIndexName =  fields.newName+"_"+uuid()+ ".tsi";
-        const child = spawn("tersect", ["build", newIndexName,"../vcf/"+randomDirName+"/*"], {cwd: path.join(dir,"indexes")});
+        const child = spawn("tersect", ["build", newIndexName,"../vcf/"+randomDirName+"/*"], {shell:true, cwd: path.join(dir,"indexes")});
         child.on("error", err => {
             console.error(err)
             next(err);
