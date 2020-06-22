@@ -70,7 +70,7 @@ CRAMER requires running on Linux or MacOS.  The programme requires NodeJS  and t
 - [Bwtool](https://github.com/CRG-Barcelona/bwtool)
 - [kentUtils from UCSC](https://github.com/ENCODE-DCC/kentUtils)
 
-#####Dependencies for Tersect Functionalities
+##### Dependencies for Tersect Functionalities
 
 - [Tersect][tersect]
 
@@ -482,12 +482,12 @@ a reference genome.</p></li>
 </table>
 <br>
 
-###CRAMER Tersect Integration
-####Purpose of the Plugin
+### CRAMER Tersect Integration
+#### Purpose of the Plugin
 This plugin allows for use of the functionalities of [Tersect][tersect], 
 a utility that enables the querying of collections of uploaded VCF files with Set-theoretical operations
 to compare specific samples in a manner far faster than existing methods with other utilities, e.g. Bedtools.
-####How it works
+#### How it works
 Tersect itself is able to construct an index of compressed sample genome information, that can be operated upon by the user's
 querying commands to compare different sample genomes within.
 <br>
@@ -540,7 +540,7 @@ logged-in there will be two additional buttons:
     clicks on “OK”, the instance will be deleted.
 
   
-###Instance page
+### Instance page
 
 ![](media/image007.png)
 
