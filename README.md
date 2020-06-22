@@ -680,7 +680,7 @@ It is important to note that although the browser page allows users to
 drag and drop correctly formatted files directly into the browser to
 visualise them, these files will not be saved in the database.
 
-####Tersect Plugin Usage
+#### Tersect Plugin Usage
 
 In order to use the VCF querying functionalities of Tersect from within the browser window, the Plugin must first be 
 selected from the list within the CRAMER instance window. In addition, the VCF and/or the VCF density plugins must be 
