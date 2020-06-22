@@ -70,6 +70,10 @@ CRAMER requires running on Linux or MacOS.  The programme requires NodeJS  and t
 - [Bwtool](https://github.com/CRG-Barcelona/bwtool)
 - [kentUtils from UCSC](https://github.com/ENCODE-DCC/kentUtils)
 
+#####Dependencies for Tersect Functionalities
+
+- [Tersect][tersect]
+
  Make sure that they are available on the $PATH. (Typically installed under /usr/local/bin). To check whether this is the case, type
 
  ```echo $PATH```
@@ -467,8 +471,30 @@ available in CRAMER.
 <li><p>Allows users to drag and drop a file -in a format supported by CRAMER - directly into the browser and display it.</p></li>
 </ul></td>
 </tr>
+<tr class="odd">
+<td>CRAMER-Tersect Integration</td>
+<td><ul>
+<li><p>An integration of the functionalities of the Tersect utility, used for querying collections of VCF-file-specified variants against
+a reference genome.</p></li>
+</ul></td>
+</tr>
 </tbody>
 </table>
+<br>
+
+###CRAMER Tersect Integration
+####Purpose of the Plugin
+This plugin allows for use of the functionalities of [Tersect][tersect], 
+a utility that enables the querying of collections of uploaded VCF files with Set-theoretical operations
+to compare specific samples in a manner far faster than existing methods with other utilities, e.g. Bedtools.
+####How it works
+Tersect itself is able to construct an index of compressed sample genome information, that can be operated upon by the user's
+querying commands to compare different sample genomes within.
+<br>
+<br>
+These operations result in a virtual genome being generated in VCF format, which can then be viewed in the viewer 
+window in the same way as any other VCF file.
+
 
 # How to navigate CRAMER
 
@@ -513,8 +539,8 @@ logged-in there will be two additional buttons:
     will make a pop-out window asking confirmation appear, if the user
     clicks on “OK”, the instance will be deleted.
 
-  - 
-**Instance page**
+  
+###Instance page
 
 ![](media/image007.png)
 
@@ -573,7 +599,7 @@ Finally, an instance can be saved in the database by clicking on the
 “Submit” button (**T**). If any parameters are incomplete or wrongly
 filled, a red alert will inform the user about the cause of the error.
 
-## Genome browser page
+### Genome browser page
 
 ![](media/image010.png)
 
@@ -653,6 +679,66 @@ the top right corner of the browser window (**O**).
 It is important to note that although the browser page allows users to
 drag and drop correctly formatted files directly into the browser to
 visualise them, these files will not be saved in the database.
+
+####Tersect Plugin Usage
+
+In order to use the VCF querying functionalities of Tersect from within the browser window, the Plugin must first be 
+selected from the list within the CRAMER instance window. In addition, the VCF and/or the VCF density plugins must be 
+enabled to view any respective tracks from the Tersect queries. These tracks will be added to the instance database entry,
+and thus will persist between sessions. They can be deleted from the instance via the instance modification window.
+
+When viewing an instance in the browser window, the Tersect functionalities can be accessed via the "**T**" icon on the right-hand-side
+toolbar. This will open the the main menu for interacting with Tersect Indexes:
+
+![](media/tersect_menu1.png)
+
+From here, a Tersect index will need to be selected or generated. This can be achieved via the upload functionalities in
+the Tersect index menu (**A**). Complete Tersect Indexes are uploadable, or VCF files can be supplied to generate a new index.
+
+Files can either be dragged and dropped from the desktop environment or selected via a file chooser.
+Existing indexes can also be deleted from the database via this menu:
+
+![](media/tersect_menu2.png)
+
+Once supplied, this menu can be closed and the main menu will be updated:
+
+![](media/tersect_menu3.png)
+
+Samples contained in the Tersect index will be displayed in the view area (**B**, lower left). Individual samples can then be 
+dragged and dropped to the set diagrams at **C**, or multiple samples can be selected using the wildcard/search functionality
+(**B**, upper left).
+
+The set controls at **D** allow the user to add up to two additional Venn diagram circles, and also remove existing ones.
+Right clicking on an area of the Venn diagram will display a pop-up window that contains a list of the samples contained in that area,
+and allows the user to delete samples from a query individually. The total number of samples in each set is displayed at the
+bottom of the "Samples in TSI" pane (**B**, lower left). The "clear samples" button next to this allows for deletion of 
+all samples from a query.
+
+The "Set notation" pane displays the Tersect operation that will be sent to the server with the request (**E**, upper left).
+The "Submit Query" button and name field (**E**, lower left) submit the Tersect request to the server. A popup notification 
+informs the user of a successful receipt of a query. 
+Once this is completed, clicking the "Saved Queries" button (**F**) displays the "Saved Queries" menu:
+
+![](media/tersect_menu4.png)
+
+This menu contains all the queries submitted to the server related to the specific instance being viewed. If a Tersect request 
+has recently been made, a small amount of time may be required for the request to finish processing, depending on the specifications
+of the server. In the event a recent request isn't visible from this pop-up, clicking the "Refresh List" button in the top left
+will refresh the list with any new entries.
+
+Each entry in the list displays its name and the command used in its generation. Hovering over an entry will show a full length
+command view in the event it becomes "cut off" in the tabular view. Additionally, each entry in the list has the option for the user to 
+download the generated VCF file, or delete both the VCF file and the database entry from the server. Additionally the "Purge Query DB"
+button in the bottom left allows the User to delete all VCF queries associated with the instance, in the event that entries have
+become disassociated from their file entries.
+
+Clicking a query name selects a entry for viewing in the browser. Multiple entries can be selected at once in this way. 
+Once selected, the user selects either or both of the Track options in the bottom right. "VCF Track" will display a typical
+CRAMER-style VCF track, and the "Density" option with provide an accompanying density plot.
+Selecting the "Add tracks to instance" button will refresh the page, with the new tracks now visible.
+
+(n.b. Both types of track for viewing must be enabled in the Instance Modification Window in order to be displayed.)
+
 
 # Hands-on Example 
 
@@ -906,3 +992,8 @@ http://www.htslib.org/doc/samtools.html. Accessed 29 Apr 2018.
 
 3\. The Bioconda Team. Using Bioconda — Bioconda documentation. 2016.
 https://bioconda.github.io/. Accessed 28 Apr 2018.
+
+4\. Tersect: a set theoretical utility for exploring sequence variant data. 2019.
+https://doi.org/10.1093/bioinformatics/btz634. Accessed 20 Jun 2020
+
+[tersect]: https://github.com/tomkurowski/tersect
