@@ -746,7 +746,7 @@ Selecting the "Add tracks to instance" button will refresh the page, with the ne
 containing human variant calls from the International Genome Sample
 Resource (IGSR) and the 1000 Genomes Project repository.
 
-## Download vcf files from the IGSR repository
+## 1\. Download vcf files from the IGSR repository
 
 VCF files from IGSR can be downloaded from the FTP site hosted at the
 EBI ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/.) Both the VCF files and
@@ -802,7 +802,7 @@ tracks to be displayed.
 
 *Fig. 6 Form for new visualization instance on CRAMER*
 
-### Add local files
+## 3\. Add local files
 
 Next, we need to visualize the files we have just downloaded in the
 previous step. In this example we will upload the
@@ -892,6 +892,40 @@ the Ensembl webpage for this gene, which will open in a new tab.
 ![](media/image017.png)
 
 *Fig. 9 CRAMER gene search result for PLAC1*
+
+## 5\. Analysing properties of Variants with Tersect
+
+1\. Tersect's functionalities can be used with files located in the aforementioned 1000Genomes FTP server, although samples 
+are required to have chromosome numberings in the Tabix format to be compatible with the CRAMER browser view.
+A good selection of samples is available here (~3GB):
+
+`ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage_SV/working/20190628_WashU_Manta_Smoove/Manta/`
+
+(Alternatively, the Tersect documentation has the option to download a demonstration TSI index containing 2504 Chromosome 1 genomic data from the Human Genome project,
+available [here](https://github.com/tomkurowski/tersect#example-data). This can be uploaded directly, and does not
+require any generation steps, and the user can progress to step 3.)
+
+
+2\. Using the Tersect file menu, these VCF files can be selected to use the Tersect .tsi generation feature to generate an index for querying.
+There is no need to supply tabix files for this operation:
+
+![](media/tersect_menu10.png)
+
+3\. Once the index file has been generated, it can be queried in the main Tersect Menu:
+
+![](media/tersect_menu11.png)
+
+4\. Select the query in the Query menu. Selected VCFs are indicated by a white border:
+
+![](media/tersect_menu12.png)
+
+5\. Clicking the "Add track to Instance" button will refresh the browser window and show the track in the browser view.
+
+![](media/tersect_menu13.png)
+
+Zooming and clicking on a band will reveal information about it, and tracks can be removed from the instance modification
+window.
+
 
 ## Common errors
 
