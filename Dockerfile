@@ -17,6 +17,8 @@ RUN git clone https://github.com/manastasiadi/libbeato.git && cd libbeato && \
     ./configure --prefix=/usr && make && make install && cd .. && rm -rf libbeato
 RUN git clone https://github.com/CRG-Barcelona/bwtool.git && cd bwtool && \
     ./configure --prefix=/usr && make && make install && cd .. && rm -rf bwtool
+RUN git clone https://github.com/tomkurowski/tersect.git && cd tersect && \
+    mkdir build && cd build && cmake .. && make && make install && cd .. && cd .. && rm -rf tersect
 RUN adduser -D app
 ADD . /home/app
 RUN chown -R app.app /home/app
