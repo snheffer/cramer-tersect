@@ -7,12 +7,15 @@ var track = new mongoose.Schema({
     data: {type: String}
 });
 
-track.pre('init', function (doc) {
-    console.error("Track INIT hook called");
-    // Failures with this middleware will result in a 500 server error, without crashing the system.
-    doc.data = doc.data.replace(/~protocol~/g,process.env.FILESERVERPROTOCOL);
-    doc.data = doc.data.replace(/~address~/g,process.env.FILESERVERIP)
-});
+////
+// Server middleware didnt work satisfactorily when instances were edited, as URLs were overwritten.
+////
+// track.pre('init', function (doc) {
+//     console.error("Track INIT hook called");
+//     // Failures with this middleware will result in a 500 server error, without crashing the system.
+//     doc.data = doc.data.replace(/<protocol>/g,process.env.FILESERVERPROTOCOL);
+//     doc.data = doc.data.replace(/<address>/g,process.env.FILESERVERIP)
+// });
 
 var trackSchema = new mongoose.Schema({
     group: {type: String, required: true},

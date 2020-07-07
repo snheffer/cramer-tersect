@@ -1,4 +1,5 @@
 var object = document.getElementById("configGenoverse").getAttribute('data');
+object = object.replace(/<origin>/g, location.origin);
 var data = JSON.parse(object);
 var plugins = [];
 var plugin;
@@ -12,10 +13,12 @@ for (var i in data.plugins) {
 
 var trackConfig = [];
 var tracksLength = data.tracks.length;
+//console.log(JSON.stringify(data, null, "\t"));
 for (var i = 0; i < tracksLength; i++) {
-    currentTrack = data.tracks[i];
+    var currentTrack = data.tracks[i];
     if (currentTrack.checked) {
         for (var j in currentTrack.trackChildren) {
+            //console.log(currentTrack.trackChildren[j]);
             trackConfig.push(eval(currentTrack.trackChildren[j].data));
         }
     }
