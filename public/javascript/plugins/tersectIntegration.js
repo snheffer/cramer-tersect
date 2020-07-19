@@ -101,7 +101,7 @@ Genoverse.Plugins.tersectIntegration = function () {
                     'Tersect Plugin': '',
                     '</br><button class="btn btn-default btn-block" id="tsi-file">Select TSI File <i class="fa fa-folder-open"></i></button> \
                         <div id="gv-tersect-gui-container" class="panel panel-default"><div class="panel-heading"><h4 class="panel-title">Samples in TSI</h4></div></br> \
-                        <span id="countA" class="btn btn-primary"><span class="wild"></span> <i class="count-close fa fa-times-circle"></i></span> <span id="countB" class="btn btn-primary"><span class="wild"></span> <i class="count-close fa fa-times-circle"></i></span> <span id="countC" class="btn btn-primary"><span class="wild"></span> <i class="count-close fa fa-times-circle"></i></span></br></br>\
+                        <div id="gv-tersect-tab-container"> <span id="countA" class="btn btn-primary"><span class="wild"></span> <i class="count-close fa fa-times-circle"></i></span> <span id="countB" class="btn btn-primary"><span class="wild"></span> <i class="count-close fa fa-times-circle"></i></span> <span id="countC" class="btn btn-primary"><span class="wild"></span> <i class="count-close fa fa-times-circle"></i></span> <button class="btn btn-primary btn-sm" id="addCircle"><i class="fa fa-plus"></i></button></div></br></br>\
                         <input type="text" id="searchBox" placeholder="Search for samples..."/></br></br> \
                         <table id="genomeTable"></table>\
                         <div class="panel-footer"><button class="btn btn-default btn-sm" id="clearSample">Clear Samples <i class="fa fa-eraser"></i></button></div></div> \
@@ -128,7 +128,7 @@ Genoverse.Plugins.tersectIntegration = function () {
                                 <th><button class="btn btn-primary" id="hideC">Samples in C <i class="fa fa-times-circle"></i></button></th>\
                                 </tr>\
                                 </tbody>\
-                            </table>\ </div>': '<div id="venn"></div><div id="venncontrols" class="panel panel-default"><div class="panel-heading"><h5 class="panel-title">Set Controls</h5></div><div class="panel-body"> <button class="btn btn-primary btn-sm" id="addCircle">Add Circle <i class="fa fa-plus"></i></button> <span style="display:inline-block; width: 15px;"></span> <input id="circleName" type="text" placeholder="Input circle..." size="12"/>&nbsp;&nbsp;<button id="removeCircle" class="btn btn-primary btn-sm">Remove Circle <i class="fa fa-trash"></i></button></div></div></br></br>\
+                            </table>\ </div>': '<div id="venn"></div><div id="venncontrols" class="panel panel-default"><div class="panel-heading"><h5 class="panel-title">Modify Command</h5></div><div class="panel-body">  <span style="display:inline-block; width: 15px;"></span> <input id="gv-tersect-advancedInput" type="text" size="45"/>&nbsp;&nbsp;</div></div></br></br>\
                             <div id="query"><span style="display:inline-block; width: 20px;"></span><button class="btn btn-default btn-xs" id="saved-queries">Saved Queries <i class="fa fa-folder-open"></i></button></div></div>',
 
                 }).addClass('gv-tersect-integration-menu');
@@ -822,6 +822,7 @@ function vennInit() {
     tooltipB = d3.select("#sampleB");
     tooltipC = d3.select("#sampleC");
 
+    //event listener to add circle to page, set from vennInit() init function.
     $('#addCircle').click(function () {
         if (newCircles().length != 0) {
 
@@ -837,7 +838,12 @@ function vennInit() {
                 sets.push(newFullSet);
             }
             sets.push({ sets: [newCircle], size: 12 });
+            //debug for sets
+            // console.log("sets:" +JSON.stringify(sets))
             var disp = circlesDisplayed();
+            if (disp.length == 3){
+                $("#addCircle").hide();
+            }
             disp.forEach(function (elem) {
                 $("#count" + elem).show();
                 $("#sample" + elem).hide();
@@ -860,7 +866,7 @@ function vennInit() {
         var delCircle = $(this).parent().children("span").text().charAt(0);
         var currentCircles = circlesDisplayed();
         if (currentCircles.length >= 2) {
-
+            $("#addCircle").show();
             if (currentCircles.find(circle => circle == delCircle)) {
 
                 for (i = 0; i < sets.length; i++) {
@@ -895,45 +901,6 @@ function vennInit() {
         }
         return false;
     });
-    $('#removeCircle').click(function () {
-        var delCircle = $("#circleName").val().toUpperCase();
-        var currentCircles = circlesDisplayed();
-        if (currentCircles.length >= 2) {
-
-            if (currentCircles.find(circle => circle == delCircle)) {
-
-                for (i = 0; i < sets.length; i++) {
-                    if (sets[i].sets.find(set => set == delCircle)) {
-                        sets.splice(i, 1);
-                        i--;
-
-                    }
-
-                }
-                $("#count" + delCircle).hide();
-                redraw();
-            } else {
-                new Noty({
-                    type: 'error',
-                    layout: 'center',
-                    text: `Circle ${$("#circleName").val().toUpperCase()} does not exist!`,
-                    timeout: '2000',
-                    theme: 'light',
-                    closeWith: ['click'],
-                }).show();
-            }
-        } else {
-            new Noty({
-                type: 'error',
-                layout: 'center',
-                text: 'Cannot remove all circles!',
-                timeout: '2000',
-                theme: 'light',
-                closeWith: ['click'],
-            }).show();
-        }
-        $("#circleName").val("");
-    });
 
     //action listeners for venn
     div.selectAll('g')
@@ -959,6 +926,7 @@ function vennInit() {
             d3.select(this).select("text").style("font-weight", "100")
                 .style("font-size", "36px");
             getNotation();
+            commandParse(command,"#gv-tersect-advancedInput");
             area.push(d.sets);
         });
 
@@ -1207,12 +1175,7 @@ function vennInit() {
                     }
                 })
             }
-            {
-
-            }
-
         }
-
     });
 };
 //resets venn to original appearance
@@ -1277,6 +1240,7 @@ function customiseVenn() {
         .style("font-size", "24")
         .style("font-weight", "200");
     getNotation();
+    commandParse(command,"#gv-tersect-advancedInput");
 
 }
 
@@ -1476,11 +1440,10 @@ function redraw() {
                     timeout: '2000',
                     theme: 'light',
                 }).show();
-
             }
             getNotation();
+            commandParse(command,"#gv-tersect-advancedInput");
         });
-
 }
 
 function getNotation() {
@@ -1908,5 +1871,21 @@ function getNotation() {
             break;
     }
 }
+
+function commandParse(command,html_id){
+    if(command != null) {
+        var mapObj = {
+            A: "u" + filesetA.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, ""),
+            B: "u" + filesetB.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, ""),
+            C: "u" + filesetB.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, "")
+        };
+        var fullCommand = command.replace(/A|B|C/g, function (matched) {
+            return mapObj[matched];
+        });
+        console.log(fullCommand)
+    }
+    $(html_id).empty().val(fullCommand)
+}
+
 
 Genoverse.Plugins.tersectIntegration.requires = 'controlPanel';
