@@ -154,7 +154,9 @@ Genoverse.Plugins.tersectIntegration = function () {
             function makeIndexGenerationMenu() {
                 var generationMenu = browser.makeMenu({
                     '<div>Generate A New Tersect Index File:</div>': '',
-                    '<div class="gv-tersect-dropzone"><a id="select-vcf">Select</a> Or Drop Files Here</div><input class="gv-tersect-integration-input gv-tersect-file-input" type="file" id="vcf-file-chooser" name="vcf file chooser" multiple>': '',
+                    '<div class="gv-tersect-dropzone"><a id="select-vcf">Select</a> Or Drop Files Here</div><input class="gv-tersect-integration-input gv-tersect-file-input" type="file" id="vcf-file-chooser" name="vcf file chooser" multiple> \
+                    <input type=text placeholder="Name New Index:" class="entryname"></input><br> \
+                    <a class="remove">remove</a>': '',
                     '': '',
                     '<button class="btn btn-primary" id="submit-new-button">Generate New Index <i class="fa fa-arrow-circle-right"></i></button>': ''
                 }).addClass('gv-tersect-integration-file-menu');
@@ -296,12 +298,41 @@ function fileUploader(parent, submit_link_text, progress_bar, chooser, extension
                     }, false);
                     return xhr;
                 },
+                statusCode: {
+                    413: function (xhr) {
+                        new Noty({
+                            type: 'error',
+                            layout: 'topRight',
+                            text: "File is too large.",
+                            timeout: '4000',
+                            theme: 'light',
+                        }).show();
+                    },
+                    422: function (xhr) {
+                        new Noty({
+                            type: 'error',
+                            layout: 'topRight',
+                            text: "Wrong file type.",
+                            timeout: '4000',
+                            theme: 'light',
+                        }).show();
+                    },
+                    500: function (xhr) {
+                        new Noty({
+                            type: 'error',
+                            layout: 'topRight',
+                            text: "Database Error.",
+                            timeout: '4000',
+                            theme: 'light',
+                        }).show();
+                    }
+                },
                 error: function (xhr, status, error) {
                     xhr.abort();
                     new Noty({
                         type: 'error',
                         layout: 'topRight',
-                        text: "Error Uploading. You Must be logged in.",
+                        text: "Error Uploading.",
                         timeout: '4000',
                         theme: 'light',
                     }).show();
@@ -472,7 +503,6 @@ function vcfUploader(parent, submit_link, chooser, chooser_link, extension, url)
     var formData = new FormData();
     formData.append("instanceName", instance_name);
     formData.append("instanceID", instance_id);
-
     $(document).data("vcfFormData", formData);
     console.log(JSON.stringify($(document).data("vcfFormData"), null, 4));
 
@@ -483,23 +513,23 @@ function vcfUploader(parent, submit_link, chooser, chooser_link, extension, url)
 
             if (files.length > 0) {
                 handleFileUpload(parent, "vcfFormData", files, extension);
-                if ($(".gv-tersect-dropzone .statusbar", parent)[0] && !$(".remove", parent)[0]) {
-                    $("<a class='remove'>remove</a>").insertAfter($(".gv-tersect-dropzone", parent));
-                    if (!$(".entryname", parent)[0]) {
-                        $("<input type=text placeholder='Name New Index:' class='entryname'></input><br>").insertAfter($(".gv-tersect-dropzone", parent));
-                    }
-                    $(".remove", parent).on("click", function () {
-                        $(".statusbar", parent).empty();
-                        formData = new FormData();
-                        $(document).data("vcfFormData", formData);
-                        $(".entryname", parent).remove();
-                        $(".remove", parent).remove();
-                    })
+                if ($(".gv-tersect-dropzone .statusbar", parent)[0]) {
+                    $(".remove",parent).show();
+                    $(".entryname",parent).show();
                 }
             }
             $(chooser, parent).val("");
-
         });
+    });
+
+    $(".remove", parent).on("click", function () {
+        $(".statusbar", parent).empty();
+        formData = new FormData();
+        formData.append("instanceName", instance_name);
+        formData.append("instanceID", instance_id);
+        $(document).data("vcfFormData", formData);
+        $(".entryname", parent).empty().hide();
+        $(".remove", parent).hide();
     });
 
     $(parent).on('dragenter', function (e) {
@@ -518,18 +548,9 @@ function vcfUploader(parent, submit_link, chooser, chooser_link, extension, url)
 
         //We need to send dropped files to Server
         handleFileUpload(parent, "vcfFormData", files, extension);
-        if ($(".gv-tersect-dropzone .statusbar", parent)[0] && !$(".remove", parent)[0]) {
-            $("<a class='remove'>remove</a>").insertAfter($(".gv-tersect-dropzone", parent));
-            if (!$(".entryname", parent)[0]) {
-                $("<br><input type=text character_set='ISO-8859-1' placeholder='Name New Index:' class='entryname'></input>").insertAfter($(".gv-tersect-dropzone", parent));
-            }
-            $(".remove", parent).on("click", function () {
-                $(".statusbar", parent).empty();
-                formData = new FormData();
-                $(document).data("vcfFormData", formData);
-                $(".entryname", parent).remove();
-                $(".remove", parent).remove();
-            })
+        if ($(".gv-tersect-dropzone .statusbar", parent)[0]) {
+            $(".remove",parent).show();
+            $(".entryname",parent).show();
         }
     });
     $(document).on('dragenter', function (e) {
@@ -550,8 +571,8 @@ function vcfUploader(parent, submit_link, chooser, chooser_link, extension, url)
         var vcfFormData = $(document).data('vcfFormData');
         if ($(".statusbar", parent)[0]) {
             // if($("entryname",parent).val()) {
-            var newName = $(".entryname", parent).val()
-            newName = newName.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+            var newName = $(".entryname", parent).val();
+            newName = newName.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
             // }
             if (newName) {
                 $('<div class="progressbar-border"> <div class="progressbar-fill"></div></div>').insertAfter($(submit_link, parent));
@@ -567,10 +588,24 @@ function vcfUploader(parent, submit_link, chooser, chooser_link, extension, url)
                         console.log('vcf upload successful!\n' + Date.now());
                         $(".statusbar", parent).empty();
                         formData = new FormData();
+                        formData.append("instanceName", instance_name);
+                        formData.append("instanceID", instance_id);
                         $(document).data("vcfFormData", formData);
                         $(".progressbar-border", parent).remove();
-                        $(".remove", parent).remove();
+                        $(".remove", parent).hide();
+                        $(".entryname",parent).hide();
 
+                    },
+                    statusCode: {
+                        413: function (xhr) {
+                            new Noty({
+                                type: 'error',
+                                layout: 'topRight',
+                                text: "Error with TSI generation.",
+                                timeout: '4000',
+                                theme: 'light',
+                            }).show();
+                        }
                     },
                     xhr: function () {
                         // create an XMLHttpRequest
@@ -602,7 +637,8 @@ function vcfUploader(parent, submit_link, chooser, chooser_link, extension, url)
                             theme: 'light',
                         }).show();
                         $(".progressbar-border", parent).remove();
-                        $(".remove", parent).remove();
+                        $(".remove", parent).hide();
+                        $(".entryname",parent).hide();
                     }
                 });
             }
@@ -728,6 +764,103 @@ function indexGetter(parent, idToGet, url) {
 
     });
 }
+
+// function indexGetter(parent, idToGet, url) {
+//     $.ajax({
+//         url: url + "/view",
+//         type: 'POST',
+//         data: { "tsifile": idToGet },
+//         processData: false,
+//         contentType: false,
+//         success: function (data) {
+//             operations.idToGet = idToGet;
+//             var samples = data.samples;
+//             console.log(samples)
+//             $('#genomeTable').empty();
+//             $('#genomeTable').append('<tr>');
+//             for (i = 0; i < samples.length; i++) {
+//                 $('<td>' + samples[i] + '</td>').attr({ id: [i], class: 'samples' }).appendTo('#genomeTable').draggable({
+//                     opacity: 0.5,
+//                     helper: "clone",
+//                     //make sure cursor is out of the way so that mouseover event for venn can fire properly
+//                     cursorAt: { left: -2, top: -2 },
+//                     // Register what we're dragging with the drop manager
+//                     start: function (event) {
+//                         DragDrop.dragged = event.target;
+//                     },
+//                     drag: function (event) {
+//                         var goodPos = DragDrop.placement();
+//                         //change tooltip depending on location of cursor
+//                         div.style('cursor', function () {
+//                             return (goodPos) ? 'copy' : 'no-drop';
+//                         });
+//                         //if location is outside of venn or in intersect do not disable drag and return sample to table
+//                         $(event.target).draggable('option', 'revert', (goodPos) ? false : true);
+//                         $(event.target).draggable('option', 'disabled', (goodPos) ? true : false);
+//                     },
+//                     stop: function (event) {
+//                         var goodPos = DragDrop.placement();
+//                         if (goodPos) {
+//                             new Noty({
+//                                 type: 'success',
+//                                 layout: 'topRight',
+//                                 text: DragDrop.dragged.innerText + ' has been dropped in: ' + DragDrop.droppable,
+//                                 timeout: '4000',
+//                                 theme: 'light',
+//                             }).show();
+//                             DragDrop.add();
+//
+//                         } else {
+//                             new Noty({
+//                                 type: 'warning',
+//                                 layout: 'topRight',
+//                                 text: DragDrop.dragged.innerText + " cannot be dropped here!",
+//                                 timeout: '5000',
+//                                 theme: 'light',
+//                                 closeWith: ['click'],
+//                             }).show();
+//
+//
+//                         }
+//                         div.style('cursor', 'pointer');
+//
+//                     }
+//                 })
+//
+//             };
+//             $('#genomeTable').append(`</tr>`);
+//             //case sensitive search for samples (only matches from the beginning of samples)
+//             $("#searchBox").off().on("keyup", function () {
+//                 wildcardgroup = $(this).val();
+//                 $("#genomeTable td").filter(function () {
+//                     $(this).toggle($(this).text().indexOf(wildcardgroup) == 0)
+//                 });
+//             });
+//
+//         },
+//         statusCode: {
+//             413: function (xhr) {
+//                 new Noty({
+//                     type: 'error',
+//                     layout: 'topRight',
+//                     text: "Error with TSI retrieval: corrupt file..",
+//                     timeout: '4000',
+//                     theme: 'light',
+//                 }).show();
+//             }
+//         },
+//         error: function (xhr, status, error) {
+//             xhr.abort();
+//             new Noty({
+//                 type: 'error',
+//                 layout: 'topRight',
+//                 text: "Error Uploading. You Must be logged in.",
+//                 timeout: '4000',
+//                 theme: 'light',
+//             }).show();
+//         }
+//     });
+// }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //
