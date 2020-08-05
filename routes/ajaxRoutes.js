@@ -5,12 +5,15 @@ var formidable = require('formidable');
 var rimraf = require('rimraf');
 var ip = require('ip');
 var fs = require('fs');
+require('lodash.combinations');
+var _ = require('lodash');
 var GenoverseInstance = require('../models/GenoverseInstance.js');
 var TersectIntegration = require('../models/tersectIntegration.js');
 var TersectVCF = require('../models/TersectVCF.js');
 var utils = require('../routes/utils.js');
 var { v4: uuid } = require('uuid');
 const {spawn} = require('child_process');
+const {spawnSync} = require('child_process');
 
 var dir = path.join(__dirname,"..");
 
@@ -447,9 +450,50 @@ router.delete('/tersectQueries/:id',isTersectAuthenticated, function(req,res,nex
 
 ////Query Generation Routes --------------------------------------------------------
 
+//threshold calculator - not necessary for a threshold of 100.
+function thresholdCalculator(_threshold, sets , file){
+    var wildcards = [];
+    var megaset = [];
+    var threshold = parseInt(_threshold);
+    if(Number.isInteger(threshold) && threshold >= 1 && threshold <= 3){
+        for(var set of sets){
+            set.forEach((element)=>{
+                if(element.match(/\*/)){
+                    wildcards.push("'"+ element+"'");
+                } else {
+                    megaset.push(element)
+                }
+            })
+        }
+        console.log(wildcards);
+        console.log(megaset);
+        var wildset = [];
+        ///home/user/Desktop/Thesis/tersectcramer_GP/indexes/new_214bb983-0618-4828-ba92-b0d9b70853e1.tsi
+        var getSamples = spawnSync('tersect', ["view",file, wildcards], { shell: true });
+        //The output of the command is printed in the command line if there are no errors
+        var wildset = getSamples.stdout;
+        wildset = wildset.toString().trim().split('\n');
+        wildset.shift();
+        megaset = megaset.concat(wildset);
+        console.log(`Megaset: ${megaset} \n wildset: ${wildset}`)
+        var subqueries = [];
+        var combinations = _.combinations(megaset, threshold);
+        for(var combination of combinations){
+            combination = "('" + combination.join("'&'") + "')";
+            subqueries.push(combination);
+        }
+        var query = (subqueries.length > 0) ?  "&(" + subqueries.join("|") + ")" : ""
+        return query
+    } else {
+        console.log("returning nothing...")
+        return ""
+    }
+}
+
 //add file path to tsi file to run
-function tersect(command, id, file, instanceID) {
+function tersect(sets, command, threshold, id, file, instanceID) {
     var query={_id:id};
+    var command = command;
     TersectIntegration.findOne(query, function(err,entry){
         if (err){
             console.error('Cant Find Ref: ' + err);
@@ -466,6 +510,8 @@ function tersect(command, id, file, instanceID) {
                     console.error("newPath: "+ newPath);
                     console.error("filepath: "+ filepath);
                     console.log(entry.route);
+                    var thresholdCommand = thresholdCalculator(threshold, sets , entry.route);
+                    command = command + thresholdCommand;
                     var tcommand = spawn('tersect', ['view', entry.route, command]);
                     var output = fs.createWriteStream(filepath);
                     tcommand.on("error", (err)=> {
@@ -486,14 +532,32 @@ function tersect(command, id, file, instanceID) {
                         } else {
                             console.log('done!');
                             var bgzipcommand = spawn('bgzip',[filepath]);
-                            bgzipcommand.stderr.on('data', (data) => {console.error(`bgzip stderr: ${data}`);});
+                            bgzipcommand.on("error", (err) => {
+                                if (err.message === "bgzip"){
+                                    console.error("Bgzip failed with non zero exit code: " + err)
+                                }
+                            });
+                            bgzipcommand.stderr.on('data', (data) => {
+                                console.error(`bgzip stderr: ${data}`);
+                                bgzipcommand.emit("error",  new Error("bgzip"))
+                            });
                             bgzipcommand.on('exit', (code) => {
                                 if (code !== 0) {
                                     console.log(`bgzip process exited with code ${code}`);
                                 } else {
                                     var filePathForTabix = filepath+'.gz';
                                     var tabixcommand = spawn('tabix',[filePathForTabix]);
-                                    tabixcommand.stderr.on('data', (data) => {console.error(`tabix stderr: ${data}`);});
+                                    tabixcommand.on("error", (err) => {
+                                        if(err.message === "tabix"){
+                                            console.error("tabix exited with non zero exit code: " + err)
+                                        } else if (err.message === "database"){
+                                            console.error("Encountered error saving query to database.")
+                                        }
+                                    });
+                                    tabixcommand.stderr.on('data', (data) => {
+                                        console.error(`tabix stderr: ${data}`);
+                                        tabixcommand.emit("error", new Error("tabix"))
+                                    });
                                     tabixcommand.on('close', (code) => {
                                         if (code !== 0) {
                                             console.log(`tabix process exited with code ${code}`);
@@ -502,7 +566,7 @@ function tersect(command, id, file, instanceID) {
                                             item.save(function (err, item) {
                                                 if (err) {
                                                     return console.error(err);
-                                                    next(err);
+                                                    tabixcommand.emit("error", new Error("database"));
                                                 } else {
                                                     console.error("Query VCF added to TersectVCF");
                                                 }
@@ -525,63 +589,89 @@ function tersect(command, id, file, instanceID) {
 })}
 
 router.post('/tersectQueries/generate',function(req,res,next){
-    var comm = req.body.command;
-    var mapObj = {
-        A:"u" + req.body.setA.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, ""),
-        B:"u" + req.body.setB.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, ""),
-        C:"u" + req.body.setC.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, "")
-    };
-    var fullCommand = comm.replace(/A|B|C/g, function(matched){
-        return mapObj[matched];
-    });
+    if(!req.body.command || !req.body.instanceID || !req.body.idToGet || !req.body.filepath || !req.body.threshold){
+        res.status(403).send("Malformed Request")
+    } else {
+        console.log(typeof req.body.setA);
+        console.log(typeof req.body.setB);
+        console.log(typeof req.body.setC);
+        var sets = new Array(JSON.parse(req.body.setA.replace(/'/g,"")), JSON.parse(req.body.setB.replace(/'/g,"")), JSON.parse(req.body.setC.replace(/'/g,"")));
+        var comm = req.body.command;
+        var threshold = req.body.threshold;
+        var mapObj = {
+            A:"u" + req.body.setA.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, ""),
+            B:"u" + req.body.setB.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, ""),
+            C:"u" + req.body.setC.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, "")
+        };
+        var fullCommand = comm.replace(/A|B|C/g, function(matched){
+            return mapObj[matched];
+        });
 
-
-    var instanceID = req.body.instanceID;
-    var id = req.body.idToGet;
-    var file = req.body.filepath.replace(/[^\d\w-_.]/g,"_");
-    tersect(fullCommand,id, file,instanceID);
-    res.send({ "location": instanceID });
-
+        var instanceID = req.body.instanceID;
+        var id = req.body.idToGet;
+        var file = req.body.filepath.replace(/[^\d\w-_.]/g,"_");
+        tersect(sets,fullCommand,threshold,id,file,instanceID);
+        res.send({ "location": instanceID });
+    }
 });
 
 ////Query VCF Download Route ---------------------------------
 
 router.post('/tersectQueries/:id/download', function(req, res, next){
-    var query = {_id:req.params.id};
-    console.error(req.params.id);
-    TersectVCF.findOne(query,function(err,entry){
-        if(err){
-            console.error("Cant find file for download id.");
-            next(err);
-        }
-        else {
-            var file = entry.route;
-            res.set('Content-Type', 'application/gzip');
+    if (!req.params.id){
+        res.status(403).send("Malformed Request.")
+    } else {
+        var query = {_id:req.params.id};
+        console.error(req.params.id);
+        TersectVCF.findOne(query,function(err,entry){
+            if(err){
+                console.error("Cant find file for download id.");
+                res.status(404).send("Can't find selected resource.");
+            }
+            else {
+                var file = entry.route;
+                res.set('Content-Type', 'application/gzip');
 
-            res.download(file);
-        }
-    })
+                res.download(file);
+            }
+        })
+    }
+
 });
 
 ////Query VCF Purge Route ---------------------------------
 //Delete every query VCF file for the instance
 router.delete('/delete-query-vcfs/:instanceID', isTersectAuthenticated, function(req, res, next){
-    console.log("instanceID: "+ req.params.instanceID)
-    var query = {instance_id:req.params.instanceID};
-    TersectVCF.deleteMany(query, function(err){
-        if(err){
-            console.error("Error encountered purging instance query VCFs: "+err);
-            next(err);
-        }
-    });
-    rimraf(path.join(dir,"newVCF",req.params.instanceID),function(err){
-        if(err){
-            console.error('Error in /tersectQueries query VCF deletion: ' + err)
-            next(err);
+    var flag = 0;
+    var instanceID = req.params.instanceID;
+    if (instanceID){
+        instanceID = instanceID.replace(/[./]/g, "")
+    }
+    if(!instanceID) {
+        res.status(403).send("Malformed Request.")
+    } else {
+        console.log("instanceID: "+ instanceID)
+        var query = {instance_id:instanceID};
+        TersectVCF.deleteMany(query, function(err){
+            if(err){
+                console.error("Error encountered purging instance query VCFs: "+err);
+                if (!res.headersSent){res.status(404).send("Resource Not Found.")};
+            }
+        });
+        if(fs.existsSync(path.join(dir,"newVCF",instanceID))){
+            rimraf(path.join(dir,"newVCF",instanceID),function(err){
+                if(err){
+                    console.error('Error in /tersectQueries query VCF deletion: ' + err)
+                    if (!res.headersSent){res.status(404).send("Resource Not Found.")};
+                } else {
+                    res.send('success')
+                }
+            })
         } else {
-            res.send('success')
+            console.error("Route Doesnt Exist.")
         }
-    })
-})
+        if(!res.headersSent){res.send("success")}
+    }
+});
 
 module.exports = router;

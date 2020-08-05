@@ -101,12 +101,12 @@ Genoverse.Plugins.tersectIntegration = function () {
                     'Tersect Plugin': '',
                     '</br><button class="btn btn-default btn-block" id="tsi-file">Select TSI File <i class="fa fa-folder-open"></i></button> \
                         <div id="gv-tersect-gui-container" class="panel panel-default"><div class="panel-heading"><h4 class="panel-title">Samples in TSI</h4></div></br> \
-                        <div id="gv-tersect-tab-container"> <span id="countA" class="btn btn-primary"><span class="wild"></span> <i class="count-close fa fa-times-circle"></i></span> <span id="countB" class="btn btn-primary"><span class="wild"></span> <i class="count-close fa fa-times-circle"></i></span> <span id="countC" class="btn btn-primary"><span class="wild"></span> <i class="count-close fa fa-times-circle"></i></span> <button class="btn btn-primary btn-sm" id="addCircle"><i class="fa fa-plus"></i></button></div></br></br>\
+                        <div id="gv-tersect-tab-container"> <span id="countA" class="wild btn btn-primary"><span></span>  <i class="count-close fa fa-times-circle"></i></span> <span id="countB" class="wild btn btn-primary"><span></span>  <i class="count-close fa fa-times-circle"></i></span> <span id="countC" class="wild btn btn-primary"><span></span>  <i class="count-close fa fa-times-circle"></i></span> <button class="btn btn-primary btn-sm" id="addCircle"><i class="fa fa-plus"></i></button></div></br></br>\
                         <input type="text" id="searchBox" placeholder="Search for samples..."/></br></br> \
                         <table id="genomeTable"></table>\
                         <div class="panel-footer"><button class="btn btn-default btn-sm" id="clearSample">Clear Samples <i class="fa fa-eraser"></i></button></div></div> \
                         </div><div class="panel panel-default" id="setnotation"> <div class="panel-heading"><h5 class="panel-title">Set notation</h5> </div><div class="panel-body"><div id="onLeft"><span id="notation" class="badge"></span> </div><div id="onRight"><button class="btn btn-default btn-xs" id="clearOperations">Clear Operations <i class="fa fa-eraser"></i></button></div></div></div>\
-                        <div><input type="text" id="filepath" />&nbsp;&nbsp;<button class="btn btn-primary" id="submit">Submit Query <i class="fa fa-download"></i></button>\
+                        <div><input type="text" placeholder="File Name" id="filepath" />&nbsp;<input type="number" placeholder="Threshold" min="1" max="3" id="gv-tersect-threshold"/>&nbsp;<button class="btn btn-primary" id="submit">Submit Query <i class="fa fa-download"></i></button>\
                         <div id="tooltipdiv">\
                             <table id="sampleA" class="venntooltip">\
                             <tbody>\
@@ -993,7 +993,7 @@ function vennInit() {
             }).show();
         }
     });
-    $('.gv-tersect-integration-menu').on("click","i.count-close", function(e){
+    $('.gv-tersect-integration-menu i.count-close').on("click", function(e){
         e.stopImmediatePropagation();
         e.preventDefault();
         var delCircle = $(this).parent().children("span").text().charAt(0);
@@ -1065,9 +1065,6 @@ function vennInit() {
 
     $('.wild').click(function () {
         var selection = $(this);
-
-
-
         function duplicate() {
             if ($(".venntooltip td").length !== 0) {
                 var check = [];
@@ -1095,15 +1092,15 @@ function vennInit() {
         if (wildcardgroup !== undefined && duplicate()) {
             var group = wildcardgroup + '*';
 
-            if (selection.parent().attr("id") == "countA") {
+            if (selection.attr("id") == "countA") {
                 addSample(group, filesetA);
                 sampleCountA = sampleCountA + groupNum;
                 $("#countA span").text("A: " + sampleCountA);
-            } else if (selection.parent().attr("id") == "countB") {
+            } else if (selection.attr("id") == "countB") {
                 addSample(group, filesetB);
                 sampleCountB = sampleCountB + groupNum;
                 $("#countB span").text("B: " + sampleCountB);
-            } else if (selection.parent().attr("id") == "countC") {
+            } else if (selection.attr("id") == "countC") {
                 addSample(group, filesetC);
                 sampleCountC = sampleCountC + groupNum;
                 $("#countC span").text("C: " + sampleCountC);
@@ -1227,6 +1224,7 @@ function vennInit() {
             operations.command = command;
             operations.instanceName = instance_name;
             operations.instanceID = instance_id;
+            operations.threshold = $("#gv-tersect-threshold").val();
             //check file name ends with vcf
             if ($("#filepath").val().endsWith(".vcf")) {
                 operations.filepath = $("#filepath").val();
