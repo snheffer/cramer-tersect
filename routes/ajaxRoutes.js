@@ -513,12 +513,12 @@ function tersect(sets, command, threshold, id, file, instanceID) {
                     var thresholdCommand = thresholdCalculator(threshold, sets , entry.route);
                     command = command + thresholdCommand;
                     var tcommand = spawn('tersect', ['view', entry.route, command]);
-                    var output = fs.createWriteStream(filepath);
                     tcommand.on("error", (err)=> {
                         if(err.message === "tersectError"){
                             console.log("Error generating new VCF");
                         }
                     });
+                    var output = fs.createWriteStream(filepath);
                     tcommand.stdout.on('data', (data) => {
                         output.write(data);
                     });
