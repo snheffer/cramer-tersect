@@ -870,9 +870,9 @@ function indexGetter(parent, idToGet, url) {
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 var area = [];
-var filesetA = [];
-var filesetB = [];
-var filesetC = [];
+var filesetA = []; //sent with request object for construction of query
+var filesetB = []; //sent with request object for construction of query
+var filesetC = []; //sent with request object for construction of query
 var wildcardgroup;
 var wildcardID = [];
 var operations = {};
@@ -1180,20 +1180,7 @@ function vennInit() {
 
 
 
-    $('#clearSample').click(function () {
-        filesetA = [];
-        filesetB = [];
-        filesetC = [];
-        sampleCountA = 0;
-        sampleCountB = 0;
-        sampleCountC = 0;
-        $("#countA span").text("A: " + sampleCountA);
-        $("#countB span").text("B: " + sampleCountB);
-        $("#countC span").text("C: " + sampleCountC);
-        $('#genomeTable td').draggable('option', 'disabled', false);
-        $('.venntooltip tr').remove();
-
-    });
+    $('#clearSample').click(resetSamples);
 
     $('#clearOperations').click(resetVenn);
 
@@ -1316,6 +1303,20 @@ function resetVenn() {
     customiseVenn()
 }
 
+function resetSamples() {
+    filesetA = [];
+    filesetB = [];
+    filesetC = [];
+    sampleCountA = 0;
+    sampleCountB = 0;
+    sampleCountC = 0;
+    $("#countA span").text("A: " + sampleCountA);
+    $("#countB span").text("B: " + sampleCountB);
+    $("#countC span").text("C: " + sampleCountC);
+    $('#genomeTable td').draggable('option', 'disabled', false);
+    $('.venntooltip tbody tr:nth-child(n+2)').remove();
+
+}
 
 //function to add sample group to fileset array and tooltip
 function addSample(input, fset) {
@@ -1345,7 +1346,8 @@ function addSample(input, fset) {
         }
     });
     //number of samples in wildcard
-    groupNum = $('#genomeTable td:visible').length;
+    //groupNum = $('#genomeTable td:visible').length;
+    groupNum = wildcardID.length;
     $('#sample' + set + ' > tbody:last-child').append(`<tr><td id="table${wildcardID}"><button class="tableButton btn btn-default" id="${set + wildcardID}" name="${groupNum}">${input}  <i class="fa fa-trash"></i></button></td></tr>`);
     wildcardID = [];
 
@@ -2008,7 +2010,7 @@ function commandParse(command,html_id){
         var mapObj = {
             A: "u" + filesetA.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, ""),
             B: "u" + filesetB.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, ""),
-            C: "u" + filesetB.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, "")
+            C: "u" + filesetC.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, "")
         };
         var fullCommand = command.replace(/A|B|C/g, function (matched) {
             return mapObj[matched];
@@ -2018,5 +2020,27 @@ function commandParse(command,html_id){
     $(html_id).empty().val(fullCommand)
 }
 
+function loadFromTemplate(setA,setB,setC){
+    resetSamples();
+    //resetVenn();
+    for(var sample of setA){
+        wildcardgroup = sample.substring(0,sample.length-1);
+        addSample(sample,filesetA);
+        sampleCountA = sampleCountA + groupNum;
+        $("#countA span").text("A: " + sampleCountA);
+    }
+    for(var sample of setB){
+        wildcardgroup = sample;
+        addSample(sample,filesetA);
+        sampleCountB = sampleCountB + groupNum;
+        $("#countB span").text("B: " + sampleCountB);
+    }
+    for(var sample of setC){
+        wildcardgroup = sample;
+        addSample(sample,filesetA);
+        sampleCountC = sampleCountC + groupNum;
+        $("#countC span").text("C: " + sampleCountC);
+    }
+}
 
 Genoverse.Plugins.tersectIntegration.requires = 'controlPanel';

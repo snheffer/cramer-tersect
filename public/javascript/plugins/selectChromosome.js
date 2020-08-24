@@ -18,7 +18,7 @@ Genoverse.Plugins.selectChromosome = function () {
                     chromosomesList: function () {
                          $('#select').append('<option value="blank">' + '' + '</option>');
                         for (var i = 0; i < count; i++) {
-                        $('#select').append('<option value="' + i + '">' + Object.keys(genome)[i] + '</option>');
+                        $('#select').append('<option value="' + i + '">' + Object.keys(genome)[i] + (genome[Object.keys(genome)[i]]["alias"] ? (" - "+genome[Object.keys(genome)[i]]["alias"]):"") + '</option>');
                         }
                     }
                 });

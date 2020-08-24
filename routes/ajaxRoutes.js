@@ -125,7 +125,7 @@ router.post('/vcfUpload/new',isUploadAuthenticated, function(req,res,next){
     form.multiples = false;
     form.maxFileSize = 5 * 1024 * 1024 * 1024;
     var randomDirName = uuid();
-    var newPath = path.join(__dirname, "../vcf/"+randomDirName);
+    var newPath = path.join(dir, "vcf", randomDirName);
 
     // log any errors that occur
     form.on('error', function(err) {
@@ -509,6 +509,9 @@ function tersect(sets, command, threshold, id, file, instanceID) {
                     console.error("Command: "+ command);
                     console.error("newPath: "+ newPath);
                     console.error("filepath: "+ filepath);
+                    console.error("typeof: " + Array.isArray(sets));
+                    console.log("Sets:"+ JSON.stringify(sets));
+                    console.log("Threshold:"+ threshold);
                     console.log(entry.route);
                     var thresholdCommand = thresholdCalculator(threshold, sets , entry.route);
                     command = command + thresholdCommand;
