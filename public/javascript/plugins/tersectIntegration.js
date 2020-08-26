@@ -129,7 +129,7 @@ Genoverse.Plugins.tersectIntegration = function () {
                                 </tr>\
                                 </tbody>\
                             </table>\ </div>': '<div id="venn"></div><div id="venncontrols" class="panel panel-default"><div class="panel-heading"><h5 class="panel-title">Modify Command</h5></div><div class="panel-body">  <span style="display:inline-block; width: 15px;"></span> <input id="gv-tersect-advancedInput" type="text" size="45"/>&nbsp;&nbsp;</div></div></br></br>\
-                            <div id="query"><span style="display:inline-block; width: 20px;"></span><button class="btn btn-default btn-xs" id="saved-queries">Saved Queries <i class="fa fa-folder-open"></i></button></div></div>',
+                            <div id="query"><span style="display:inline-block; width: 20px;"></span><button class="btn btn-default btn-xs" id="saved-queries">Saved Queries <i class="fa fa-folder-open"></i></button><button class="btn btn-default btn-xs" id="sample">Load Sample Data <i class="fa fa-folder-open"></i></button></div></div>',
 
                 }).addClass('gv-tersect-integration-menu');
                 vennInit();
@@ -160,7 +160,7 @@ Genoverse.Plugins.tersectIntegration = function () {
                     '': '',
                     '<button class="btn btn-primary" id="submit-new-button">Generate New Index <i class="fa fa-arrow-circle-right"></i></button>': ''
                 }).addClass('gv-tersect-integration-file-menu');
-                vcfUploader(generationMenu, '#submit-new-button', "#vcf-file-chooser", "#select-vcf", "vcf", "/index/vcfUpload/new")
+                vcfUploader(generationMenu, '#submit-new-button', "#vcf-file-chooser", "#select-vcf", "vcf", "/index/vcfUpload/new");
                 return generationMenu;
             }
 
@@ -250,7 +250,7 @@ function fileUploader(parent, submit_link_text, progress_bar, chooser, extension
             $(progress_bar, parent).width("0%");
             var formData = new FormData();
             formData.append("instanceName", instance_name);
-            formData.append("instanceID", instance_id)
+            formData.append("instanceID", instance_id);
             for (var i = 0; i < files.length; i++) {
                 var file = files[i];
                 // add the files to formData object for the data payload
@@ -401,7 +401,7 @@ function queryPopulator(query_list, id, query_url) {
         url: query_url,
         success: function (data) {
             $.each(data, function () {
-                $(query_list).append('<tr data-id="' + this._id + '"><td><a class="gv-tersect-query-name">' + this.name + '</a></td><td class="CellWithComment"><span class="CellComment">' + decodeURIComponent(this.command) + '</span><span>' + decodeURIComponent(this.command) + '</span></td><td><a class="gv-tersect-query-download">Download</a></td><td><a class="gv-tersect-query-delete">delete</a></td></tr>');
+                $(query_list).append('<tr data-id="' + this._id + '"><td><a class="gv-tersect-query-name">' + this.name + '</a></td><td class="CellWithComment"><span class="CellComment">' + decodeURIComponent(this.command) + '</span><span>' + decodeURIComponent(this.command) + '</span></td><td><a class="gv-tersect-query-edit">Edit</a></td><td><a class="gv-tersect-query-download">Download</a></td><td><a class="gv-tersect-query-delete">delete</a></td></tr>');
             });
 
 
@@ -436,6 +436,31 @@ function queryPopulator(query_list, id, query_url) {
                     success: function (data) {
                         alert("Item Deleted!");
                         queryPopulator(query_list, id, query_url);
+                    },
+                    error: function (err) {
+                        console.error(err);
+                    }
+                })
+            });
+            $(query_list).parent().on('click', '.gv-tersect-query-edit', function () {
+                console.log("edit event fired at: " + Date.now());
+                $.ajax({
+                    type: 'POST',
+                    url: query_url + "/" + $(this).parent().parent().data("id") + "/edit",
+                    statusCode: {
+                        403: function (xhr) {
+                            new Noty({
+                                type: 'error',
+                                layout: 'topRight',
+                                text: "You Must be logged in.",
+                                timeout: '4000',
+                                theme: 'light',
+                            }).show();
+                        }
+                    },
+                    success: function (data) {
+                        console.log(data)
+                        loadFromTemplate(data)
                     },
                     error: function (err) {
                         console.error(err);
@@ -1320,6 +1345,7 @@ function resetSamples() {
 
 //function to add sample group to fileset array and tooltip
 function addSample(input, fset) {
+    var input_2 = (input.endsWith("*")) ? input.slice(0,-1) : input;
     fset.push(`'` + input + `'`);
     var set;
     if (fset == filesetA) {
@@ -1338,7 +1364,7 @@ function addSample(input, fset) {
     }).show();
 
     $("#genomeTable td").filter(function () {
-        if ($(this).text().indexOf(wildcardgroup) == 0) {
+        if ($(this).text().indexOf(input_2) == 0) {
             //disable drag on matching samples
             $(this).draggable('option', 'disabled', true);
             wildcardID.push(this.id);
@@ -2020,24 +2046,21 @@ function commandParse(command,html_id){
     $(html_id).empty().val(fullCommand)
 }
 
-function loadFromTemplate(setA,setB,setC){
+function loadFromTemplate(setArray){
     resetSamples();
-    //resetVenn();
-    for(var sample of setA){
-        wildcardgroup = sample.substring(0,sample.length-1);
+    resetVenn();
+    for(var sample of setArray[0]){
         addSample(sample,filesetA);
         sampleCountA = sampleCountA + groupNum;
         $("#countA span").text("A: " + sampleCountA);
     }
-    for(var sample of setB){
-        wildcardgroup = sample;
-        addSample(sample,filesetA);
+    for(var sample of setArray[1]){
+        addSample(sample,filesetB);
         sampleCountB = sampleCountB + groupNum;
         $("#countB span").text("B: " + sampleCountB);
     }
-    for(var sample of setC){
-        wildcardgroup = sample;
-        addSample(sample,filesetA);
+    for(var sample of setArray[2]){
+        addSample(sample,filesetC);
         sampleCountC = sampleCountC + groupNum;
         $("#countC span").text("C: " + sampleCountC);
     }

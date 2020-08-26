@@ -58,158 +58,194 @@ isTersectAuthenticated = function (req, res, next) {
 
 //route for uploading a new Tersect Index (TSI) file.
 router.post('/tersectUpload/new',isUploadAuthenticated, function(req,res,next){
-        // create an incoming form object
-        var form = new formidable.IncomingForm();
-        var fields = {};  
-        // specify that we dont want to allow the user to upload multiple files in a single request
-        form.multiples = false;
-        form.maxFileSize = 5 * 1024 * 1024 * 1024;
-        // store all uploads in the /uploads directory
-        form.uploadDir = path.join(__dirname, '../indexes');
-        // every time a file has been uploaded successfully,
-        // rename it to it's original name
-        form.on('field',function(name,field){
-            fields[name] = field;
-        });
-        form.on('file', function(field, file) {
-            if(file.name.match(/\.(TSI|tsi)$/i)) {
-                var newPath = path.join(form.uploadDir,file.name);
-                newPath = path.join(form.uploadDir,(path.basename(newPath).replace(/\.[^/.]+$/, "")+"_"+uuid()+path.extname(newPath)));
-                fs.renameSync(file.path, newPath);
-                console.error(file.path);
-                console.error(fields.instanceName);
-                var item = new TersectIntegration({ name: file.name, instance_id: fields.instanceID, local: true, route: newPath });
-                item.save(function (err, item) {
-                    if (err) {
-                        console.error(err);
-                        form.emit("error", new Error("database"));
-                    }
-                });
-            } else {
-                console.log(file.name + " is not allowed");
-                form.emit("error",new Error("fileType"));
-            }
-
-        });
-        // log any errors that occur
-        form.on('error', function(err) {
-            console.log('An error has occurred: \n' + err);
+    // create an incoming form object
+    // specify that we dont want to allow the user to upload multiple files in a single request
+    var form = new formidable({multiples:false,maxFileSize:5368709120,uploadDir:path.join(dir,'indexes')});
+    var newPath = "";
+    form.parse(req, function(err,fields,files){
+        if(err){
             req.pause();
-            if(err.message === "fileType"){
+            res.writeHead(413, {'Content-Type': 'text/plain'});
+            res.end('Tersect Error')
+        } else {
+            console.log(JSON.stringify(files));
+            if(files["uploads[]"].name.match(/\.(TSI|tsi)$/i)) {
+                newPath = path.join(form.uploadDir,files["uploads[]"].name);
+                newPath = path.join(form.uploadDir,(path.basename(newPath).replace(/\.[^/.]+$/, "")+"_"+uuid()+path.extname(newPath)));
+                console.log("newpath: "+newPath)
+                fs.renameSync(files["uploads[]"].path, newPath);
+                var flag = false;
+                var sampleCheck = spawnSync('tersect',["samples",newPath,"-m","'*'"],{shell:true});
+                var sampleCheckOutput = sampleCheck.stdout;
+                console.log(sampleCheckOutput);
+                sampleCheckOutput = sampleCheckOutput.toString().trim().split('\n');
+                for (var name of sampleCheckOutput){
+                    if(name.endsWith("*")){
+                        flag = true;
+                        break
+                    }
+                }
+                if(flag){
+                    res.writeHead(500, {'Content-Type': 'text/plain'});
+                    res.end('Tersect Index Contains Samples With Wildcard In Their Names. Will not work with current iteration of CRAMER/Tersect')
+                    console.log('Tersect Index Contains Samples With Wildcard In Their Names. Will not work with current iteration of CRAMER/Tersect')
+                    rimraf(newPath, function(err){
+                        if(err){
+                            console.error("Error deleting file located at: " + newPath)
+                        } else console.error("Deleted file located at: " + newPath)
+                    })
+                } else {
+                    var item = new TersectIntegration({ name: files["uploads[]"].name, instance_id: fields.instanceID, local: true, route: newPath });
+                    item.save(function (err, item) {
+                        if (err) {
+                            console.error(err);
+                            res.writeHead(500, {'Content-Type': 'text/plain'});
+                            res.end('Tersect Database Error')
+                        } else {
+                            res.end("success");
+                            console.log("saved to DB!")
+                        }
+                    });
+                }
+            } else {
+                console.log(files["uploads[]"].name + " is not allowed");
+                req.pause();
                 res.writeHead(422, {'Content-Type': 'text/plain'});
                 res.end('Wrong File Type')
-            } else if(err.message === "database" ){
-                res.writeHead(500, {'Content-Type': 'text/plain'});
-                res.end('Tersect Database Error')
-            } else {
-                res.writeHead(413, {'Content-Type': 'text/plain'});
-                res.end('Tersect Error')
             }
+        }
+    });
 
-        });
-        // once all the files have been uploaded, send a response to the client
-        form.on('end', function() {
-            res.end('success');
-        });
-        // parse the incoming request containing the form data
-        form.parse(req);
 });
 
 //uploader route for uploading new vcf files to generate new TSI files, and add them to the database.
 router.post('/vcfUpload/new',isUploadAuthenticated, function(req,res,next){
-    // create an incoming form object
-    var form = new formidable.IncomingForm();
-    var fields = {};
-    var files = [];
-    // specify that we want to allow the user to upload multiple files in a single request
-    form.multiples = false;
-    form.maxFileSize = 5 * 1024 * 1024 * 1024;
     var randomDirName = uuid();
     var newPath = path.join(dir, "vcf", randomDirName);
-
-    // log any errors that occur
-    form.on('error', function(err) {
-        console.log('An error has occurred: \n' + err);
-        req.pause();
-        if(err.message === "fileType"){
-            res.writeHead(422, {'Content-Type': 'text/plain'});
-            res.end('Wrong File Type')
-        } else if(err.message === "database" ){
-            res.writeHead(500, {'Content-Type': 'text/plain'});
-            res.end('Tersect Database Error')
-        } else {
-            res.writeHead(413, {'Content-Type': 'text/plain'});
-            res.end('Tersect Error')
-        }
-
-    });
-
     fs.mkdir(newPath, { recursive: true }, (err) => {
         if (err){
             console.error(err);
-            form.emit("error", new Error("newDir"))
-        }
-    });
+            res.writeHead(500, {'Content-Type': 'text/plain'});
+            res.end('Tersect Database Error')
+        } else {console.log("making newPath directory...")
+            // create an incoming form object
+            var form = new formidable.IncomingForm();
+            var fields = {};
+            var files = [];
+            // specify that we want to allow the user to upload multiple files in a single request
+            form.multiples = false;
+            form.maxFileSize = 5 * 1024 * 1024 * 1024;
+            // log any errors that occur
+            form.on('error', function(err) {
+                console.log('An error has occurred: \n' + err);
+                req.pause();
+                if(err.message === "fileType"){
+                    res.writeHead(422, {'Content-Type': 'text/plain'});
+                    res.end('Wrong File Type')
+                } else if(err.message === "database" ){
+                    res.writeHead(500, {'Content-Type': 'text/plain'});
+                    res.end('Tersect Database Error')
+                } else {
+                    res.writeHead(413, {'Content-Type': 'text/plain'});
+                    res.end('Tersect Error')
+                }
+            });
+            // store all uploads in the ../vcf/ directory in a random directory.
+            form.uploadDir = newPath;
+            // every time a file has been uploaded successfully,
+            // rename it to it's original name
+            form.on('field',function(name,field){
+                fields[name] = field;
+                console.log(JSON.stringify(fields))
+            });
+            form.on ('fileBegin', function(name, file){
+                //rename the incoming file to the file's name
+                if(file.name.toLowerCase().endsWith(".vcf")){
+                    file.path = form.uploadDir + "/" + path.basename(file.name)+"_"+uuid()+".vcf";
 
-    // store all uploads in the ../vcf/ directory in a random directory.
-    form.uploadDir = newPath;
-    // every time a file has been uploaded successfully,
-    // rename it to it's original name
-    form.on('field',function(name,field){
-        fields[name] = field;
-    });
-    form.on ('fileBegin', function(name, file){
-        //rename the incoming file to the file's name
-        if(file.name.toLowerCase().endsWith(".vcf")){
-            file.path = form.uploadDir + "/" + path.basename(file.name)+"_"+uuid()+".vcf";
+                } else if (file.name.toLowerCase().endsWith(".vcf.gz")){
+                    file.path = form.uploadDir + "/" + path.basename(file.name)+"_"+uuid()+".vcf.gz";
 
-        } else if (file.name.toLowerCase().endsWith(".vcf.gz")){
-            file.path = form.uploadDir + "/" + path.basename(file.name)+"_"+uuid()+".vcf.gz";
-
-        } else {form.emit("error", new Error("fileType"))}
-
-    });
-    form.on('file', function(name, file) {
-        files.push(file);
-    });
-
-    // once all the files have been uploaded, send a response to the client
-    form.on('end', function() {
-        GenoverseInstance.exists({_id:fields.instanceID}, function(err, result){
-            if(err){
-                form.emit("error", new Error("database"))
-            } else {
-                res.end('success');
-                console.error(JSON.stringify(fields, null, 4));
-                console.error(JSON.stringify(files, null, 4));
-                fields.newName = fields.newName.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
-                const newIndexName =  fields.newName+"_"+uuid()+ ".tsi";
-                const child = spawn("tersect", ["build", newIndexName,"../vcf/"+randomDirName+"/*"], {shell:true, cwd: path.join(dir,"indexes")});
-                child.on("error", err => {
-                    console.error(err);
-                });
-                child.on("close", (code, signal) => {
-                    if (code !== 0) {
-                        console.error(`tersect process exited with code ${code}`);
+                } else {form.emit("error", new Error("fileType"))}
+            });
+            form.on('file', function(name, file) {
+                files.push(file);
+                console.log(JSON.stringify(files))
+            });
+            // once all the files have been uploaded, send a response to the client
+            form.on('end', function() {
+                GenoverseInstance.exists({_id:fields.instanceID}, function(err, result){
+                    if(err){
+                        form.emit("error", new Error("database"))
                     } else {
-                        var item = new TersectIntegration({
-                            name: fields.newName,
-                            instance_id: fields.instanceID,
-                            local: true,
-                            route: path.join(dir, "indexes", newIndexName)
+                        res.end('success');
+                        console.error(JSON.stringify(fields, null, 4));
+                        console.error(JSON.stringify(files, null, 4));
+                        fields.newName = fields.newName.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+                        const newIndexName =  fields.newName+"_"+uuid()+ ".tsi";
+                        const child = spawn("tersect", ["build", newIndexName,"../vcf/"+randomDirName+"/*"], {shell:true, cwd: path.join(dir,"indexes")});
+                        child.on("error", err => {
+                            console.error(err);
                         });
-                        item.save(function (err, item) {
-                            if (err) {
-                                console.error(err)
+                        child.stdout.on('data', function(data) {
+                            console.log(data.toString());
+                        });
+                        child.on("close", (code, signal) => {
+                            if (code !== 0) {
+                                console.error(`tersect process exited with code ${code}`);
+                            } else {
+                                var flag = false;
+                                var indexPath = path.join(dir, "indexes", newIndexName);
+                                var sampleCheck = spawnSync('tersect',["samples",indexPath,"-m","'*'"],{shell:true});
+                                var sampleCheckOutput = sampleCheck.stdout;
+                                console.log(sampleCheckOutput);
+                                sampleCheckOutput = sampleCheckOutput.toString().trim().split('\n');
+                                for (var name of sampleCheckOutput){
+                                    if(name.endsWith("*")){
+                                        flag = true;
+                                        break
+                                    }
+                                }
+                                if(flag){
+                                    console.log('Tersect Index Contains Samples With Wildcard In Their Names. Will not work with current iteration of CRAMER/Tersect')
+                                    rimraf(indexPath, function(err){
+                                        if(err){
+                                            console.error("Error deleting file located at: " + indexPath)
+                                        } else console.error("Deleted file located at: " + indexPath)
+                                    });
+                                    rimraf(newPath, function(err){
+                                        if(err){
+                                            console.error("Error deleting file located at: " + newPath)
+                                        } else console.error("Deleted file located at: " + newPath)
+                                    })
+                                } else {
+                                    var item = new TersectIntegration({
+                                        name: fields.newName,
+                                        instance_id: fields.instanceID,
+                                        local: true,
+                                        route: indexPath
+                                    });
+                                    item.save(function (err, item) {
+                                        if (err) {
+                                            console.error("Error Saving to database: " + err)
+                                        }
+                                    });
+                                    rimraf(newPath, function(err){
+                                        if(err){
+                                            console.error("Error deleting file located at: " + newPath)
+                                        } else console.error("Deleted file located at: " + newPath)
+                                    })
+                                }
+
                             }
-                        });
+                        })
                     }
                 })
-            }
-        })
+            });
+            // parse the incoming request containing the form data
+            form.parse(req);
+        }
     });
-    // parse the incoming request containing the form data
-    form.parse(req);
 });
 
 ////Populator Routes --------------------------------------------------------
@@ -467,7 +503,6 @@ function thresholdCalculator(_threshold, sets , file){
         }
         console.log(wildcards);
         console.log(megaset);
-        var wildset = [];
         ///home/user/Desktop/Thesis/tersectcramer_GP/indexes/new_214bb983-0618-4828-ba92-b0d9b70853e1.tsi
         var getSamples = spawnSync('tersect', ["view",file, wildcards], { shell: true });
         //The output of the command is printed in the command line if there are no errors
@@ -565,7 +600,7 @@ function tersect(sets, command, threshold, id, file, instanceID) {
                                         if (code !== 0) {
                                             console.log(`tabix process exited with code ${code}`);
                                         } else {
-                                            var item = new TersectVCF({ name: file, command:encodeURIComponent(command), instance_id: instanceID, parent_id:id,  route: filePathForTabix});
+                                            var item = new TersectVCF({ name: file, command:encodeURIComponent(command), sets:sets, instance_id: instanceID, parent_id:id,  route: filePathForTabix});
                                             item.save(function (err, item) {
                                                 if (err) {
                                                     return console.error(err);
@@ -636,6 +671,28 @@ router.post('/tersectQueries/:id/download', function(req, res, next){
                 res.set('Content-Type', 'application/gzip');
 
                 res.download(file);
+            }
+        })
+    }
+
+});
+
+
+////Query VCF Edit Route ---------------------------------
+
+router.post('/tersectQueries/:id/edit', function(req, res, next){
+    if (!req.params.id){
+        res.status(403).send("Malformed Request.")
+    } else {
+        var query = {_id:req.params.id};
+        console.error(req.params.id);
+        TersectVCF.findOne(query,function(err,entry){
+            if(err){
+                console.error("Cant find file for download id.");
+                res.status(404).send("Can't find selected resource.");
+            }
+            else {
+                res.send(entry.sets)
             }
         })
     }
