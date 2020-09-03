@@ -114,12 +114,9 @@
 }
 
 .gv-tersect-integration-plugin .gv-tersect-integration-file-menu {
-    max-width: 600px;
-}
-
-.gv-tersect-integration-plugin .gv-tersect-integration-file-menu {
     left: 24%;
     top: 70px;
+    max-width: 600px;
 }
 
 .gv-tersect-integration-plugin .gv-tersect-integration-file-menu table {
@@ -345,6 +342,11 @@ progress[value] {
     border-color: #4D6297;
 }
 
+#tersectMenu>div>table {
+    max-width: 98%;
+    width: 100%;
+}
+
 #tersectMenu tr:first-child td  {
     background-color: #4D6297;
     color: #FFFFFF;
@@ -353,6 +355,17 @@ progress[value] {
 
 #tersectMenu *{
     color: #0f0f0f;
+}
+
+#queryMenu {
+    width: 900px;
+    max-width: 900px;
+    left: 5%
+}
+
+#queryMenu table {
+    max-width: 98%;
+    width: 100%;
 }
 
 #query{
