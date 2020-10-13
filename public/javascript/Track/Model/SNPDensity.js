@@ -13,12 +13,19 @@ Genoverse.Track.Model.SNPDensity = Genoverse.Track.Model.Graph.Bar.extend({
     parseData: function (text, chr, s, e) {
         var lines = text.split('\n');
         var features = [];
-        var binSize = this.binSize;
-        for (var j = s; j < e; j+= this.binSize/1000) {
+        console.error("Binsize Before Calculation" + this.binSize);
+
+        var binSize = this.binSize == -1 ? (Math.ceil((e-s)/10)) : this.binSize;
+
+        //var binSize = this.binSize;
+        console.log(`Start:${s} End:${e}`)
+        console.error(binSize);
+        //console.trace(binSize);
+        for (var j = s; j < e; j+= binSize/1000) {
                     features.push({
                         chr: chr,
                         start: j,
-                        end: j + this.binSize/1000,
+                        end: j + binSize/1000,
                         height: 0
                     });
                 }

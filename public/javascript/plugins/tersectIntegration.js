@@ -129,7 +129,7 @@ Genoverse.Plugins.tersectIntegration = function () {
                                 </tr>\
                                 </tbody>\
                             </table>\ </div>': '<div id="venn"></div><div id="venncontrols" class="panel panel-default"><div class="panel-heading"><h5 class="panel-title">Modify Command</h5></div><div class="panel-body">  <span style="display:inline-block; width: 15px;"></span> <input id="gv-tersect-advancedInput" type="text" size="45"/>&nbsp;&nbsp;</div></div></br></br>\
-                            <div id="query"><span style="display:inline-block; width: 20px;"></span><button class="btn btn-default btn-xs" id="saved-queries">Saved Queries <i class="fa fa-folder-open"></i></button><button class="btn btn-default btn-xs" id="sample">Load Sample Data <i class="fa fa-folder-open"></i></button></div></div>',
+                            <div id="query"><span style="display:inline-block; width: 20px;"></span><button class="btn btn-default btn-xs" id="saved-queries">Saved Queries <i class="fa fa-folder-open"></i></button></div></div>',
 
                 }).addClass('gv-tersect-integration-menu');
                 vennInit();

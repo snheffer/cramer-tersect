@@ -1,5 +1,17 @@
 Genoverse.Plugins.trackControls = function () {
   var defaultControls = [
+    $('<a title="Refresh this track" class="fa fa-undo">').on('click', function(){
+      //console.log($(this).data('track').reset());
+      //Genoverse.setScale();
+      //$(this).data("track").browser.move(3000);
+      //$(this).data("track").browser.init();
+      console.log($(this).data("track"));
+      console.log($("#genoverse").data("genoverse"));
+      var instance = $("#genoverse").data("genoverse");
+      $(this).data("track").models[-1].getData(instance.chr,instance.start,instance.end);
+      //instance.moveTo(instance.chr,instance.start+100,instance.end+100,true);
+      //instance.onTracks("makeFirstImage")
+    }),
     $('<a title="More info" class="fa fa-info-circle">').on('click', function () {
       var track = $(this).data('track');
       var menu  = track.prop('menus').filter('.gv-track-info');
