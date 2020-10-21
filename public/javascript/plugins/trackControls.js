@@ -5,9 +5,13 @@ Genoverse.Plugins.trackControls = function () {
       //Genoverse.setScale();
       //$(this).data("track").browser.move(3000);
       //$(this).data("track").browser.init();
-      console.log($(this).data("track"));
-      console.log($("#genoverse").data("genoverse"));
+      //console.log($(this).data("track"));
+      //console.log($("#genoverse").data("genoverse"));
       var instance = $("#genoverse").data("genoverse");
+      //INITIALISE TRACK, AND THEN RESET IN THIS ORDER FOR REDRAWING
+      $(this).data("track").views[-1].init();
+      $(this).data("track").models[-1].init();
+      $(this).data("track").reset();
       $(this).data("track").models[-1].getData(instance.chr,instance.start,instance.end);
       //instance.moveTo(instance.chr,instance.start+100,instance.end+100,true);
       //instance.onTracks("makeFirstImage")
