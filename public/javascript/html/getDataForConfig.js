@@ -589,7 +589,8 @@ function addSnpDensityTrack(modify, object) {
         'info: \'' + $('#snpDensityInfoInput').val().replace(/(\\)*([\\'"`])/g,"\\'") + '\',\n' +
         'model: Genoverse.Track.Model.SNPDensity.extend({\n' +
         'url: \'\<origin\>/index/request?chr=__CHR__&start=__START__&end=__END__&type=tabix\',\n' +
-        'largeFile: true,\n';
+        'largeFile: true,\n' +
+        'binSize_id: ' + $('#snpDensityNameInput').val()+uuidv4() +',\n';
 
     if (!modify & $('#snpDensityBinsizeInput').val() !== '') {
         trackString += 'binSize: ' + $('#snpDensityBinsizeInput').val() + ',\n';
@@ -1275,4 +1276,11 @@ function checkCustomTrack(name, info, trackString) {
 
     errMessage(errCustomTrack);
     return valid;
+}
+
+function uuidv4() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
 }

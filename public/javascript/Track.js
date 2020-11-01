@@ -566,8 +566,12 @@ Genoverse.Track = Base.extend({
   reset: function () {
     this.setLengthMap();
 
+    //complete initialisation allows redrawing dynamically for certain track types.
     for (var i in this.models) {
-      if (this.models[i].url !== false) {
+      if (arguments[0] == "completeSNPDensity" && this.models[i].url !== false) {
+        this.models[i].init();
+        [].shift.call(arguments);
+      } else if (this.models[i].url !== false) {
         this.models[i].init(true);
       }
     }

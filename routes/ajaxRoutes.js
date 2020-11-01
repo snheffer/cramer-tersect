@@ -391,7 +391,7 @@ router.post('/tersectQueries/newTracks',isTersectAuthenticated,function(req,res,
                                         track.trackChildren.push({
                                             "name": current.name,
                                             "description": current.command,
-                                            "data": "Genoverse.Track.SNPDensity.extend({\nname: '" + current.name + "',\ninfo: '" + current.command + "',\nmodel: Genoverse.Track.Model.SNPDensity.extend({\nurl: '\<origin\>/index/request?chr=__CHR__&start=__START__&end=__END__&type=tabix',\nlargeFile: true,\nurlParams: {file: '" + current.route + "'}\n})\n})"
+                                            "data": "Genoverse.Track.SNPDensity.extend({\nname: '" + current.name + "',\ninfo: '" + current.command + "',\nmodel: Genoverse.Track.Model.SNPDensity.extend({\nurl: '\<origin\>/index/request?chr=__CHR__&start=__START__&end=__END__&type=tabix',\nlargeFile: true,\nbinSize_id: '"+current.name+uuid()+"',\nurlParams: {file: '" + current.route + "'}\n})\n})"
                                             //'data': 'Genoverse.Track.SNPDensity.extend({\nname: "' + current.name + '",\ninfo: "' + current.command + '",\nmodel: Genoverse.Track.Model.SNPDensity.extend({\nurl: "http://'+ip.address()+':'+process.env.PORT+'/index/request?chr=__CHR__&start=__START__&end=__END__&type=tabix",\nlargeFile: true,\nurlParams: {file: "' + current.route + '"}\n})\n})'
                                         })
 
@@ -494,14 +494,14 @@ function thresholdCalculator(_threshold, sets , file){
     if(Number.isInteger(threshold) && threshold >= 1 && threshold <= 3){
         for(var set of sets){
             set.forEach((element)=>{
-                if(element.match(/\*/)){
+                if(element.endsWith('*')){
                     wildcards.push("'"+ element+"'");
                 } else {
                     megaset.push(element)
                 }
             })
         }
-        console.log(wildcards);
+        console.log(`wildcards: ${wildcards}`);
         console.log(megaset);
         ///home/user/Desktop/Thesis/tersectcramer_GP/indexes/new_214bb983-0618-4828-ba92-b0d9b70853e1.tsi
         var getSamples = spawnSync('tersect', ["view",file, wildcards], { shell: true });

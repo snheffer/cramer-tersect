@@ -1,6 +1,8 @@
 Genoverse.Track.Model.SNPDensity = Genoverse.Track.Model.Graph.Bar.extend({
     dataType: 'text',
     binSize: 1000000,
+    binSize_id: '',
+
 
     getData: function (chr, start, end) {
         var deferred = $.Deferred();
@@ -13,14 +15,24 @@ Genoverse.Track.Model.SNPDensity = Genoverse.Track.Model.Graph.Bar.extend({
     parseData: function (text, chr, s, e) {
         var lines = text.split('\n');
         var features = [];
-        console.error("Binsize Before Calculation" + this.binSize);
+        var temp_binsize = 0
+        console.error("Binsize Before Calculation: " + this.binSize);
+        //console.log(`SNPDensity Data Log: ${JSON.stringify(this, getCircularReplacer())}`)
+        if ($('#genoverse').data('master_binSize') && $('#genoverse').data('master_binSize') >= Math.ceil((e-s)/10)){
+            temp_binsize = $('#genoverse').data('master_binSize');
+        }
+        if ($('#genoverse').data('binSize_'+this.binSize_id) && $('#genoverse').data('binSize_'+this.binSize_id) >= Math.ceil((e-s)/10)){
+            temp_binsize = $('#genoverse').data('binSize_'+this.binSize_id);
+        }
+        console.log(`Grabbed ID :  ${this.binSize_id}`);
+        console.error("Temp Binsize After Calculation: " + temp_binsize);
 
-        var binSize = this.binSize == -1 ? (Math.ceil((e-s)/10)) : this.binSize;
+        var binSize = temp_binsize ? temp_binsize : (this.binSize == -1 ? (Math.ceil((e-s)/10)) : this.binSize) ;
 
         //var binSize = this.binSize;
         console.log(`Start:${s} End:${e}`)
         console.error(binSize);
-        //console.trace(binSize);
+
         for (var j = s; j < e; j+= binSize/1000) {
                     features.push({
                         chr: chr,

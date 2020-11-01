@@ -1,20 +1,14 @@
 Genoverse.Plugins.trackControls = function () {
   var defaultControls = [
     $('<a title="Refresh this track" class="fa fa-undo">').on('click', function(){
-      //console.log($(this).data('track').reset());
-      //Genoverse.setScale();
-      //$(this).data("track").browser.move(3000);
-      //$(this).data("track").browser.init();
-      //console.log($(this).data("track"));
-      //console.log($("#genoverse").data("genoverse"));
-      var instance = $("#genoverse").data("genoverse");
+      //var instance = $("#genoverse").data("genoverse");
       //INITIALISE TRACK, AND THEN RESET IN THIS ORDER FOR REDRAWING
-      $(this).data("track").views[-1].init();
-      $(this).data("track").models[-1].init();
-      $(this).data("track").reset();
-      $(this).data("track").models[-1].getData(instance.chr,instance.start,instance.end);
-      //instance.moveTo(instance.chr,instance.start+100,instance.end+100,true);
-      //instance.onTracks("makeFirstImage")
+      //console.log($(this).data('track'));
+      // for (var i in $(this).data("track").models){
+      //   console.log(i)
+      //   $(this).data("track").models[i].init()
+      // }
+      $(this).data("track").reset("completeSNPDensity");
     }),
     $('<a title="More info" class="fa fa-info-circle">').on('click', function () {
       var track = $(this).data('track');
@@ -67,6 +61,27 @@ Genoverse.Plugins.trackControls = function () {
     })
   ];
 
+  var binSizeSelector = $('<input type="number">').on('keypress', function (e) {
+    if(e.which === 13){
+      var instance = $("#genoverse").data("genoverse");
+      if ($(this).val() >= Math.ceil((instance.end-instance.start)/10)){
+        //$("#genoverse").data("master_binSize", $(this).val());
+        $("#genoverse").data('binSize_'+$(this).data("track")._defaults.model.prototype.binSize_id, $(this).val());
+
+        console.log($(this).data("track"));
+
+        $(this).data('track').reset("completeSNPDensity");
+      } else {
+        window.alert('That Binsize Value is Too Great For The Current Zoom Level')
+      }
+      //Disable textbox to prevent multiple submit
+      $(this).attr("disabled", "disabled");
+      //Enable the textbox again if needed.
+      $(this).removeAttr("disabled");
+    }
+  });
+  //($(this).data('track').namespace == 'SNPDensity'? binSizeSelector : []),
+
   var remove = $('<a title="Remove track" class="fa fa-trash">').on('click', function () {
     $(this).data('track').remove();
   });
@@ -91,8 +106,9 @@ Genoverse.Plugins.trackControls = function () {
       var defaultConfig = this.prop('defaultConfig');
       var savedConfig   = this.browser.savedConfig ? this.browser.savedConfig[this.prop('id')] || {} : {};
       var prop, el, j;
+      var namespace = this.model.track.namespace ? this.model.track.namespace : null;
 
-      controls = (controls || []).concat(defaultControls, this.prop('removable') === false ? [] : remove);
+      controls = (controls || []).concat((namespace === "SNPDensity" ? binSizeSelector : []), defaultControls, this.prop('removable') === false ? [] : remove);
 
       this.trackControls = $('<div class="gv-track-controls">').prependTo(this.container);
 
