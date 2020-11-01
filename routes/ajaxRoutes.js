@@ -72,19 +72,19 @@ router.post('/tersectUpload/new',isUploadAuthenticated, function(req,res,next){
             if(files["uploads[]"].name.match(/\.(TSI|tsi)$/i)) {
                 newPath = path.join(form.uploadDir,files["uploads[]"].name);
                 newPath = path.join(form.uploadDir,(path.basename(newPath).replace(/\.[^/.]+$/, "")+"_"+uuid()+path.extname(newPath)));
-                console.log("newpath: "+newPath)
+                console.log("newpath: "+newPath);
                 fs.renameSync(files["uploads[]"].path, newPath);
                 var flag = false;
                 var sampleCheck = spawnSync('tersect',["samples",newPath,"-m","'*'"],{shell:true});
                 var sampleCheckOutput = sampleCheck.stdout;
                 console.log(sampleCheckOutput);
                 sampleCheckOutput = sampleCheckOutput.toString().trim().split('\n');
-                for (var name of sampleCheckOutput){
-                    if(name.endsWith("*")){
-                        flag = true;
-                        break
-                    }
-                }
+                // for (var name of sampleCheckOutput){
+                //     if(name.endsWith("*")){
+                //         flag = true;
+                //         break
+                //     }
+                // }
                 if(flag){
                     res.writeHead(500, {'Content-Type': 'text/plain'});
                     res.end('Tersect Index Contains Samples With Wildcard In Their Names. Will not work with current iteration of CRAMER/Tersect')
@@ -95,17 +95,46 @@ router.post('/tersectUpload/new',isUploadAuthenticated, function(req,res,next){
                         } else console.error("Deleted file located at: " + newPath)
                     })
                 } else {
-                    var item = new TersectIntegration({ name: files["uploads[]"].name, instance_id: fields.instanceID, local: true, route: newPath });
-                    item.save(function (err, item) {
-                        if (err) {
-                            console.error(err);
-                            res.writeHead(500, {'Content-Type': 'text/plain'});
-                            res.end('Tersect Database Error')
+                    sampleCheckOutput.shift();
+                    var idTable = utils.arraysToDict(sampleCheckOutput,utils.idGen(sampleCheckOutput.length));
+                    var idTableText = "";
+                    for(var i in idTable){
+                        console.log(i)
+                        idTableText = idTableText + `${i}\t${idTable[i]}\n`
+                    }
+                    var idtableTextOutput = idTableText;
+                    fs.writeFile(newPath+'.tsv', idtableTextOutput, function (err) {
+                        if (err){
+                            console.log(err)
                         } else {
-                            res.end("success");
-                            console.log("saved to DB!")
+                            console.log("Name File Wrote successfully")
+                            const child = spawn("tersect", ["rename", newPath, "-n", newPath+'.tsv'], {shell:true, cwd: path.join(dir,"indexes")});
+                            child.on("error", err => {
+                                console.error(err);
+                            });
+                            child.on("close", (code, signal) => {
+                                if (code !== 0) {
+                                    console.error(`tersect process exited with code ${code}`);
+                                } else {
+                                    console.log("Tersect Rename Successful")
+                                    var item = new TersectIntegration({ name: files["uploads[]"].name, instance_id: fields.instanceID, local: true, route: newPath, aliases: idTable });
+                                    item.save(function (err, item) {
+                                        if (err) {
+                                            console.error(err);
+                                            res.writeHead(500, {'Content-Type': 'text/plain'});
+                                            res.end('Tersect Database Error')
+                                        } else {
+                                            res.end("success");
+                                            console.log("saved to DB!")
+                                        }
+                                    });
+                                }
+                            });
                         }
+
+                        console.log('.tsv written');
                     });
+
                 }
             } else {
                 console.log(files["uploads[]"].name + " is not allowed");
@@ -200,12 +229,12 @@ router.post('/vcfUpload/new',isUploadAuthenticated, function(req,res,next){
                                 var sampleCheckOutput = sampleCheck.stdout;
                                 console.log(sampleCheckOutput);
                                 sampleCheckOutput = sampleCheckOutput.toString().trim().split('\n');
-                                for (var name of sampleCheckOutput){
-                                    if(name.endsWith("*")){
-                                        flag = true;
-                                        break
-                                    }
-                                }
+                                // for (var name of sampleCheckOutput){
+                                //     if(name.endsWith("*")){
+                                //         flag = true;
+                                //         break
+                                //     }
+                                // }
                                 if(flag){
                                     console.log('Tersect Index Contains Samples With Wildcard In Their Names. Will not work with current iteration of CRAMER/Tersect')
                                     rimraf(indexPath, function(err){
@@ -219,22 +248,64 @@ router.post('/vcfUpload/new',isUploadAuthenticated, function(req,res,next){
                                         } else console.error("Deleted file located at: " + newPath)
                                     })
                                 } else {
-                                    var item = new TersectIntegration({
-                                        name: fields.newName,
-                                        instance_id: fields.instanceID,
-                                        local: true,
-                                        route: indexPath
-                                    });
-                                    item.save(function (err, item) {
-                                        if (err) {
-                                            console.error("Error Saving to database: " + err)
+                                    sampleCheckOutput.shift();
+                                    var idTable = utils.arraysToDict(sampleCheckOutput,utils.idGen(sampleCheckOutput.length));
+                                    var idTableText = "";
+                                    for(var i in idTable){
+                                        console.log(i)
+                                        idTableText = idTableText + `${i}\t${idTable[i]}\n`
+                                    }
+                                    var idtableTextOutput = idTableText;
+                                    fs.writeFile(indexPath+'.tsv', idtableTextOutput, function (err) {
+                                        if (err){
+                                            console.log(err)
+                                        } else {
+                                            console.log("Name File Wrote successfully")
+                                            const child = spawn("tersect", ["rename", indexPath, "-n", indexPath+'.tsv'], {shell:true, cwd: path.join(dir,"indexes")});
+                                            child.on("error", err => {
+                                                console.error(err);
+                                            });
+                                            child.on("close", (code, signal) => {
+                                                if (code !== 0) {
+                                                    console.error(`tersect process exited with code ${code}`);
+                                                    rimraf(indexPath, function(err){
+                                                        if(err){
+                                                            console.error("Error deleting file located at: " + indexPath)
+                                                        } else console.error("Deleted file located at: " + indexPath)
+                                                    });
+                                                    rimraf(newPath, function(err){
+                                                        if(err){
+                                                            console.error("Error deleting file located at: " + newPath)
+                                                        } else console.error("Deleted file located at: " + newPath)
+                                                    })
+                                                } else {
+                                                    console.log("Tersect Rename Successful")
+                                                    var item = new TersectIntegration({ name: fields.newName, instance_id: fields.instanceID, local: true, route: indexPath, aliases: idTable });
+                                                    item.save(function (err, item) {
+                                                        if (err) {
+                                                            console.error(err);
+                                                            res.writeHead(500, {'Content-Type': 'text/plain'});
+                                                            res.end('Tersect Database Error')
+                                                            rimraf(indexPath, function(err){
+                                                                if(err){
+                                                                    console.error("Error deleting file located at: " + indexPath)
+                                                                } else console.error("Deleted file located at: " + indexPath)
+                                                            });
+                                                        } else {
+                                                            res.end("success");
+                                                            console.log("saved to DB!")
+                                                        }
+                                                    });
+                                                    rimraf(newPath, function(err){
+                                                        if(err){
+                                                            console.error("Error deleting file located at: " + newPath)
+                                                        } else console.error("Deleted file located at: " + newPath)
+                                                    })
+                                                }
+                                            });
                                         }
+                                        console.log('.tsv written');
                                     });
-                                    rimraf(newPath, function(err){
-                                        if(err){
-                                            console.error("Error deleting file located at: " + newPath)
-                                        } else console.error("Deleted file located at: " + newPath)
-                                    })
                                 }
 
                             }
@@ -309,37 +380,42 @@ router.post('/tersectUpload/view',function(req,res,next){
                 res.status(404).send("Resource Not Found.");
             } else {
                 console.log(entry.name);
-                var arr = [];
-                var getSamples = spawn('tersect', ['samples', entry.route], { shell: true });
-                //The output of the command is printed in the command line if there are no errors
-                getSamples.stdout.on('data', (data) => {
-                    //each sample name is on a new line, split by new line
-                    arr = data.toString().trim().split('\n');
-                    //remove first item - Sample
-                    arr.shift();
-                });
-                getSamples.on("error", err => {
-                    console.error(err);
-                    if(err.message === "malformedTSI"){
-                        res.status(415).send("Corrupted Index!");
-                    } else {
-                        res.status(500).send("Tersect Error.")
-                    }
-                });
-                //prints error from running tersect
-                getSamples.stderr.on('data', (data) => {
-                    console.error(`Error in retrieving samples within TSI file: ${data}`);
-                    getSamples.emit("error", new Error("malformedTSI"))
-                });
-                //prints after command is complete if there was an error
-                getSamples.on('close', (code) => {
-                    if (code !== 0) {
-                        console.log(`tersect process exited with code ${code}`);
-                    } else {
-                        console.log(arr);
-                        res.send({ "samples": arr });
-                    }
-                });
+                var arr = []
+                for (var i of entry.aliases.keys()){
+                    arr.push(i)
+                }
+                res.send({ "samples": arr });
+                // var arr = [];
+                // var getSamples = spawn('tersect', ['samples', entry.route], { shell: true });
+                // //The output of the command is printed in the command line if there are no errors
+                // getSamples.stdout.on('data', (data) => {
+                //     //each sample name is on a new line, split by new line
+                //     arr = data.toString().trim().split('\n');
+                //     //remove first item - Sample
+                //     arr.shift();
+                // });
+                // getSamples.on("error", err => {
+                //     console.error(err);
+                //     if(err.message === "malformedTSI"){
+                //         res.status(415).send("Corrupted Index!");
+                //     } else {
+                //         res.status(500).send("Tersect Error.")
+                //     }
+                // });
+                // //prints error from running tersect
+                // getSamples.stderr.on('data', (data) => {
+                //     console.error(`Error in retrieving samples within TSI file: ${data}`);
+                //     getSamples.emit("error", new Error("malformedTSI"))
+                // });
+                // //prints after command is complete if there was an error
+                // getSamples.on('close', (code) => {
+                //     if (code !== 0) {
+                //         console.log(`tersect process exited with code ${code}`);
+                //     } else {
+                //         console.log(arr);
+                //         res.send({ "samples": arr });
+                //     }
+                // });
             }
         })
     }
@@ -487,69 +563,50 @@ router.delete('/tersectQueries/:id',isTersectAuthenticated, function(req,res,nex
 ////Query Generation Routes --------------------------------------------------------
 
 //threshold calculator - not necessary for a threshold of 100.
-function thresholdCalculator(_threshold, sets , file){
-    var wildcards = [];
-    var megaset = [];
+function thresholdCalculator(_threshold, sets){
     var threshold = parseInt(_threshold);
+    console.log("SetJoined: "+JSON.stringify(sets));
     if(Number.isInteger(threshold) && threshold >= 1 && threshold <= 3){
-        for(var set of sets){
-            set.forEach((element)=>{
-                if(element.endsWith('*')){
-                    wildcards.push("'"+ element+"'");
-                } else {
-                    megaset.push(element)
-                }
-            })
-        }
-        console.log(`wildcards: ${wildcards}`);
-        console.log(megaset);
-        ///home/user/Desktop/Thesis/tersectcramer_GP/indexes/new_214bb983-0618-4828-ba92-b0d9b70853e1.tsi
-        var getSamples = spawnSync('tersect', ["view",file, wildcards], { shell: true });
-        //The output of the command is printed in the command line if there are no errors
-        var wildset = getSamples.stdout;
-        wildset = wildset.toString().trim().split('\n');
-        wildset.shift();
-        megaset = megaset.concat(wildset);
-        console.log(`Megaset: ${megaset} \n wildset: ${wildset}`)
         var subqueries = [];
-        var combinations = _.combinations(megaset, threshold);
+        var combinations = _.combinations(sets, threshold);
         for(var combination of combinations){
             combination = "('" + combination.join("'&'") + "')";
             subqueries.push(combination);
         }
-        var query = (subqueries.length > 0) ?  "&(" + subqueries.join("|") + ")" : ""
+        var query = (subqueries.length > 0) ?  "&(" + subqueries.join("|") + ")" : "";
         return query
     } else {
-        console.log("returning nothing...")
+        console.log("returning nothing...");
         return ""
     }
 }
 
 //add file path to tsi file to run
-function tersect(sets, command, threshold, id, file, instanceID) {
-    var query={_id:id};
-    var command = command;
+function tersect(params) {
+    var query={_id:params.idToGet};
+    var command = params.fullCommand;
     TersectIntegration.findOne(query, function(err,entry){
         if (err){
             console.error('Cant Find Ref: ' + err);
             res.status(404).send("Resource Not Found.");
         } else {
-            var newPath = path.join(dir,"newVCF",instanceID,path.basename(entry.route,".tsi"),uuid());
-            var filepath = path.join(newPath,file);
+            var newPath = path.join(dir,"newVCF",params.instanceID,path.basename(entry.route,".tsi"),uuid());
+            var filepath = path.join(newPath,params.file);
             fs.mkdir(newPath, { recursive: true }, (err) => {
                 if (err){
                     console.error("Error in making tersect query directory: " + err);
                 } else {
-                    console.error("ID: " + id);
-                    console.error("Command: "+ command);
+                    console.error("ID: " + params.idToGet);
+                    console.error("Command: "+ params.fullCommand);
                     console.error("newPath: "+ newPath);
                     console.error("filepath: "+ filepath);
-                    console.error("typeof: " + Array.isArray(sets));
-                    console.log("Sets:"+ JSON.stringify(sets));
-                    console.log("Threshold:"+ threshold);
+                    console.error("typeof: " + Array.isArray(params.setsTranslatedJoined));
+                    console.log("Sets:"+ JSON.stringify(params.setsTranslatedJoined));
+                    console.log("Threshold:"+ params.threshold);
                     console.log(entry.route);
-                    var thresholdCommand = thresholdCalculator(threshold, sets , entry.route);
+                    var thresholdCommand = thresholdCalculator(params.threshold, params.setsTranslatedJoined);
                     command = command + thresholdCommand;
+                    console.log("Final Command: "+command);
                     var tcommand = spawn('tersect', ['view', entry.route, command]);
                     tcommand.on("error", (err)=> {
                         if(err.message === "tersectError"){
@@ -600,7 +657,14 @@ function tersect(sets, command, threshold, id, file, instanceID) {
                                         if (code !== 0) {
                                             console.log(`tabix process exited with code ${code}`);
                                         } else {
-                                            var item = new TersectVCF({ name: file, command:encodeURIComponent(command), sets:sets, instance_id: instanceID, parent_id:id,  route: filePathForTabix});
+                                            var item = new TersectVCF({
+                                                name: params.file,
+                                                command:encodeURIComponent(params.fullCommandOrig),
+                                                sets:params.setArray,
+                                                instance_id: params.instanceID,
+                                                parent_id:params.idToGet,
+                                                route: filePathForTabix
+                                            });
                                             item.save(function (err, item) {
                                                 if (err) {
                                                     return console.error(err);
@@ -624,32 +688,95 @@ function tersect(sets, command, threshold, id, file, instanceID) {
             });
 
         }
-})}
+    })}
 
 router.post('/tersectQueries/generate',function(req,res,next){
     if(!req.body.command || !req.body.instanceID || !req.body.idToGet || !req.body.filepath || !req.body.threshold){
         res.status(403).send("Malformed Request")
     } else {
-        console.log(typeof req.body.setA);
-        console.log(typeof req.body.setB);
-        console.log(typeof req.body.setC);
-        var sets = new Array(JSON.parse(req.body.setA.replace(/'/g,"")), JSON.parse(req.body.setB.replace(/'/g,"")), JSON.parse(req.body.setC.replace(/'/g,"")));
-        var comm = req.body.command;
-        var threshold = req.body.threshold;
-        var mapObj = {
-            A:"u" + req.body.setA.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, ""),
-            B:"u" + req.body.setB.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, ""),
-            C:"u" + req.body.setC.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, "")
-        };
-        var fullCommand = comm.replace(/A|B|C/g, function(matched){
-            return mapObj[matched];
-        });
+        var query = {_id : req.body.idToGet};
+        TersectIntegration.findOne(query,function(err,entry){
+            if(err){
+                console.error("Cant Find Index With that ID.");
+                res.status(304).send("Bad Request.")
+            } else{
+                console.log(typeof req.body.setA);
+                console.log(typeof req.body.setB);
+                console.log(typeof req.body.setC);
+                var setA = typeof req.body.setA == 'object' ? req.body.setA : [];
+                var setB = typeof req.body.setB == 'object' ? req.body.setB : [];
+                var setC = typeof req.body.setC == 'object' ? req.body.setC : [];
+                console.log("TYPEOF SETA: "+typeof setA);
+                console.log("TYPEOF SETB: "+typeof setB);
+                console.log("TYPEOF SETC: "+typeof setC);
+                var sets = {A:setA,B:setB,C:setC};
+                console.log("sets: "+JSON.stringify(sets));
+                var setArray = [setA.filter(Boolean),setB.filter(Boolean),setC.filter(Boolean)];
+                var setsTranslated = {A:[],B:[],C:[]};
+                for(let set of Object.keys(sets)){
+                    console.log(typeof set);
+                    sets[set].forEach((element)=>{
+                        console.log("ELEMENT: " + element);
+                        if(typeof element == 'object'){
+                            element = element.join();
+                            console.log("TARGET ELEMENT" + element);
 
-        var instanceID = req.body.instanceID;
-        var id = req.body.idToGet;
-        var file = req.body.filepath.replace(/[^\d\w-_.]/g,"_");
-        tersect(sets,fullCommand,threshold,id,file,instanceID);
-        res.send({ "location": instanceID });
+                            entry.aliases.forEach(function(trans, orig) {
+                                console.log("CURRENT KEY: " + orig);
+                                if (orig.indexOf(element) !== -1 ){
+                                    console.log("TARGET KEY" + orig);
+                                    setsTranslated[set].push(trans)
+                                }
+                            });
+                        } else {
+                            // console.log("ELEMENT TYPE: " + typeof element);
+                            // console.log("Alias Value: " +  entry.aliases.get(element));
+                            setsTranslated[set].push(entry.aliases.get(element))
+                        }
+                    })
+                }
+                //console.log("SetsTranslated: "+JSON.stringify(setsTranslated));
+
+                var setsTranslatedJoined = [...setsTranslated.A,...setsTranslated.B,...setsTranslated.C].filter(Boolean);
+
+
+                var comm = req.body.command;
+                var threshold = req.body.threshold;
+                var mapObj = {
+                    A:"u" +"('" + setsTranslated.A.join("','") + "')",
+                    B:"u" +"('" + setsTranslated.B.join("','") + "')",
+                    C:"u" +"('" + setsTranslated.C.join("','") + "')"
+                };
+
+                var fullCommand = comm.replace(/A|B|C/g, function(matched){
+                    return mapObj[matched];
+                });
+
+                var mapObjOrig = {
+                    A:"u" +"('" + sets.A.join("','").replace(/\[([^\[\]]*)\]/g,"($1)*") + "')",
+                    B:"u" +"('" + sets.B.join("','").replace(/\[([^\[\]]*)\]/g,"($1)*") + "')",
+                    C:"u" +"('" + sets.C.join("','").replace(/\[([^\[\]]*)\]/g,"($1)*") + "')"
+                };
+
+                var fullCommandOrig = comm.replace(/A|B|C/g, function(matched){
+                    return mapObjOrig[matched];
+                });
+
+                var tersectParams = {};
+                tersectParams.instanceID = req.body.instanceID;
+                tersectParams.idToGet = req.body.idToGet;
+                tersectParams.file = req.body.filepath.replace(/[^\d\w-_.]/g,"_");
+                tersectParams.setsTranslatedJoined = setsTranslatedJoined;
+                tersectParams.setArray = setArray;
+                tersectParams.fullCommand = fullCommand;
+                tersectParams.fullCommandOrig = fullCommandOrig;
+                tersectParams.threshold = threshold;
+
+                tersect(tersectParams);
+                res.send({ "location": tersectParams.instanceID });
+            }
+        })
+
     }
 });
 

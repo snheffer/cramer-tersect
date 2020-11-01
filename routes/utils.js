@@ -185,5 +185,46 @@ module.exports = {
             console.log(err);
             return true;
         }
+    },
+
+    idGen: function (length) {
+        const nextLetter = (char) => {
+            var alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+            return char == '9' ? 'a': alphabet.charAt(alphabet.search(char)+1);
+        }
+
+        let newCharArray = [];
+
+        const incrementChar = (l) => {
+            const lastChar = l[l.length - 1]
+            const remString = l.slice(0, l.length - 1)
+            const newChar = lastChar == undefined ? 'a' : nextLetter(lastChar);
+            newCharArray.unshift(newChar)
+            if (lastChar === '9') {
+                return incrementChar(remString)
+            }
+            const batchString = remString + [...newCharArray].join('')
+            newCharArray = []
+            return batchString;
+        }
+        output = [];
+        start = "";
+        for(var i = 0; i<length; i++){
+            start = incrementChar(start);
+            output.push(start);
+        }
+        return output
+
+
+    },
+
+    arraysToDict: function(keys,values){
+        var obj = {};
+        for(var i = 0; i < keys.length; i++){
+            obj[keys[i]] = values[i]
+        }
+        return obj
+
     }
+
 };
