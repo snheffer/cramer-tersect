@@ -1343,9 +1343,9 @@ function resetSamples() {
 }
 
 //function to add sample group to fileset array and tooltip
-function addSample(input, fset) {
+function addSample(input, fset, reload) {
     var input_2 = typeof input == "object" ? input.join() : input;
-    typeof input == "object" ? fset.push([input]) : fset.push(input);
+    reload == true ? fset.push(input) : fset.push([input]);
     var set;
     if (fset == filesetA) {
         set = 'A';
@@ -2049,17 +2049,17 @@ function loadFromTemplate(setArray){
     resetSamples();
     resetVenn();
     for(var sample of setArray[0]){
-        addSample(sample,filesetA);
+        addSample(sample,filesetA,true);
         sampleCountA = sampleCountA + groupNum;
         $("#countA span").text("A: " + sampleCountA);
     }
     for(var sample of setArray[1]){
-        addSample(sample,filesetB);
+        addSample(sample,filesetB,true);
         sampleCountB = sampleCountB + groupNum;
         $("#countB span").text("B: " + sampleCountB);
     }
     for(var sample of setArray[2]){
-        addSample(sample,filesetC);
+        addSample(sample,filesetC,true);
         sampleCountC = sampleCountC + groupNum;
         $("#countC span").text("C: " + sampleCountC);
     }
