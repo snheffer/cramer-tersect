@@ -171,7 +171,7 @@ Genoverse.Plugins.tersectIntegration = function () {
                     '<input class="gv-tersect-integration-input gv-tersect-file-input" type="file" id="local-file-chooser" name="local file chooser" multiple><div class="progressbar-border"> <div id="local-file-progress" class="progressbar-fill"></div></div>': '',
                     '<button id="tsi-submit-local" class="btn btn-primary btn-block"><a id="tsi-submit-local-text" class="gv-tersect-integration-text">Submit File <i class="fa fa-upload"></i></a></button>': '',
                 }).addClass('gv-tersect-integration-file-menu');
-                $('#tsi-submit-local', fileMenu).on('click', function () { fileUploader(fileMenu, "#tsi-submit-local-text", "#local-file-progress", "#local-file-chooser", "tsi", ".gv-tersect-index-list tbody", "/index/tersectUpload/new") });
+                $('#tsi-submit-local', fileMenu).on('click', function () { fileUploader(fileMenu, "#tsi-submit-local-text", "#local-file-progress", "#local-file-chooser", "tsi", "/index/tersectUpload/new") });
                 return fileMenu;
             }
 
@@ -237,7 +237,7 @@ function removeScrollBar() {
 }
 
 
-function fileUploader(parent, submit_link_text, progress_bar, chooser, extension, index_list, url) {
+function fileUploader(parent, submit_link_text, progress_bar, chooser, extension, url) {
     $(chooser, parent).click();
 
     var flag = true;

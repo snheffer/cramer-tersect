@@ -69,73 +69,88 @@ router.post('/tersectUpload/new',isUploadAuthenticated, function(req,res,next){
             res.end('Tersect Error')
         } else {
             console.log(JSON.stringify(files));
+            newPath = path.join(form.uploadDir,fields.instanceID)
             if(files["uploads[]"].name.match(/\.(TSI|tsi)$/i)) {
-                newPath = path.join(form.uploadDir,files["uploads[]"].name);
-                newPath = path.join(form.uploadDir,(path.basename(newPath).replace(/\.[^/.]+$/, "")+"_"+uuid()+path.extname(newPath)));
-                console.log("newpath: "+newPath);
-                fs.renameSync(files["uploads[]"].path, newPath);
-                var flag = false;
-                var sampleCheck = spawnSync('tersect',["samples",newPath,"-m","'*'"],{shell:true});
-                var sampleCheckOutput = sampleCheck.stdout;
-                console.log(sampleCheckOutput);
-                sampleCheckOutput = sampleCheckOutput.toString().trim().split('\n');
-                // for (var name of sampleCheckOutput){
-                //     if(name.endsWith("*")){
-                //         flag = true;
-                //         break
-                //     }
-                // }
-                if(flag){
-                    res.writeHead(500, {'Content-Type': 'text/plain'});
-                    res.end('Tersect Index Contains Samples With Wildcard In Their Names. Will not work with current iteration of CRAMER/Tersect')
-                    console.log('Tersect Index Contains Samples With Wildcard In Their Names. Will not work with current iteration of CRAMER/Tersect')
-                    rimraf(newPath, function(err){
-                        if(err){
-                            console.error("Error deleting file located at: " + newPath)
-                        } else console.error("Deleted file located at: " + newPath)
-                    })
-                } else {
-                    sampleCheckOutput.shift();
-                    var idTable = utils.arraysToDict(sampleCheckOutput,utils.idGen(sampleCheckOutput.length));
-                    var idTableText = "";
-                    for(var i in idTable){
-                        console.log(i)
-                        idTableText = idTableText + `${i}\t${idTable[i]}\n`
-                    }
-                    var idtableTextOutput = idTableText;
-                    fs.writeFile(newPath+'.tsv', idtableTextOutput, function (err) {
-                        if (err){
-                            console.log(err)
+                fs.mkdir(newPath, { recursive: true }, (err) => {
+                    if (err){
+                        req.pause();
+                        res.writeHead(413, {'Content-Type': 'text/plain'});
+                        res.end('Tersect Error')
+                    } else {
+                        newPath = path.join(form.uploadDir,fields.instanceID,files["uploads[]"].name);
+                        newPath = path.join(form.uploadDir,fields.instanceID,(path.basename(newPath).replace(/\.[^/.]+$/, "")+"_"+uuid()+path.extname(newPath)));
+                        console.log("newpath: "+newPath);
+                        fs.renameSync(files["uploads[]"].path, newPath);
+                        var flag = false;
+                        var sampleCheck = spawnSync('tersect',["samples",newPath,"-m","'*'"],{shell:true});
+                        var sampleCheckOutput = sampleCheck.stdout;
+                        console.log(sampleCheckOutput);
+                        sampleCheckOutput = sampleCheckOutput.toString().trim().split('\n');
+                        // for (var name of sampleCheckOutput){
+                        //     if(name.endsWith("*")){
+                        //         flag = true;
+                        //         break
+                        //     }
+                        // }
+                        if(flag){
+                            res.writeHead(500, {'Content-Type': 'text/plain'});
+                            res.end('Tersect Index Contains Samples With Wildcard In Their Names. Will not work with current iteration of CRAMER/Tersect')
+                            console.log('Tersect Index Contains Samples With Wildcard In Their Names. Will not work with current iteration of CRAMER/Tersect')
+                            rimraf(newPath, function(err){
+                                if(err){
+                                    console.error("Error deleting file located at: " + newPath)
+                                } else console.error("Deleted file located at: " + newPath)
+                            })
                         } else {
-                            console.log("Name File Wrote successfully")
-                            const child = spawn("tersect", ["rename", newPath, "-n", newPath+'.tsv'], {shell:true, cwd: path.join(dir,"indexes")});
-                            child.on("error", err => {
-                                console.error(err);
-                            });
-                            child.on("close", (code, signal) => {
-                                if (code !== 0) {
-                                    console.error(`tersect process exited with code ${code}`);
+                            sampleCheckOutput.shift();
+                            var idTable = utils.arraysToDict(sampleCheckOutput,utils.idGen(sampleCheckOutput.length));
+                            var idTableText = "";
+                            for(var i in idTable){
+                                console.log(i)
+                                idTableText = idTableText + `${i}\t${idTable[i]}\n`
+                            }
+                            var idtableTextOutput = idTableText;
+                            fs.writeFile(newPath+'.tsv', idtableTextOutput, function (err) {
+                                if (err){
+                                    console.log(err)
                                 } else {
-                                    console.log("Tersect Rename Successful")
-                                    var item = new TersectIntegration({ name: files["uploads[]"].name, instance_id: fields.instanceID, local: true, route: newPath, aliases: idTable });
-                                    item.save(function (err, item) {
-                                        if (err) {
-                                            console.error(err);
-                                            res.writeHead(500, {'Content-Type': 'text/plain'});
-                                            res.end('Tersect Database Error')
+                                    console.log("Name File Wrote successfully")
+                                    const child = spawn("tersect", ["rename", newPath, "-n", newPath+'.tsv'], {shell:true, cwd: path.join(dir,"indexes")});
+                                    child.on("error", err => {
+                                        console.error(err);
+                                    });
+                                    child.on("close", (code, signal) => {
+                                        if (code !== 0) {
+                                            console.error(`tersect process exited with code ${code}`);
                                         } else {
-                                            res.end("success");
-                                            console.log("saved to DB!")
+                                            console.log("Tersect Rename Successful")
+                                            var item = new TersectIntegration({
+                                                name: files["uploads[]"].name,
+                                                instance_id: fields.instanceID,
+                                                local: true,
+                                                route: newPath,
+                                                aliases: idTable });
+                                            item.save(function (err, item) {
+                                                if (err) {
+                                                    console.error(err);
+                                                    res.writeHead(500, {'Content-Type': 'text/plain'});
+                                                    res.end('Tersect Database Error')
+                                                } else {
+                                                    res.end("success");
+                                                    console.log("saved to DB!")
+                                                }
+                                            });
                                         }
                                     });
                                 }
+
+                                console.log('.tsv written');
                             });
+
                         }
+                    };
+                });
 
-                        console.log('.tsv written');
-                    });
-
-                }
             } else {
                 console.log(files["uploads[]"].name + " is not allowed");
                 req.pause();
@@ -207,109 +222,124 @@ router.post('/vcfUpload/new',isUploadAuthenticated, function(req,res,next){
                     if(err){
                         form.emit("error", new Error("database"))
                     } else {
-                        res.end('success');
-                        console.error(JSON.stringify(fields, null, 4));
-                        console.error(JSON.stringify(files, null, 4));
-                        fields.newName = fields.newName.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
-                        const newIndexName =  fields.newName+"_"+uuid()+ ".tsi";
-                        const child = spawn("tersect", ["build", newIndexName,"../vcf/"+randomDirName+"/*"], {shell:true, cwd: path.join(dir,"indexes")});
-                        child.on("error", err => {
-                            console.error(err);
-                        });
-                        child.stdout.on('data', function(data) {
-                            console.log(data.toString());
-                        });
-                        child.on("close", (code, signal) => {
-                            if (code !== 0) {
-                                console.error(`tersect process exited with code ${code}`);
-                            } else {
-                                var flag = false;
-                                var indexPath = path.join(dir, "indexes", newIndexName);
-                                var sampleCheck = spawnSync('tersect',["samples",indexPath,"-m","'*'"],{shell:true});
-                                var sampleCheckOutput = sampleCheck.stdout;
-                                console.log(sampleCheckOutput);
-                                sampleCheckOutput = sampleCheckOutput.toString().trim().split('\n');
-                                // for (var name of sampleCheckOutput){
-                                //     if(name.endsWith("*")){
-                                //         flag = true;
-                                //         break
-                                //     }
-                                // }
-                                if(flag){
-                                    console.log('Tersect Index Contains Samples With Wildcard In Their Names. Will not work with current iteration of CRAMER/Tersect')
-                                    rimraf(indexPath, function(err){
-                                        if(err){
-                                            console.error("Error deleting file located at: " + indexPath)
-                                        } else console.error("Deleted file located at: " + indexPath)
-                                    });
-                                    rimraf(newPath, function(err){
-                                        if(err){
-                                            console.error("Error deleting file located at: " + newPath)
-                                        } else console.error("Deleted file located at: " + newPath)
-                                    })
-                                } else {
-                                    sampleCheckOutput.shift();
-                                    var idTable = utils.arraysToDict(sampleCheckOutput,utils.idGen(sampleCheckOutput.length));
-                                    var idTableText = "";
-                                    for(var i in idTable){
-                                        console.log(i)
-                                        idTableText = idTableText + `${i}\t${idTable[i]}\n`
-                                    }
-                                    var idtableTextOutput = idTableText;
-                                    fs.writeFile(indexPath+'.tsv', idtableTextOutput, function (err) {
-                                        if (err){
-                                            console.log(err)
-                                        } else {
-                                            console.log("Name File Wrote successfully")
-                                            const child = spawn("tersect", ["rename", indexPath, "-n", indexPath+'.tsv'], {shell:true, cwd: path.join(dir,"indexes")});
-                                            child.on("error", err => {
-                                                console.error(err);
+                        fs.mkdir(path.join(dir,"indexes",fields.instanceID), { recursive: true }, (err) => {
+                            if (err){
+                                req.pause();
+                                res.writeHead(413, {'Content-Type': 'text/plain'});
+                                res.end('Tersect Error')
+                            } else{
+                                res.end('success');
+                                console.error("FIELDS: "+JSON.stringify(fields, null, 4));
+                                console.error("FILES: "+JSON.stringify(files, null, 4));
+                                fields.newName = fields.newName.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+                                const newIndexName =  fields.newName+"_"+uuid()+ ".tsi";
+                                const child = spawn("tersect", ["build", newIndexName,path.join(dir,"vcf",randomDirName,"*")], {shell:true, cwd: path.join(dir,"indexes",fields.instanceID)});
+                                child.on("error", err => {
+                                    console.error(err);
+                                });
+                                child.stdout.on('data', function(data) {
+                                    console.log(data.toString());
+                                });
+                                child.on("close", (code, signal) => {
+                                    if (code !== 0) {
+                                        console.error(`tersect process exited with code ${code}`);
+                                    } else {
+                                        var flag = false;
+                                        var indexPath = path.join(dir, "indexes", fields.instanceID, newIndexName);
+                                        var sampleCheck = spawnSync('tersect',["samples",indexPath,"-m","'*'"],{shell:true});
+                                        var sampleCheckOutput = sampleCheck.stdout;
+                                        console.log(sampleCheckOutput);
+                                        sampleCheckOutput = sampleCheckOutput.toString().trim().split('\n');
+                                        // for (var name of sampleCheckOutput){
+                                        //     if(name.endsWith("*")){
+                                        //         flag = true;
+                                        //         break
+                                        //     }
+                                        // }
+                                        if(flag){
+                                            console.log('Tersect Index Contains Samples With Wildcard In Their Names. Will not work with current iteration of CRAMER/Tersect')
+                                            rimraf(indexPath, function(err){
+                                                if(err){
+                                                    console.error("Error deleting file located at: " + indexPath)
+                                                } else console.error("Deleted file located at: " + indexPath)
                                             });
-                                            child.on("close", (code, signal) => {
-                                                if (code !== 0) {
-                                                    console.error(`tersect process exited with code ${code}`);
-                                                    rimraf(indexPath, function(err){
-                                                        if(err){
-                                                            console.error("Error deleting file located at: " + indexPath)
-                                                        } else console.error("Deleted file located at: " + indexPath)
-                                                    });
-                                                    rimraf(newPath, function(err){
-                                                        if(err){
-                                                            console.error("Error deleting file located at: " + newPath)
-                                                        } else console.error("Deleted file located at: " + newPath)
-                                                    })
+                                            rimraf(newPath, function(err){
+                                                if(err){
+                                                    console.error("Error deleting file located at: " + newPath)
+                                                } else console.error("Deleted file located at: " + newPath)
+                                            })
+                                        } else {
+                                            sampleCheckOutput.shift();
+                                            var idTable = utils.arraysToDict(sampleCheckOutput,utils.idGen(sampleCheckOutput.length));
+                                            var idTableText = "";
+                                            for(var i in idTable){
+                                                console.log(i)
+                                                idTableText = idTableText + `${i}\t${idTable[i]}\n`
+                                            }
+                                            var idtableTextOutput = idTableText;
+                                            fs.writeFile(indexPath+'.tsv', idtableTextOutput, function (err) {
+                                                if (err){
+                                                    console.log(err)
                                                 } else {
-                                                    console.log("Tersect Rename Successful")
-                                                    var item = new TersectIntegration({ name: fields.newName, instance_id: fields.instanceID, local: true, route: indexPath, aliases: idTable });
-                                                    item.save(function (err, item) {
-                                                        if (err) {
-                                                            console.error(err);
-                                                            res.writeHead(500, {'Content-Type': 'text/plain'});
-                                                            res.end('Tersect Database Error')
+                                                    console.log("Name File Wrote successfully")
+                                                    const child = spawn("tersect", ["rename", indexPath, "-n", indexPath+'.tsv'], {shell:true, cwd: path.join(dir,"indexes")});
+                                                    child.on("error", err => {
+                                                        console.error(err);
+                                                    });
+                                                    child.on("close", (code, signal) => {
+                                                        if (code !== 0) {
+                                                            console.error(`tersect process exited with code ${code}`);
                                                             rimraf(indexPath, function(err){
                                                                 if(err){
                                                                     console.error("Error deleting file located at: " + indexPath)
                                                                 } else console.error("Deleted file located at: " + indexPath)
                                                             });
+                                                            rimraf(newPath, function(err){
+                                                                if(err){
+                                                                    console.error("Error deleting file located at: " + newPath)
+                                                                } else console.error("Deleted file located at: " + newPath)
+                                                            })
                                                         } else {
-                                                            res.end("success");
-                                                            console.log("saved to DB!")
+                                                            console.log("Tersect Rename Successful")
+                                                            var item = new TersectIntegration({
+                                                                name: fields.newName,
+                                                                instance_id: fields.instanceID,
+                                                                local: true,
+                                                                route: indexPath,
+                                                                aliases: idTable
+                                                            });
+                                                            item.save(function (err, item) {
+                                                                if (err) {
+                                                                    console.error(err);
+                                                                    res.writeHead(500, {'Content-Type': 'text/plain'});
+                                                                    res.end('Tersect Database Error');
+                                                                    rimraf(indexPath, function(err){
+                                                                        if(err){
+                                                                            console.error("Error deleting file located at: " + indexPath)
+                                                                        } else console.error("Deleted file located at: " + indexPath)
+                                                                    });
+                                                                } else {
+                                                                    res.end("success");
+                                                                    console.log("saved to DB!")
+                                                                }
+                                                            });
+                                                            rimraf(newPath, function(err){
+                                                                if(err){
+                                                                    console.error("Error deleting file located at: " + newPath)
+                                                                } else console.error("Deleted file located at: " + newPath)
+                                                            })
                                                         }
                                                     });
-                                                    rimraf(newPath, function(err){
-                                                        if(err){
-                                                            console.error("Error deleting file located at: " + newPath)
-                                                        } else console.error("Deleted file located at: " + newPath)
-                                                    })
                                                 }
+                                                console.log('.tsv written');
                                             });
                                         }
-                                        console.log('.tsv written');
-                                    });
-                                }
 
-                            }
-                        })
+                                    }
+                                })
+                            };
+                        });
+
                     }
                 })
             });
