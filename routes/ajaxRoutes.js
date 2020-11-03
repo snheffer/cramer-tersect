@@ -214,7 +214,7 @@ router.post('/vcfUpload/new',isUploadAuthenticated, function(req,res,next){
             });
             form.on('file', function(name, file) {
                 files.push(file);
-                console.log(JSON.stringify(files))
+
             });
             // once all the files have been uploaded, send a response to the client
             form.on('end', function() {
@@ -231,9 +231,9 @@ router.post('/vcfUpload/new',isUploadAuthenticated, function(req,res,next){
                                 res.end('success');
                                 console.error("FIELDS: "+JSON.stringify(fields, null, 4));
                                 console.error("FILES: "+JSON.stringify(files, null, 4));
-                                fields.newName = fields.newName.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+                                fields.newName = fields.newName.replace(/[.,\/#!$%\^&\*;:{}=\-_`~() ]/g, "");
                                 const newIndexName =  fields.newName+"_"+uuid()+ ".tsi";
-                                const child = spawn("tersect", ["build", newIndexName,path.join(dir,"vcf",randomDirName,"*")], {shell:true, cwd: path.join(dir,"indexes",fields.instanceID)});
+                                const child = spawn("tersect", ["build", newIndexName,path.join(dir,'vcf',randomDirName,'*')], {shell:true, cwd: path.join(dir,"indexes",fields.instanceID)});
                                 child.on("error", err => {
                                     console.error(err);
                                 });
@@ -410,42 +410,48 @@ router.post('/tersectUpload/view',function(req,res,next){
                 res.status(404).send("Resource Not Found.");
             } else {
                 console.log(entry.name);
-                var arr = []
-                for (var i of entry.aliases.keys()){
-                    arr.push(i)
+                if(!entry.aliases){
+                    console.error("No associated DB sample name information");
+                    res.status(404).send("Resource Not Found.")
+                } else {
+                    var arr = []
+                    for (var i of entry.aliases.keys()){
+                        arr.push(i)
+                    }
+                    res.send({ "samples": arr });
+                    // var arr = [];
+                    // var getSamples = spawn('tersect', ['samples', entry.route], { shell: true });
+                    // //The output of the command is printed in the command line if there are no errors
+                    // getSamples.stdout.on('data', (data) => {
+                    //     //each sample name is on a new line, split by new line
+                    //     arr = data.toString().trim().split('\n');
+                    //     //remove first item - Sample
+                    //     arr.shift();
+                    // });
+                    // getSamples.on("error", err => {
+                    //     console.error(err);
+                    //     if(err.message === "malformedTSI"){
+                    //         res.status(415).send("Corrupted Index!");
+                    //     } else {
+                    //         res.status(500).send("Tersect Error.")
+                    //     }
+                    // });
+                    // //prints error from running tersect
+                    // getSamples.stderr.on('data', (data) => {
+                    //     console.error(`Error in retrieving samples within TSI file: ${data}`);
+                    //     getSamples.emit("error", new Error("malformedTSI"))
+                    // });
+                    // //prints after command is complete if there was an error
+                    // getSamples.on('close', (code) => {
+                    //     if (code !== 0) {
+                    //         console.log(`tersect process exited with code ${code}`);
+                    //     } else {
+                    //         console.log(arr);
+                    //         res.send({ "samples": arr });
+                    //     }
+                    // });
                 }
-                res.send({ "samples": arr });
-                // var arr = [];
-                // var getSamples = spawn('tersect', ['samples', entry.route], { shell: true });
-                // //The output of the command is printed in the command line if there are no errors
-                // getSamples.stdout.on('data', (data) => {
-                //     //each sample name is on a new line, split by new line
-                //     arr = data.toString().trim().split('\n');
-                //     //remove first item - Sample
-                //     arr.shift();
-                // });
-                // getSamples.on("error", err => {
-                //     console.error(err);
-                //     if(err.message === "malformedTSI"){
-                //         res.status(415).send("Corrupted Index!");
-                //     } else {
-                //         res.status(500).send("Tersect Error.")
-                //     }
-                // });
-                // //prints error from running tersect
-                // getSamples.stderr.on('data', (data) => {
-                //     console.error(`Error in retrieving samples within TSI file: ${data}`);
-                //     getSamples.emit("error", new Error("malformedTSI"))
-                // });
-                // //prints after command is complete if there was an error
-                // getSamples.on('close', (code) => {
-                //     if (code !== 0) {
-                //         console.log(`tersect process exited with code ${code}`);
-                //     } else {
-                //         console.log(arr);
-                //         res.send({ "samples": arr });
-                //     }
-                // });
+
             }
         })
     }
@@ -596,11 +602,11 @@ router.delete('/tersectQueries/:id',isTersectAuthenticated, function(req,res,nex
 function thresholdCalculator(_threshold, sets){
     var threshold = parseInt(_threshold);
     console.log("SetJoined: "+JSON.stringify(sets));
-    if(Number.isInteger(threshold) && threshold >= 1 && threshold <= 3){
+    if(Number.isInteger(threshold) && threshold >= 1 && threshold <= 2){
         var subqueries = [];
         var combinations = _.combinations(sets, threshold);
         for(var combination of combinations){
-            combination = "('" + combination.join("'&'") + "')";
+            combination = "i('" + combination.join("','") + "')";
             subqueries.push(combination);
         }
         var query = (subqueries.length > 0) ?  "&(" + subqueries.join("|") + ")" : "";
@@ -783,9 +789,21 @@ router.post('/tersectQueries/generate',function(req,res,next){
                 });
 
                 var mapObjOrig = {
-                    A:"u" +"('" + sets.A.join("','").replace(/\[([^\[\]]*)\]/g,"($1)*") + "')",
-                    B:"u" +"('" + sets.B.join("','").replace(/\[([^\[\]]*)\]/g,"($1)*") + "')",
-                    C:"u" +"('" + sets.C.join("','").replace(/\[([^\[\]]*)\]/g,"($1)*") + "')"
+                    A:"u" +"('" + sets.A.map(function(x){
+                        if(typeof x == 'object'){
+                            return `(${x[0]})*`
+                        }
+                    }).join("','") + "')",
+                    B:"u" +"('" + sets.B.map(function(x){
+                        if(typeof x == 'object'){
+                            return `(${x[0]})*`
+                        }
+                    }).join("','") + "')",
+                    C:"u" +"('" + sets.C.map(function(x){
+                        if(typeof x == 'object'){
+                            return `(${x[0]})*`
+                        }
+                    }).join("','") + "')"
                 };
 
                 var fullCommandOrig = comm.replace(/A|B|C/g, function(matched){
@@ -881,7 +899,7 @@ router.delete('/delete-query-vcfs/:instanceID', isTersectAuthenticated, function
                     console.error('Error in /tersectQueries query VCF deletion: ' + err)
                     if (!res.headersSent){res.status(404).send("Resource Not Found.")};
                 } else {
-                    res.send('success')
+                    if (!res.headersSent){res.send('success')}
                 }
             })
         } else {

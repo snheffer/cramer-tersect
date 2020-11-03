@@ -92,8 +92,26 @@
 }
 
 .gv-tersect-integration-plugin .gv-tersect-integration-file-menu .gv-tersect-dropzone{
-    height: 250px;
-    width: 250px;
+    height: 310px;
+    min-height: 310px;
+    width: 100%;
+    overflow: auto;
+}
+
+.gv-tersect-integration-plugin .gv-tersect-integration-file-menu .gv-tersect-dropzone .filename
+{
+    display:inline-block;
+    vertical-align:top;
+    width:75%;
+    font-size: 12pt;
+}
+.gv-tersect-integration-plugin .gv-tersect-integration-file-menu .gv-tersect-dropzone .filesize
+{
+    display:inline-block;
+    vertical-align:top;
+    width:20%;
+    font-size: 12pt;
+    margin-right:5px;
 }
 
 .gv-tersect-integration-plugin .gv-tersect-integration-file-menu .gv-tersect-list {
@@ -422,4 +440,21 @@ input[type="radio"]{
 #queryMenu .gv-tersect-list tbody td{
     overflow: hidden;
     cursor: pointer;
+}
+
+#indexGenerationMenu{
+    height: 100%;
+    width: 100%;
+}
+#indexGenerationMenu table {
+    max-width: 97%;
+    width: 98%;
+}
+
+#gv-tersect-advancedInput{
+    font-size: 13pt;
+}
+
+#gv-tersect-threshold{
+    width: 100px;
 }

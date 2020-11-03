@@ -34,6 +34,7 @@
     "path": "^0.12.7",
     "rimraf": "^3.0.2",
     "serve-favicon": "~2.4.5",
+    "util": "^0.12.3",
     "uuid": "^7.0.2"
   },
   "devDependencies": {

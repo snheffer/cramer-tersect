@@ -128,7 +128,7 @@ Genoverse.Plugins.tersectIntegration = function () {
                                 <th><button class="btn btn-primary" id="hideC">Samples in C <i class="fa fa-times-circle"></i></button></th>\
                                 </tr>\
                                 </tbody>\
-                            </table>\ </div>': '<div id="venn"></div><div id="venncontrols" class="panel panel-default"><div class="panel-heading"><h5 class="panel-title">Modify Command</h5></div><div class="panel-body">  <span style="display:inline-block; width: 15px;"></span> <input id="gv-tersect-advancedInput" type="text" size="45"/>&nbsp;&nbsp;</div></div></br></br>\
+                            </table>\ </div>': '<div id="venn"></div><div id="venncontrols" class="panel panel-default"><div class="panel-heading"><h5 class="panel-title">Modify Command</h5></div><div class="panel-body">  <span style="display:inline-block; width: 15px;"></span> <span id="gv-tersect-advancedInput" class="badge" ></span>&nbsp;&nbsp;</div></div></br></br>\
                             <div id="query"><span style="display:inline-block; width: 20px;"></span><button class="btn btn-default btn-block" id="saved-queries">Saved Queries <i class="fa fa-folder-open"></i></button></div></div>',
 
                 }).addClass('gv-tersect-integration-menu');
@@ -2033,16 +2033,28 @@ function getNotation() {
 function commandParse(command,html_id){
     if(command != null) {
         var mapObj = {
-            A: "u" + filesetA.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, ""),
-            B: "u" + filesetB.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, ""),
-            C: "u" + filesetC.toString().replace(/\[/g, "(").replace(/\]/g, ")").replace(/"/g, "")
+            A: "u" +"('" + filesetA.map(function(x){
+                if(typeof x == 'object'){
+                    return `(${x[0]})*`
+                }
+            }).join("','") + "')",
+            B: "u" +"('" + filesetB.map(function(x){
+                if(typeof x == 'object'){
+                    return `(${x[0]})*`
+                }
+            }).join("','") + "')",
+            C: "u" +"('" + filesetC.map(function(x){
+                if(typeof x == 'object'){
+                    return `(${x[0]})*`
+                }
+            }).join("','") + "')",
         };
         var fullCommand = command.replace(/A|B|C/g, function (matched) {
             return mapObj[matched];
         });
         console.log(fullCommand)
     }
-    $(html_id).empty().val(fullCommand)
+    $(html_id).text(fullCommand)
 }
 
 function loadFromTemplate(setArray){

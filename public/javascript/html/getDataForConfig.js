@@ -195,7 +195,7 @@ function removeTrack(item) {
 // Modify tracks
 function modifyTrack(item, trackType) {
     // Get the id name from the DOM
-    const id = $(item).data('id');
+    const id = $(item).attr('data-id');
     const name = $('#' + id).text();
     const modalId = `#${trackType}Modal`;
 
@@ -320,10 +320,10 @@ function addDbsnpTrack() {
 function addFastaTrack(modify, object) {
     const modalId = '#fastaModal';
     // Check if we need to update the track
-    const isUpdate = $(modalId).data('trackid') !== undefined;
+    const isUpdate = $(modalId).attr('data-trackid');
 
     let trackString = modify ? object.data : 'Genoverse.Track.extend({\n' +
-        'name: \'' + $('#fastaNameInput').val() + '\',\n' +
+        'name: \'' + $('#fastaNameInput').val().replace(/\W/g,"_") + '\',\n' +
         'info: \'' + $('#fastaInfoInput').val().replace(/(\\)*([\\'"`])/g,"\\'") + '\',\n' +
         'controller: Genoverse.Track.Controller.Sequence,\n' +
         'model: Genoverse.Track.Model.Sequence.extend({\n' +
@@ -341,7 +341,7 @@ function addFastaTrack(modify, object) {
         valid = checkTrack('fasta', ['fasta', 'fa', 'fna', 'ffn', 'faa', 'frn']);
     }
     if (valid === true) {
-        const track = { name: name, description: info, data: trackString, temp_id:(modify ? object._id.toString():('L'+trackCount)) };
+        const track = { name: name, description: info, data: trackString, temp_id: isUpdate ? isUpdate : (modify ? object._id.toString():('L'+trackCount)) };
 
         // If it is an update, just update the list and the DOM
         if (isUpdate) {
@@ -362,10 +362,10 @@ function addFastaTrack(modify, object) {
 function addBedTrack(modify, object) {
     const modalId = '#bedModal';
     // Check if we need to update the track
-    const isUpdate = $(modalId).data('trackid') !== undefined;
+    const isUpdate = $(modalId).attr('data-trackid');
 
     let trackString = modify ? object.data : 'Genoverse.Track.File.BED.extend({\n' +
-        'name: \'' + $('#bedNameInput').val() + '\',\n' +
+        'name: \'' + $('#bedNameInput').val().replace(/\W/g,"_") + '\',\n' +
         'info: \'' + $('#bedInfoInput').val().replace(/(\\)*([\\'"`])/g,"\\'") + '\',\n' +
         'model: Genoverse.Track.Model.File.BED.extend({\n' +
         'url: \'\<origin\>/index/request?chr=__CHR__&start=__START__&end=__END__&type=tabix\',\n' +
@@ -380,7 +380,7 @@ function addBedTrack(modify, object) {
         valid = checkTrack('bed', ['bed']);
     }
     if (valid === true) {
-        const track = { name: name, description: info, data: trackString, temp_id:(modify ? object._id.toString():('L'+trackCount)) };
+        const track = { name: name, description: info, data: trackString, temp_id: isUpdate ? isUpdate : (modify ? object._id.toString():('L'+trackCount)) };
 
         // If it is an update, just update the list and the DOM
         if (isUpdate) {
@@ -401,7 +401,7 @@ function addBedTrack(modify, object) {
 function addBamTrack(modify, object) {
     const modalId = '#bamModal';
     // Check if we need to update the track
-    const isUpdate = $(modalId).data('trackid') !== undefined;
+    const isUpdate = $(modalId).attr('data-trackid');
 
     let trackString = modify ? object.data : 'Genoverse.Track.File.BAM.extend({\n' +
         'name: \'' + $('#bamNameInput').val().replace(/\s/g, '</br>') + '\',\n' +
@@ -420,7 +420,7 @@ function addBamTrack(modify, object) {
         valid = checkTrack('bam', ['bam']);
     }
     if (valid === true) {
-        const track = { name: name, description: info, data: trackString, temp_id:(modify ? object._id.toString():('L'+trackCount)) };
+        const track = { name: name, description: info, data: trackString, temp_id: isUpdate ? isUpdate : (modify ? object._id.toString():('L'+trackCount)) };
 
         // If it is an update, just update the list and the DOM
         if (isUpdate) {
@@ -441,17 +441,17 @@ function addBamTrack(modify, object) {
 function addBigwigTrack(modify, object) {
     const modalId = '#bigwigModal';
     // Check if we need to update the track
-    const isUpdate = $(modalId).data('trackid') !== undefined;
+    const isUpdate = $(modalId).attr('data-trackid');
 
     let trackString = modify ? object.data : 'Genoverse.Track.File.ftpBIGWIG.extend({\n' +
-        'name: \'' + $('#bigwigNameInput').val() + '\',\n' +
+        'name: \'' + $('#bigwigNameInput').val().replace(/\W/g,"_") + '\',\n' +
         'info: \'' + $('#bigwigInfoInput').val().replace(/(\\)*([\\'"`])/g,"\\'") + '\',\n' +
         "model: Genoverse.Track.Model.File.ftpBIGWIG.extend({" +
         'url: \'\<origin\>/index/request?chr=__CHR__&start=__START__&end=__END__&type=bigwig\',\n' +
         'urlParams: {file: \'' + $('#bigwigUrlInput').val() + '\'}' +
         '\n})' +
         '\n})';
-    const name = modify ? object.name : $('#bigwigNameInput').val();
+    const name = modify ? object.name : $('#bigwigNameInput').val().replace(/\W/g,"_");
     const info = modify ? object.description : $('#bigwigInfoInput').val().replace(/(\\)*([\\'"`])/g,"\\'");
     let valid = true;
     if (!modify) {
@@ -459,7 +459,7 @@ function addBigwigTrack(modify, object) {
     }
 
     if (valid === true) {
-        const track = { name: name, description: info, data: trackString, temp_id:(modify ? object._id.toString():('L'+trackCount)) };
+        const track = { name: name, description: info, data: trackString, temp_id: isUpdate ? isUpdate : (modify ? object._id.toString():('L'+trackCount)) };
 
         // If it is an update, just update the list and the DOM
         if (isUpdate) {
@@ -480,10 +480,10 @@ function addBigwigTrack(modify, object) {
 function addGffTrack(modify, object) {
     const modalId = '#gffModal';
     // Check if we need to update the track
-    const isUpdate = $(modalId).data('trackid') !== undefined;
+    const isUpdate = $(modalId).attr('data-trackid');
 
     let trackString = modify ? object.data : 'Genoverse.Track.File.GFF.extend({\n' +
-        'name: \'' + $('#gffNameInput').val() + '\',\n' +
+        'name: \'' + $('#gffNameInput').val().replace(/\W/g,"_") + '\',\n' +
         'info: \'' + $('#gffInfoInput').val().replace(/(\\)*([\\'"`])/g,"\\'") + '\',\n' +
         'model: Genoverse.Track.Model.File.GFF.extend({\n' +
         'url: \'\<origin\>/index/request?chr=__CHR__&start=__START__&end=__END__&type=tabix\',\n' +
@@ -504,7 +504,7 @@ function addGffTrack(modify, object) {
             'intronStyle: \'' + $('#gffIntronSelect').val() + '\'})';
     }
     trackString = modify ? trackString : trackString + '\n})';
-    const name = modify ? object.name : $("#gffNameInput").val();
+    const name = modify ? object.name : $("#gffNameInput").val().replace(/\W/g,"_");
     const info = modify ? object.description : $('#gffInfoInput').val().replace(/(\\)*([\\'"`])/g,"\\'");
     let valid = true;
     if (!modify) {
@@ -512,7 +512,7 @@ function addGffTrack(modify, object) {
     }
 
     if (valid === true) {
-        const track = { name: name, description: info, data: trackString, temp_id:(modify ? object._id.toString():('L'+trackCount)) };
+        const track = { name: name, description: info, data: trackString, temp_id: isUpdate ? isUpdate : (modify ? object._id.toString():('L'+trackCount)) };
 
         // If it is an update, just update the list and the DOM
         if (isUpdate) {
@@ -533,10 +533,10 @@ function addGffTrack(modify, object) {
 function addVcfTrack(modify, object) {
     const modalId = '#vcfModal';
     // Check if we need to update the track
-    const isUpdate = $(modalId).data('trackid') !== undefined;
+    const isUpdate = $(modalId).attr('data-trackid') !== undefined;
 
     let trackString = modify ? object.data : 'Genoverse.Track.File.VCF.extend({\n' +
-        'name: \'' + $('#vcfNameInput').val() + '\',\n' +
+        'name: \'' + $('#vcfNameInput').val().replace(/\W/g,"_") + '\',\n' +
         'info: \'' + $('#vcfInfoInput').val().replace(/(\\)*([\\'"`])/g,"\\'") + '\',\n' +
         'model: Genoverse.Track.Model.File.VCF.extend({\n' +
         'url: \'\<origin\>/index/request?chr=__CHR__&start=__START__&end=__END__&type=tabix\',\n' +
@@ -552,14 +552,14 @@ function addVcfTrack(modify, object) {
     if (!modify) {
         trackString += '\n})';
     }
-    const name = modify ? object.name : $("#vcfNameInput").val();
+    const name = modify ? object.name : $("#vcfNameInput").val().replace(/\W/g,"_");
     const info = modify ? object.description : $('#vcfInfoInput').val().replace(/(\\)*([\\'"`])/g,"\\'");
     let valid = true;
     if (!modify) {
         valid = checkTrack('vcf', ['vcf']);
     }
     if (valid === true) {
-        const track = { name: name, description: info, data: trackString, temp_id:(modify ? object._id.toString():('L'+trackCount)) };
+        const track = { name: name, description: info, data: trackString, temp_id: isUpdate ? isUpdate : (modify ? object._id.toString():('L'+trackCount)) };
 
         // If it is an update, just update the list and the DOM
         if (isUpdate) {
@@ -581,16 +581,16 @@ function addVcfTrack(modify, object) {
 function addSnpDensityTrack(modify, object) {
     const modalId = '#snpDensityModal';
     // Check if we need to update the track
-    const isUpdate = $(modalId).data('trackid') !== undefined;
+    const isUpdate = $(modalId).attr('data-trackid');
 
     // Make heterozygous track
     let trackString = modify ? object.data : 'Genoverse.Track.SNPDensity.extend({\n' +
-        'name: \'' + $('#snpDensityNameInput').val() + '\',\n' +
+        'name: \'' + $('#snpDensityNameInput').val().replace(/\W/g,"_") + '\',\n' +
         'info: \'' + $('#snpDensityInfoInput').val().replace(/(\\)*([\\'"`])/g,"\\'") + '\',\n' +
         'model: Genoverse.Track.Model.SNPDensity.extend({\n' +
         'url: \'\<origin\>/index/request?chr=__CHR__&start=__START__&end=__END__&type=tabix\',\n' +
         'largeFile: true,\n' +
-        'binSize_id: ' + $('#snpDensityNameInput').val()+uuidv4() +',\n';
+        'binSize_id: \'' + $('#snpDensityNameInput').val()+uuidv4() + '\',\n';
 
     if (!modify & $('#snpDensityBinsizeInput').val() !== '') {
         trackString += 'binSize: ' + $('#snpDensityBinsizeInput').val() + ',\n';
@@ -600,7 +600,7 @@ function addSnpDensityTrack(modify, object) {
         trackString += ',\nthreshold: ' + $('#snpDensityThresholdInput').val();
     }
     trackString = modify ? trackString : trackString + '\n})';
-    const name = modify ? object.name : $('#snpDensityNameInput').val();
+    const name = modify ? object.name : $('#snpDensityNameInput').val().replace(/\W/g,"_");
     const info = modify ? object.description : $('#snpDensityInfoInput').val().replace(/(\\)*([\\'"`])/g,"\\'");
 
     let valid = true;
@@ -608,7 +608,7 @@ function addSnpDensityTrack(modify, object) {
         valid = checkTrack('snpDensity', ['vcf']);
     }
     if (valid === true) {
-        const track = { name: name, description: info, type: 'snpDensity', data: trackString, temp_id:(modify ? object._id.toString():('L'+trackCount)) };
+        const track = { name: name, description: info, type: 'snpDensity', data: trackString, temp_id: isUpdate ? isUpdate : (modify ? object._id.toString():('L'+trackCount)) };
 
         // If it is an update, just update the list and the DOM
         if (isUpdate) {
@@ -629,10 +629,10 @@ function addSnpDensityTrack(modify, object) {
 function addGeneExpressionTrack(modify, object) {
     const modalId = '#geneExpressionModal';
     // Check if we need to update the track
-    const isUpdate = $(modalId).data('trackid') !== undefined;
+    const isUpdate = $(modalId).attr('data-trackid');
 
     let trackString = modify ? object.data : 'Genoverse.Track.GeneExpression.extend({\n' +
-        'name: \'' + $('#geneExpressionNameInput').val() + '\',\n' +
+        'name: \'' + $('#geneExpressionNameInput').val().replace(/\W/g,"_") + '\',\n' +
         'info: \'' + $('#geneExpressionInfoInput').val().replace(/(\\)*([\\'"`])/g,"\\'") + '\',\n'
         + 'model: Genoverse.Track.Model.GeneExpression.extend({\n'
         + 'url: "\<origin\>/index/request?chr=__CHR__&start=__START__&end=__END__&type=tabix",\n'
@@ -649,14 +649,14 @@ function addGeneExpressionTrack(modify, object) {
     }
     trackString = modify ? trackString : trackString + '\n})';
     console.log(trackString);
-    const name = modify ? object.name : $('#geneExpressionNameInput').val();
+    const name = modify ? object.name : $('#geneExpressionNameInput').val().replace(/\W/g,"_");
     const info = modify ? object.description : $('#geneExpressionInfoInput').val().replace(/(\\)*([\\'"`])/g,"\\'");
     let valid = true;
     if (!modify) {
         valid = checkGeneExpressionTrack(name, info);
     }
     if (valid === true) {
-        const track = { name: name, description: info, data: trackString, temp_id:(modify ? object._id.toString():('L'+trackCount)) };
+        const track = { name: name, description: info, data: trackString, temp_id: isUpdate ? isUpdate : (modify ? object._id.toString():('L'+trackCount)) };
 
         // If it is an update, just update the list and the DOM
         if (isUpdate) {
@@ -677,9 +677,9 @@ function addGeneExpressionTrack(modify, object) {
 function addCustomTrack(modify, object) {
     const modalId = '#customModal';
     // Check if we need to update the track
-    const isUpdate = $(modalId).data('trackid') !== undefined;
+    const isUpdate = $(modalId).attr('data-trackid');
 
-    const name = modify ? object.name : $("#customNameInput").val();
+    const name = modify ? object.name : $("#customNameInput").val().replace(/\W/g,"_");
     const info = modify ? object.description : $("#customInfoInput").val().replace(/(\\)*([\\'"`])/g,"\\'");
     const trackString = modify ? object.data : $('#customText').val();
     let valid = true;
@@ -688,7 +688,7 @@ function addCustomTrack(modify, object) {
     }
 
     if (valid === true) {
-        const track = { name: name, description: info, data: trackString, temp_id:(modify ? object._id.toString():('L'+trackCount)) };
+        const track = { name: name, description: info, data: trackString, temp_id: isUpdate ? isUpdate : (modify ? object._id.toString():('L'+trackCount)) };
 
         // If it is an update, just update the list and the DOM
         if (isUpdate) {
@@ -731,7 +731,7 @@ function addDOMTrack(name, trackType, id, db_id) {
  * @param {*} track Object of the new track
  */
 function updateTrack(modalId, track) {
-    const trackId = $(modalId).data('trackid');
+    const trackId = $(modalId).attr('data-trackid');
     const labelElement = $(`${'#'+ trackId} label`);
 
     for (let i = 0; i < tracks.length; i++) {
@@ -835,7 +835,7 @@ function validate(boolean) {
     addDbsnpTrack();
     addGeneTrack();
     addSequenceTrack();
-    // Remove temp_id from data structure before ataching to AJAX request
+    // Remove temp_id from data structure before attaching to AJAX request
     for (let i = 0; i < tracks.length; i++) {
         for (let j = 0; j < tracks[i].length; j++) {
             if (tracks[i][j].temp_id) {
@@ -1077,8 +1077,8 @@ function checkTrack(trackType, ext) {
     // If we do not update the track then check if the name already exists
     // If it is true throw an error to the user
     tracksList.each(function () {
-        if (`#${$(this).attr('id')}` !== $(`#${trackType}Modal`).data('trackid') &&
-            $('label', this).text() === $('#' + trackType + 'NameInput').val()) {
+        if (`${$(this).attr('id')}` !== $(`#${trackType}Modal`).attr('data-trackid') &&
+            $('label', this).text() === $('#' + trackType + 'NameInput').val().replace(/\W/g,"_")) {
             valid = false;
             $('#' + trackType + 'NameInput').css({ 'background-color': "rgba(255,0,51,0.6)" });
             errTrack.push('- name already exists. It must be unique.');
@@ -1170,7 +1170,7 @@ function checkGeneExpressionTrack(name, info, isUpdate) {
     // If we do not update the track then check if the name already exists
     // If it is true throw an error to the user
     tracksList.each(function () {
-        if (`#${$(this).attr('id')}` !== $('#geneExpressionModal').data('trackid') &&
+        if (`${$(this).attr('id')}` !== $('#geneExpressionModal').attr('data-trackid') &&
             $('label', this).text() === $('#geneExpressionNameInput').val()) {
             valid = false;
             $("#geneExpressionNameInput").css({ 'background-color': "rgba(255,0,51,0.6)" });
@@ -1241,7 +1241,7 @@ function checkCustomTrack(name, info, trackString) {
     // If we do not update the track then check if the name already exists
     // If it is true throw an error to the user
     tracksList.each(function () {
-        if (`#${$(this).attr('id')}` !== $('#customModal').data('trackid') &&
+        if (`${$(this).attr('id')}` !== $('#customModal').attr('data-trackid') &&
             $('label', this).text() === $('#customNameInput').val()) {
             valid = false;
             $("#customNameInput").css({ 'background-color': "rgba(255,0,51,0.6)" });
