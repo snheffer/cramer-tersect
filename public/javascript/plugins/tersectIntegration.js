@@ -128,7 +128,7 @@ Genoverse.Plugins.tersectIntegration = function () {
                                 <th><button class="btn btn-primary" id="hideC">Samples in C <i class="fa fa-times-circle"></i></button></th>\
                                 </tr>\
                                 </tbody>\
-                            </table>\ </div>': '<div id="venn"></div><div id="venncontrols" class="panel panel-default"><div class="panel-heading"><h5 class="panel-title">Modify Command</h5></div><div class="panel-body">  <span style="display:inline-block; width: 15px;"></span> <span id="gv-tersect-advancedInput" class="badge" ></span>&nbsp;&nbsp;</div></div></br></br>\
+                            </table>\ </div>': '<div id="venn"></div><div id="venncontrols" class="panel panel-default"><div class="panel-heading"><h5 class="panel-title">Full Command</h5></div><div class="panel-body">  <span style="display:inline-block; width: 15px;"></span> <span id="gv-tersect-advancedInput" class="badge" ></span>&nbsp;&nbsp;</div></div></br></br>\
                             <div id="query"><span style="display:inline-block; width: 20px;"></span><button class="btn btn-default btn-block" id="saved-queries">Saved Queries <i class="fa fa-folder-open"></i></button></div></div>',
 
                 }).addClass('gv-tersect-integration-menu');
@@ -194,22 +194,25 @@ Genoverse.Plugins.tersectIntegration = function () {
                     if (flag = true) {$.ajax({
                         type: 'DELETE',
                         url: '/index/delete-query-vcfs/'+instance_id,
-                        statusCode: {
-                            403: function (xhr) {
-                                new Noty({
-                                    type: 'error',
-                                    layout: 'topRight',
-                                    text: "You Must be logged in.",
-                                    timeout: '4000',
-                                    theme: 'light',
-                                }).show();
-                            }
-                        },
                         success: function (data) {
+                            new Noty({
+                                type: 'success',
+                                layout: 'topRight',
+                                text: "All Items Deleted!",
+                                timeout: '4000',
+                                theme: 'light',
+                            }).show();
                             $('#query-refresh').click();
                         },
-                        error: function (err) {
-                            console.error(err);
+                        error: function (xhr) {
+                            console.error(xhr);
+                            new Noty({
+                                type: 'error',
+                                layout: 'topRight',
+                                text: `${xhr.status}: ${xhr.responseText} `,
+                                timeout: '4000',
+                                theme: 'light',
+                            }).show();
                         }
                     })}
                 });
@@ -297,41 +300,12 @@ function fileUploader(parent, submit_link_text, progress_bar, chooser, extension
                     }, false);
                     return xhr;
                 },
-                statusCode: {
-                    413: function (xhr) {
-                        new Noty({
-                            type: 'error',
-                            layout: 'topRight',
-                            text: "File is too large.",
-                            timeout: '4000',
-                            theme: 'light',
-                        }).show();
-                    },
-                    422: function (xhr) {
-                        new Noty({
-                            type: 'error',
-                            layout: 'topRight',
-                            text: "Wrong file type.",
-                            timeout: '4000',
-                            theme: 'light',
-                        }).show();
-                    },
-                    500: function (xhr) {
-                        new Noty({
-                            type: 'error',
-                            layout: 'topRight',
-                            text: "Database Error.",
-                            timeout: '4000',
-                            theme: 'light',
-                        }).show();
-                    }
-                },
-                error: function (xhr, status, error) {
+                error: function (xhr) {
                     xhr.abort();
                     new Noty({
                         type: 'error',
                         layout: 'topRight',
-                        text: "Error Uploading.",
+                        text: `${xhr.status}: ${xhr.responseText} `,
                         timeout: '4000',
                         theme: 'light',
                     }).show();
@@ -361,22 +335,24 @@ function indexPopulator(index_list, url, query_list, query_url) {
                 $.ajax({
                     type: 'DELETE',
                     url: url + "/" + $(this).parent().parent().data("id"),
-                    statusCode: {
-                        403: function (xhr) {
-                            new Noty({
-                                type: 'error',
-                                layout: 'topRight',
-                                text: "You Must be logged in.",
-                                timeout: '4000',
-                                theme: 'light',
-                            }).show();
-                        }
-                    },
                     success: function (data) {
+                        new Noty({
+                            type: 'success',
+                            layout: 'topRight',
+                            text: "Index Deleted!",
+                            timeout: '2000',
+                            theme: 'light',
+                        }).show();
                         indexPopulator(index_list, url, query_list, query_url);
                     },
-                    error: function (err) {
-                        console.error(err);
+                    error: function (xhr) {
+                        new Noty({
+                            type: 'error',
+                            layout: 'topRight',
+                            text: `${xhr.status}: ${xhr.responseText} `,
+                            timeout: '4000',
+                            theme: 'light',
+                        }).show();
                     }
                 })
             });
@@ -400,20 +376,20 @@ function queryPopulator(query_list, id, query_url) {
         url: query_url,
         success: function (data) {
             $.each(data, function () {
-                $(query_list).append('<tr data-id="' + this._id + '"><td><a class="gv-tersect-query-name">' + this.name + '</a></td><td class="CellWithComment"><span class="CellComment">' + decodeURIComponent(this.command) + '</span><span>' + decodeURIComponent(this.command) + '</span></td><td><a class="gv-tersect-query-edit">Edit</a></td><td><a class="gv-tersect-query-download">Download</a></td><td><a class="gv-tersect-query-delete">delete</a></td></tr>');
+                $(query_list).append('<tr class="gv-tersect-query-row" data-id="' + this._id + '"><td><a class="gv-tersect-query-name">' + this.name + '</a></td><td class="CellWithComment"><span class="CellComment">' + decodeURIComponent(this.command) + '</span><span>' + decodeURIComponent(this.command) + '</span></td><td><a class="gv-tersect-query-edit">Edit</a></td><td><a class="gv-tersect-query-download">Download</a></td><td><a class="gv-tersect-query-delete">delete</a></td></tr>');
             });
 
 
-            $(query_list).parent().off().on('click', '.gv-tersect-query-name', function () {
+            $(query_list).parent().off().on('click', '.gv-tersect-query-row', function () {
                 if ($(this).hasClass("active")) {
                     $(this).removeClass("active");
                     $(this).css("border", "none");
-                    var index = idsForTracks.indexOf($(this).parent().parent().data('id'));
+                    var index = idsForTracks.indexOf($(this).data('id'));
                     if (index !== -1) idsForTracks.splice(index, 1);
                 } else {
                     $(this).addClass("active");
                     $(this).css("border", "5px solid white");
-                    idsForTracks.push($(this).parent().parent().data('id'));
+                    idsForTracks.push($(this).data('id'));
                 }
             });
             $(query_list).parent().on('click', '.gv-tersect-query-delete', function () {
@@ -421,23 +397,25 @@ function queryPopulator(query_list, id, query_url) {
                 $.ajax({
                     type: 'DELETE',
                     url: query_url + "/" + $(this).parent().parent().data("id"),
-                    statusCode: {
-                        403: function (xhr) {
-                            new Noty({
-                                type: 'error',
-                                layout: 'topRight',
-                                text: "You Must be logged in.",
-                                timeout: '4000',
-                                theme: 'light',
-                            }).show();
-                        }
-                    },
                     success: function (data) {
-                        alert("Item Deleted!");
+                        new Noty({
+                            type: 'success',
+                            layout: 'topRight',
+                            text: "Item Deleted!",
+                            timeout: '2000',
+                            theme: 'light',
+                        }).show();
                         queryPopulator(query_list, id, query_url);
+                        idsForTracks = []
                     },
-                    error: function (err) {
-                        console.error(err);
+                    error: function (xhr) {
+                        new Noty({
+                            type: 'error',
+                            layout: 'topRight',
+                            text: `${xhr.status}: ${xhr.responseText} `,
+                            timeout: '4000',
+                            theme: 'light',
+                        }).show();
                     }
                 })
             });
@@ -446,23 +424,18 @@ function queryPopulator(query_list, id, query_url) {
                 $.ajax({
                     type: 'POST',
                     url: query_url + "/" + $(this).parent().parent().data("id") + "/edit",
-                    statusCode: {
-                        403: function (xhr) {
-                            new Noty({
-                                type: 'error',
-                                layout: 'topRight',
-                                text: "You Must be logged in.",
-                                timeout: '4000',
-                                theme: 'light',
-                            }).show();
-                        }
-                    },
                     success: function (data) {
                         console.log(data)
                         loadFromTemplate(data)
                     },
-                    error: function (err) {
-                        console.error(err);
+                    error: function (xhr) {
+                        new Noty({
+                            type: 'error',
+                            layout: 'topRight',
+                            text: `${xhr.status}: ${xhr.responseText} `,
+                            timeout: '4000',
+                            theme: 'light',
+                        }).show();
                     }
                 })
             });
@@ -495,21 +468,19 @@ function queryPopulator(query_list, id, query_url) {
                     $.ajax({
                         url: query_url + '/newTracks',
                         type: 'POST',
-                        statusCode: {
-                            403: function (xhr) {
-                                new Noty({
-                                    type: 'error',
-                                    layout: 'topRight',
-                                    text: "You Must be logged in.",
-                                    timeout: '4000',
-                                    theme: 'light',
-                                }).show();
-                            }
-                        },
                         data: { idsForTracks: idsForTracks, instanceName: instance_name, instanceID: instance_id, vcfFlag: vcfFlag, densityFlag: densityFlag },
                         success: function (data) {
                             $('a', query_list).css('border', 'none');
                             location.reload(true)
+                        },
+                        error: function (xhr) {
+                            new Noty({
+                                type: 'error',
+                                layout: 'topRight',
+                                text: `${xhr.status}: ${xhr.responseText} `,
+                                timeout: '4000',
+                                theme: 'light',
+                            }).show();
                         }
                     })
                 } else {
@@ -620,17 +591,6 @@ function vcfUploader(parent, submit_link, chooser, chooser_link, extension, url)
                         $(".entryname",parent).hide();
 
                     },
-                    statusCode: {
-                        413: function (xhr) {
-                            new Noty({
-                                type: 'error',
-                                layout: 'topRight',
-                                text: "Error with TSI generation.",
-                                timeout: '4000',
-                                theme: 'light',
-                            }).show();
-                        }
-                    },
                     xhr: function () {
                         // create an XMLHttpRequest
                         var xhr = new XMLHttpRequest();
@@ -651,12 +611,12 @@ function vcfUploader(parent, submit_link, chooser, chooser_link, extension, url)
                         }, false);
                         return xhr;
                     },
-                    error: function (xhr, status, error) {
+                    error: function (xhr) {
                         xhr.abort();
                         new Noty({
                             type: 'error',
                             layout: 'topRight',
-                            text: "Error Uploading. You Must be logged in.",
+                            text: 'You need to be logged in to complete that action',
                             timeout: '4000',
                             theme: 'light',
                         }).show();
@@ -2036,16 +1996,22 @@ function commandParse(command,html_id){
             A: "u" +"('" + filesetA.map(function(x){
                 if(typeof x == 'object'){
                     return `(${x[0]})*`
+                } else {
+                    return x
                 }
             }).join("','") + "')",
             B: "u" +"('" + filesetB.map(function(x){
                 if(typeof x == 'object'){
                     return `(${x[0]})*`
+                } else {
+                    return x
                 }
             }).join("','") + "')",
             C: "u" +"('" + filesetC.map(function(x){
                 if(typeof x == 'object'){
                     return `(${x[0]})*`
+                } else {
+                    return x
                 }
             }).join("','") + "')",
         };

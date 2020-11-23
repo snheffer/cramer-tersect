@@ -187,7 +187,7 @@ module.exports = {
         }
     },
 
-    idGen: function (length) {
+    idGen: function (length, id_start) {
         const nextLetter = (char) => {
             var alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
             return char == '9' ? 'a': alphabet.charAt(alphabet.search(char)+1);
@@ -206,16 +206,14 @@ module.exports = {
             const batchString = remString + [...newCharArray].join('')
             newCharArray = []
             return batchString;
-        }
+        };
         output = [];
-        start = "";
+        start = id_start;
         for(var i = 0; i<length; i++){
-            start = incrementChar(start);
             output.push(start);
+            start = incrementChar(start);
         }
         return output
-
-
     },
 
     arraysToDict: function(keys,values){
@@ -224,7 +222,5 @@ module.exports = {
             obj[keys[i]] = values[i]
         }
         return obj
-
-    }
-
+    },
 };
