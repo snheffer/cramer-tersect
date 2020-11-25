@@ -376,7 +376,7 @@ function queryPopulator(query_list, id, query_url) {
         url: query_url,
         success: function (data) {
             $.each(data, function () {
-                $(query_list).append('<tr class="gv-tersect-query-row" data-id="' + this._id + '"><td><a class="gv-tersect-query-name">' + this.name + '</a></td><td class="CellWithComment"><span class="CellComment">' + decodeURIComponent(this.command) + '</span><span>' + decodeURIComponent(this.command) + '</span></td><td><a class="gv-tersect-query-edit">Edit</a></td><td><a class="gv-tersect-query-download">Download</a></td><td><a class="gv-tersect-query-delete">delete</a></td></tr>');
+                $(query_list).append('<tr data-id="' + this._id + '"><td class="gv-tersect-query-row"><a class="gv-tersect-query-name">' + this.name + '</a></td><td class="CellWithComment"><span class="CellComment">' + decodeURIComponent(this.command) + '</span><span>' + decodeURIComponent(this.command) + '</span></td><td><a class="gv-tersect-query-edit">Edit</a></td><td><a class="gv-tersect-query-download">Download</a></td><td><a class="gv-tersect-query-delete">delete</a></td></tr>');
             });
 
 
@@ -384,12 +384,12 @@ function queryPopulator(query_list, id, query_url) {
                 if ($(this).hasClass("active")) {
                     $(this).removeClass("active");
                     $(this).css("border", "none");
-                    var index = idsForTracks.indexOf($(this).data('id'));
+                    var index = idsForTracks.indexOf($(this).parent().data('id'));
                     if (index !== -1) idsForTracks.splice(index, 1);
                 } else {
                     $(this).addClass("active");
                     $(this).css("border", "5px solid white");
-                    idsForTracks.push($(this).data('id'));
+                    idsForTracks.push($(this).parent().data('id'));
                 }
             });
             $(query_list).parent().on('click', '.gv-tersect-query-delete', function () {
@@ -892,18 +892,18 @@ var DragDrop = {
     },
     add: function () {
         if (this.droppable[0] == 'A') {
-            $('#sampleA > tbody:last-child').append(`<tr><td id="table${this.dragged.id}"><button class="tableButton btn btn-default" id="A${this.dragged.id}">${this.dragged.innerText} <i class="fa fa-trash"></i></button></td></tr>`);
+            $('#sampleA > tbody:last-child').append(`<tr><td id="table${this.dragged.id}"><button class="tableButton btn btn-default" id="A${this.dragged.id}">${this.dragged.innerText}<i class="fa fa-trash"></i></button></td></tr>`);
             filesetA.push(this.dragged.innerText);
             sampleCountA++;
             $("#countA span").text("A: " + sampleCountA);
 
         } else if (this.droppable[0] == 'B') {
-            $('#sampleB > tbody:last-child').append(`<tr><td id="table${this.dragged.id}"><button class="tableButton btn btn-default" id="B${this.dragged.id}">${this.dragged.innerText} <i class="fa fa-trash"></i></button></td></tr>`);
+            $('#sampleB > tbody:last-child').append(`<tr><td id="table${this.dragged.id}"><button class="tableButton btn btn-default" id="B${this.dragged.id}">${this.dragged.innerText}<i class="fa fa-trash"></i></button></td></tr>`);
             filesetB.push(this.dragged.innerText);
             sampleCountB++;
             $("#countB span").text("B: " + sampleCountB);
         } else if (this.droppable[0] == 'C') {
-            $('#sampleC > tbody:last-child').append(`<tr><td id="table${this.dragged.id}"><button class="tableButton btn btn-default" id="C${this.dragged.id}">${this.dragged.innerText} <i class="fa fa-trash"></i></button></td></tr>`);
+            $('#sampleC > tbody:last-child').append(`<tr><td id="table${this.dragged.id}"><button class="tableButton btn btn-default" id="C${this.dragged.id}">${this.dragged.innerText}<i class="fa fa-trash"></i></button></td></tr>`);
             filesetC.push(this.dragged.innerText);
             sampleCountC++;
             $("#countC span").text("C: " + sampleCountC);
@@ -1049,7 +1049,7 @@ function vennInit() {
 
     $('.wild').click(function () {
         var selection = $(this);
-        function duplicate() {
+        function notDuplicate() {
             if ($(".venntooltip td").length !== 0) {
                 var check = [];
                 $(".venntooltip").find("tr").find("td").each(function () {
@@ -1073,7 +1073,7 @@ function vennInit() {
                 return true;
             }
         }
-        if (wildcardgroup !== undefined && duplicate()) {
+        if (wildcardgroup !== undefined && notDuplicate()) {
             var group = wildcardgroup ;
 
             if (selection.attr("id") == "countA") {
@@ -1111,28 +1111,32 @@ function vennInit() {
         var tableID = `[id="table${ID}"]`;
         //remove from filesets
         var samp = $(tableID).text();
-        filesetA = filesetA.filter(item => !item.includes(samp));
-        filesetB = filesetB.filter(item => !item.includes(samp));
-        filesetC = filesetC.filter(item => !item.includes(samp));
+        console.log(samp);
+        var indexA = filesetA.indexOf((this.hasAttribute('data-wildcard'))?[samp]:samp);
+        var indexB = filesetB.indexOf((this.hasAttribute('data-wildcard'))?[samp]:samp);
+        var indexC = filesetC.indexOf((this.hasAttribute('data-wildcard'))?[samp]:samp);
+        if (indexA !== -1) filesetA.splice(indexA, 1);
+        if (indexB !== -1) filesetB.splice(indexB, 1);
+        if (indexC !== -1) filesetC.splice(indexC, 1);
         //remove from table
         $(tableID).remove();
 
         if (ID.includes(',')) {
 
             var arrID = ID.split(',');
-            for (i = 0; i < arrID.length; i++) {
+            for (let i = 0; i < arrID.length; i++) {
                 //make sample draggable
                 $('#' + arrID[i]).draggable('option', 'disabled', false);
             }
             //decrement count
             if (this.id.charAt(0) == "A") {
-                sampleCountA = sampleCountA - this.name;
+                sampleCountA = sampleCountA - arrID.length;
                 $("#countA span").text("A: " + sampleCountA);
             } else if (this.id.charAt(0) == "B") {
-                sampleCountB = sampleCountB - this.name;
+                sampleCountB = sampleCountB - arrID.length;
                 $("#countB span").text("B: " + sampleCountB);
             } else {
-                sampleCountC = sampleCountC - this.name;
+                sampleCountC = sampleCountC - arrID.length;
                 $("#countC span").text("C: " + sampleCountC);
             }
         } else {
@@ -1304,7 +1308,7 @@ function resetSamples() {
 
 //function to add sample group to fileset array and tooltip
 function addSample(input, fset, reload) {
-    var input_2 = typeof input == "object" ? input.join() : input;
+    //var input_2 = typeof input == "object" ? input.join() : input;
     reload == true ? fset.push(input) : fset.push([input]);
     var set;
     if (fset == filesetA) {
@@ -1322,18 +1326,33 @@ function addSample(input, fset, reload) {
         theme: 'light',
     }).show();
 
-    $("#genomeTable td").filter(function () {
-        if ($(this).text().indexOf(input_2) == 0) {
-            //disable drag on matching samples
-            $(this).draggable('option', 'disabled', true);
-            wildcardID.push(this.id);
+    let wildcardHTMLTag = ""
 
-        }
-    });
+    if(typeof input === 'string' && reload === true) {
+        $("#genomeTable td").filter(function () {
+
+            if ($(this).text() == input) {
+                //disable drag on matching samples
+                $(this).draggable('option', 'disabled', true);
+                wildcardID.push(this.id);
+            }
+        });
+    } else {
+        input = (typeof input === 'object') ? input.join():input;
+        wildcardHTMLTag = "data-wildcard";
+        $("#genomeTable td").filter(function () {
+            if ($(this).text().indexOf(input) == 0) {
+                //disable drag on matching samples
+                $(this).draggable('option', 'disabled', true);
+                wildcardID.push(this.id);
+            }
+        });
+    }
+
     //number of samples in wildcard
     //groupNum = $('#genomeTable td:visible').length;
     groupNum = wildcardID.length;
-    $('#sample' + set + ' > tbody:last-child').append(`<tr><td id="table${wildcardID}"><button class="tableButton btn btn-default" id="${set + wildcardID}" name="${groupNum}">${input}  <i class="fa fa-trash"></i></button></td></tr>`);
+    $('#sample' + set + ' > tbody:last-child').append(`<tr><td id="table${wildcardID}"><button class="tableButton btn btn-default" id="${set + wildcardID}" name="${groupNum}" ${wildcardHTMLTag}>${input}<i class="fa fa-trash"></i></button></td></tr>`);
     wildcardID = [];
 
 }

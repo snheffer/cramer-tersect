@@ -244,7 +244,7 @@ router.post('/vcfUpload/new',isUploadAuthenticated, async function(req,res,next)
         var item = new TersectIntegration({
             name: fields.newName,
             instance_id: fields.instanceID,
-            local: true,
+            renamed: true,
             route: indexPath,
             aliases: idTable
         });
@@ -324,9 +324,10 @@ router.post('/tersectUpload/view',function(req,res,next){
                 res.status(404).send("Resource Not Found.");
             } else {
                 console.log(entry.name);
-                if(!entry.aliases){
+                if(!entry.renamed){
                     console.error("No associated DB sample name information");
                     res.status(404).send("Resource Not Found.")
+                    //res.send({samples: entry.samples})
                 } else {
                     var arr = []
                     for (var i of entry.aliases.keys()){
@@ -525,11 +526,12 @@ async function tersect(params) {
         console.error("Command: " + params.fullCommand);
         console.error("newPath: " + newPath);
         console.error("filepath: " + filepath);
-        console.error("typeof: " + Array.isArray(params.setsTranslatedJoined));
-        console.log("Sets:" + JSON.stringify(params.setsTranslatedJoined));
+        // console.error("typeof: " + Array.isArray(params.setsTranslatedJoined));
+        // console.log("Sets:" + JSON.stringify(params.setsTranslatedJoined));
         console.log("Threshold:" + params.threshold);
         console.log(doc.route);
-        let thresholdCommand = thresholdCalculator(params.threshold, params.setsTranslatedJoined);
+
+        let thresholdCommand = (doc.renamed) ? thresholdCalculator(params.threshold, params.setsTranslatedJoined) : thresholdCalculator(params.threshold, params.setsJoined);
         command = command + thresholdCommand;
         console.log("Final Command: " + command);
         let tcommand = spawn('tersect', ['view', doc.route, command]);
@@ -596,7 +598,7 @@ async function tersect(params) {
         });
         var item = new TersectVCF({
             name: params.file,
-            command:encodeURIComponent(params.fullCommandOrig),
+            command: (doc.renamed) ? encodeURIComponent(params.fullCommandOrig) : encodeURIComponent(params.fullCommand),
             sets:params.setArray,
             instance_id: params.instanceID,
             parent_id:params.idToGet,
@@ -632,74 +634,121 @@ router.post('/tersectQueries/generate', async function(req,res,next){
         let sets = {A:setA,B:setB,C:setC};
         console.log("sets: "+JSON.stringify(sets));
         let setArray = [setA.filter(Boolean),setB.filter(Boolean),setC.filter(Boolean)];
-        let setsTranslated = {A:[],B:[],C:[]};
-        for(let set of Object.keys(sets)){
-            console.log(typeof set);
-            sets[set].forEach((element)=>{
-                console.log("ELEMENT: " + element);
-                if(typeof element == 'object'){
-                    element = element.join();
-                    console.log("TARGET ELEMENT: " + element);
-                    doc.aliases.forEach(function(trans, orig) {
-                        console.log("CURRENT KEY: " + orig);
-                        if (orig.indexOf(element) == 0 ){
-                            console.log("TARGET KEY" + orig);
-                            setsTranslated[set].push(trans)
-                        }
-                    });
-                } else {
-                    // console.log("ELEMENT TYPE: " + typeof element);
-                    // console.log("Alias Value: " +  entry.aliases.get(element));
-                    setsTranslated[set].push(doc.aliases.get(element))
-                }
-            })
-        }
-        let setsTranslatedJoined = [...setsTranslated.A,...setsTranslated.B,...setsTranslated.C].filter(Boolean);
-        let comm = req.body.command;
-        let threshold = req.body.threshold;
-        let mapObj = {
-            A:"u" +"('" + setsTranslated.A.join("','") + "')",
-            B:"u" +"('" + setsTranslated.B.join("','") + "')",
-            C:"u" +"('" + setsTranslated.C.join("','") + "')"
-        };
-        let fullCommand = comm.replace(/A|B|C/g, function(matched){
-            return mapObj[matched];
-        });
-        let mapObjOrig = {
-            A:"u" +"('" + sets.A.map(function(x){
-                if(typeof x == 'object'){
-                    return `(${x[0]})*`
-                } else {
-                    return x
-                }
-            }).join("','") + "')",
-            B:"u" +"('" + sets.B.map(function(x){
-                if(typeof x == 'object'){
-                    return `(${x[0]})*`
-                } else {
-                    return x
-                }
-            }).join("','") + "')",
-            C:"u" +"('" + sets.C.map(function(x){
-                if(typeof x == 'object'){
-                    return `(${x[0]})*`
-                } else {
-                    return x
-                }
-            }).join("','") + "')"
-        };
-        let fullCommandOrig = comm.replace(/A|B|C/g, function(matched){
-            return mapObjOrig[matched];
-        });
         let tersectParams = {};
-        tersectParams.instanceID = req.body.instanceID;
-        tersectParams.idToGet = req.body.idToGet;
-        tersectParams.file = req.body.filepath.replace(/[^\d\w-_.]/g,"_");
-        tersectParams.setsTranslatedJoined = setsTranslatedJoined;
-        tersectParams.setArray = setArray;
-        tersectParams.fullCommand = fullCommand;
-        tersectParams.fullCommandOrig = fullCommandOrig;
-        tersectParams.threshold = threshold;
+        if (doc.renamed == true){
+            let setsTranslated = {A:[],B:[],C:[]};
+            for(let set of Object.keys(sets)){
+                console.log(typeof set);
+                sets[set].forEach((element)=>{
+                    console.log("ELEMENT: " + element);
+                    if(typeof element == 'object'){
+                        element = element.join();
+                        console.log("TARGET ELEMENT: " + element);
+                        doc.aliases.forEach(function(trans, orig) {
+                            console.log("CURRENT KEY: " + orig);
+                            if (orig.indexOf(element) == 0 ){
+                                console.log("TARGET KEY" + orig);
+                                setsTranslated[set].push(trans)
+                            }
+                        });
+                    } else {
+                        // console.log("ELEMENT TYPE: " + typeof element);
+                        // console.log("Alias Value: " +  entry.aliases.get(element));
+                        setsTranslated[set].push(doc.aliases.get(element))
+                    }
+                })
+            };
+            let setsTranslatedJoined = [...setsTranslated.A,...setsTranslated.B,...setsTranslated.C].filter(Boolean);
+            let comm = req.body.command;
+            let threshold = req.body.threshold;
+            let mapObj = {
+                A:"u" +"('" + setsTranslated.A.join("','") + "')",
+                B:"u" +"('" + setsTranslated.B.join("','") + "')",
+                C:"u" +"('" + setsTranslated.C.join("','") + "')"
+            };
+            let fullCommand = comm.replace(/A|B|C/g, function(matched){
+                return mapObj[matched];
+            });
+            let mapObjOrig = {
+                A:"u" +"('" + sets.A.map(function(x){
+                    if(typeof x == 'object'){
+                        return `(${x[0]})*`
+                    } else {
+                        return x
+                    }
+                }).join("','") + "')",
+                B:"u" +"('" + sets.B.map(function(x){
+                    if(typeof x == 'object'){
+                        return `(${x[0]})*`
+                    } else {
+                        return x
+                    }
+                }).join("','") + "')",
+                C:"u" +"('" + sets.C.map(function(x){
+                    if(typeof x == 'object'){
+                        return `(${x[0]})*`
+                    } else {
+                        return x
+                    }
+                }).join("','") + "')"
+            };
+            let fullCommandOrig = comm.replace(/A|B|C/g, function(matched){
+                return mapObjOrig[matched];
+            });
+            tersectParams.instanceID = req.body.instanceID;
+            tersectParams.idToGet = req.body.idToGet;
+            tersectParams.renamed = true;
+            tersectParams.file = req.body.filepath.replace(/[^\d\w-_.]/g,"_");
+            tersectParams.setArray = setArray;
+            tersectParams.fullCommand = fullCommand;
+            tersectParams.fullCommandOrig = fullCommandOrig;
+            tersectParams.threshold = threshold;
+            tersectParams.setsTranslatedJoined = setsTranslatedJoined;
+
+        } else {
+            let setsJoined = [];
+            for(let set of Object.keys(sets)){
+                sets[set].forEach((element)=>{
+                    console.log("ELEMENT: " + element);
+                    if(typeof element == 'object'){
+                        element = element.join();
+                        console.log("TARGET ELEMENT: " + element);
+                        doc.samples.forEach(function(sample) {
+                            console.log("CURRENT KEY: " + sample);
+                            if (sample.indexOf(element) == 0 ){
+                                console.log("TARGET KEY" + sample);
+                                setsJoined.push(sample)
+                            }
+                        });
+                    } else {
+                        // console.log("ELEMENT TYPE: " + typeof element);
+                        // console.log("Alias Value: " +  entry.aliases.get(element));
+                        setsJoined.push(element)
+                    }
+                })
+            };
+            let comm = req.body.command;
+            let threshold = req.body.threshold;
+            let mapObj = {
+                A:"u" +"('" + sets.A.join("','") + "')",
+                B:"u" +"('" + sets.B.join("','") + "')",
+                C:"u" +"('" + sets.C.join("','") + "')"
+            };
+            let fullCommand = comm.replace(/A|B|C/g, function(matched){
+                return mapObj[matched];
+            });
+            tersectParams.instanceID = req.body.instanceID;
+            tersectParams.idToGet = req.body.idToGet;
+            tersectParams.renamed = false;
+            tersectParams.file = req.body.filepath.replace(/[^\d\w-_.]/g,"_");
+            tersectParams.setArray = setArray;
+            tersectParams.fullCommand = fullCommand;
+            tersectParams.threshold = threshold;
+            tersectParams.setsJoined = setsJoined;
+
+        }
+
+
 
         res.send({ "location": tersectParams.instanceID });
         await tersect(tersectParams);
