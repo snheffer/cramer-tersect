@@ -56,32 +56,40 @@ router.get('/request', function (req, res, next) {
             // Find which command line to execute with the type
             if (req.query.type.match("faidx")) {
                 // Write the command
-                command = "samtools faidx " + file + ' ' + chr + ':' + start + '-' + end + ' | tail -n+2';
-            } 
+                //command = "samtools faidx " + file + ' ' + chr + ':' + start + '-' + end + ' | tail -n+2';
+                command = `samtools faidx '${decodeURIComponent(file)}' ${chr}:${start}-${end} | tail -n+2`;
+            }
             else if (req.query.type.match("tabix")) {
                 // Find the header
-                var listSequenceName = sync('tabix -l ' + file, {cwd: dir + "/indexes"}).toString().split('\n');
+                //var listSequenceName = sync('tabix -l ' + decodeURIComponent(file), {cwd: dir + "/indexes"}).toString().split('\n');
+                var listSequenceName = sync(`tabix -l '${decodeURIComponent(file)}'`, {cwd: dir + "/indexes"}).toString().split('\n');
                 var sequenceName = utils.extractHead(listSequenceName, chr); // Remove "SN:"
                 // Write the command
-                command = "tabix " + file + ' ' + sequenceName + ':' + start + '-' + end;
-            } 
+                //command = "tabix " + decodeURIComponent(file) + ' ' + sequenceName + ':' + start + '-' + end;
+                command = `tabix '${decodeURIComponent(file)}' ${sequenceName}:${start}-${end}`;
+            }
             else if (req.query.type.match("bam")) {
                 // Find the header
-                var listSequenceName = sync('samtools view -H ' + file + '| grep \'@SQ\' | awk \'{for (i=1;i<=NF;i++){if ($i ~/^SN:/) {print $i}}}\'', {cwd: dir + "/indexes"}).toString().split('\n');
+                //var listSequenceName = sync('samtools view -H ' + file + '| grep \'@SQ\' | awk \'{for (i=1;i<=NF;i++){if ($i ~/^SN:/) {print $i}}}\'', {cwd: dir + "/indexes"}).toString().split('\n');
+                var listSequenceName = sync(`samtools view -H '${decodeURIComponent(file)}' | grep '@SQ' | awk '{for (i=1;i<=NF;i++){if ($i ~/^SN:/) {print $i}}}'`, {cwd: dir + "/indexes"}).toString().split('\n');
                 var sequenceName = utils.extractHead(listSequenceName, chr).substring(3); // Remove "SN:"
                 // Write the command
-                command = "samtools view " + file + ' ' + sequenceName + ':' + start + '-' + end;
-            } 
+                // command = "samtools view " + file + ' ' + sequenceName + ':' + start + '-' + end;
+                command = `samtools view '${decodeURIComponent(file)}' ${sequenceName}:${start}-${end}`;
+            }
             else if (req.query.type.match("bigwig")) {
                 // Find the header
-                var listSequenceName = sync('bigWigInfo ' + file + ' -chroms | grep SN', {cwd: dir + "/indexes"}).toString().split('\n');
+                // var listSequenceName = sync('bigWigInfo ' + file + ' -chroms | grep SN', {cwd: dir + "/indexes"}).toString().split('\n');
+                var listSequenceName = sync(`bigWigInfo ${decodeURIComponent(file)} -chroms | grep SN`, {cwd: dir + "/indexes"}).toString().split('\n');
                 var sequenceName = utils.extractHead(listSequenceName, chr).substring(3); // Remove "SN:"
                 // Write the command
-                command = "echo '" + sequenceName + "\t" + start + "\t" + end + "' > position.bed | bwtool extract bed position.bed " + file + " stdout";
-            } 
+                // command = "echo '" + sequenceName + "\t" + start + "\t" + end + "' > position.bed | bwtool extract bed position.bed " + file + " stdout";
+                command = `echo '${sequenceName}\t${start}\t${end}' > position.bed | bwtool extract bed position.bed ${file} stdout`;
+            }
             else if (req.query.type.match("rsem")) {
                 // Write the command
-                command = "wget -qO- " + file;
+                // command = "wget -qO- " + file;
+                command = `wget -qO- ${file}`;
             }
             console.log('Command: ' + command);
 

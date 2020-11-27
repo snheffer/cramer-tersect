@@ -16,7 +16,7 @@ Genoverse.Plugins.trackControls = function () {
 
       if (!menu.length) {
         menu = { title : track.name };
-        menu[track.prop('info') || ''] = '';
+        menu[decodeURIComponent(track.prop('info')) || ''] = '';
 
         menu = track.prop('menus', track.prop('menus').add(track.browser.makeMenu(menu).addClass('gv-track-info')));
       }
