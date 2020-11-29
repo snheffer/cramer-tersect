@@ -1113,18 +1113,35 @@ function vennInit() {
 
     //remove sample if close button is clicked in tooltip
     $("#tooltipdiv").on('click', '.tableButton', function () {
-        var ID = (this.id).substr(1);
-        var tableID = `[id="table${ID}"]`;
+        console.log(`this ID: ${this.id}`);
+        console.log(`filesetBefore ${filesetA}`);
+        let ID = (this.id).substr(1);
+        let tableID = `[id="table${ID}"]`;
         //remove from filesets
-        var samp = $(tableID).text();
-        console.log(samp);
-        var indexA = filesetA.indexOf((this.hasAttribute('data-wildcard'))?[samp]:samp);
-        var indexB = filesetB.indexOf((this.hasAttribute('data-wildcard'))?[samp]:samp);
-        var indexC = filesetC.indexOf((this.hasAttribute('data-wildcard'))?[samp]:samp);
-        if (indexA !== -1) filesetA.splice(indexA, 1);
-        if (indexB !== -1) filesetB.splice(indexB, 1);
-        if (indexC !== -1) filesetC.splice(indexC, 1);
-        //remove from table
+        let sampArr = $(tableID);
+        let samp = sampArr[0].textContent;
+        console.log(`Sample Text ${samp}`);
+        let wildcard = (this.hasAttribute('data-wildcard'))?true:false;
+        if(wildcard){
+            for (let fileSet of [filesetA,filesetB,filesetC]){
+                for (let i = 0; i < fileSet.length; i++){
+                    if(typeof fileSet[i] == "object" && fileSet[i][0] == samp){
+                        fileSet.splice(i,1);
+                        i--
+                    }
+                }
+            }
+        } else {
+            for (let fileSet of [filesetA,filesetB,filesetC]){
+                for (let i = 0; i < fileSet.length; i++){
+                    if(fileSet[i] == samp){
+                        fileSet.splice(i,1);
+                        i--
+                    }
+                }
+            }
+        }
+
         $(tableID).remove();
 
         if (ID.includes(',')) {
@@ -1326,7 +1343,7 @@ function addSample(input, fset, reload) {
     }
     new Noty({
         type: 'success',
-        layout: 'topRight',
+        layout: 'topLeft',
         text: input + ' has been added to: ' + set,
         timeout: '1500',
         theme: 'light',
