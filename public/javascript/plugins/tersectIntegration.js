@@ -190,8 +190,8 @@ Genoverse.Plugins.tersectIntegration = function () {
                     }
                 });
                 $('#purge-queries').on('click', function(){
-                    flag = confirm("This will delete all entries associated with this instance. Do you wish to continue?")
-                    if (flag = true) {$.ajax({
+                    flag = confirm("This will delete all entries associated with this instance. Do you wish to continue?");
+                    if (flag == true) {$.ajax({
                         type: 'DELETE',
                         url: '/index/delete-query-vcfs/'+instance_id,
                         success: function (data) {
@@ -332,29 +332,32 @@ function indexPopulator(index_list, url, query_list, query_url) {
 
             $(index_list).parent().off().on('click', '.gv-tersect-index-delete', function () {
                 console.log("delete event fired at: " + Date.now());
-                $.ajax({
-                    type: 'DELETE',
-                    url: url + "/" + $(this).parent().parent().data("id"),
-                    success: function (data) {
-                        new Noty({
-                            type: 'success',
-                            layout: 'topRight',
-                            text: "Index Deleted!",
-                            timeout: '2000',
-                            theme: 'light',
-                        }).show();
-                        indexPopulator(index_list, url, query_list, query_url);
-                    },
-                    error: function (xhr) {
-                        new Noty({
-                            type: 'error',
-                            layout: 'topRight',
-                            text: `${xhr.status}: ${xhr.responseText} `,
-                            timeout: '4000',
-                            theme: 'light',
-                        }).show();
-                    }
-                })
+                let flag = confirm("Are you sure you want to permanently delete that Index file?")
+                if(flag == true) {
+                    $.ajax({
+                        type: 'DELETE',
+                        url: url + "/" + $(this).parent().parent().data("id"),
+                        success: function (data) {
+                            new Noty({
+                                type: 'success',
+                                layout: 'topRight',
+                                text: "Index Deleted!",
+                                timeout: '2000',
+                                theme: 'light',
+                            }).show();
+                            indexPopulator(index_list, url, query_list, query_url);
+                        },
+                        error: function (xhr) {
+                            new Noty({
+                                type: 'error',
+                                layout: 'topRight',
+                                text: `${xhr.status}: ${xhr.responseText} `,
+                                timeout: '4000',
+                                theme: 'light',
+                            }).show();
+                        }
+                    })
+                }
             });
             $(index_list).parent().on('click', '.gv-tersect-index-name', function () { indexGetter(index_list, $(this).parent().parent().data('id'), url) });
             $(index_list).parent().on('click', '.gv-tersect-index-name', function () { $(document).data('query-id', $(this).parent().parent().data('id')) });
@@ -393,31 +396,34 @@ function queryPopulator(query_list, id, query_url) {
                 }
             });
             $(query_list).parent().on('click', '.gv-tersect-query-delete', function () {
-                console.log("delete event fired at: " + Date.now());
-                $.ajax({
-                    type: 'DELETE',
-                    url: query_url + "/" + $(this).parent().parent().data("id"),
-                    success: function (data) {
-                        new Noty({
-                            type: 'success',
-                            layout: 'topRight',
-                            text: "Item Deleted!",
-                            timeout: '2000',
-                            theme: 'light',
-                        }).show();
-                        queryPopulator(query_list, id, query_url);
-                        idsForTracks = []
-                    },
-                    error: function (xhr) {
-                        new Noty({
-                            type: 'error',
-                            layout: 'topRight',
-                            text: `${xhr.status}: ${xhr.responseText} `,
-                            timeout: '4000',
-                            theme: 'light',
-                        }).show();
-                    }
-                })
+                let flag = confirm("Are you sure you want to permanently delete that query file?");
+                if (flag == true){
+                    console.log("delete event fired at: " + Date.now());
+                    $.ajax({
+                        type: 'DELETE',
+                        url: query_url + "/" + $(this).parent().parent().data("id"),
+                        success: function (data) {
+                            new Noty({
+                                type: 'success',
+                                layout: 'topRight',
+                                text: "Item Deleted!",
+                                timeout: '2000',
+                                theme: 'light',
+                            }).show();
+                            queryPopulator(query_list, id, query_url);
+                            idsForTracks = []
+                        },
+                        error: function (xhr) {
+                            new Noty({
+                                type: 'error',
+                                layout: 'topRight',
+                                text: `${xhr.status}: ${xhr.responseText} `,
+                                timeout: '4000',
+                                theme: 'light',
+                            }).show();
+                        }
+                    })
+                }
             });
             $(query_list).parent().on('click', '.gv-tersect-query-edit', function () {
                 console.log("edit event fired at: " + Date.now());
@@ -1322,7 +1328,7 @@ function addSample(input, fset, reload) {
         type: 'success',
         layout: 'topRight',
         text: input + ' has been added to: ' + set,
-        timeout: '4000',
+        timeout: '1500',
         theme: 'light',
     }).show();
 

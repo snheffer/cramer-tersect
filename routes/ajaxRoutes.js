@@ -141,7 +141,7 @@ router.post('/tersectUpload/new',isUploadAuthenticated, async function(req,res,n
         var item = new TersectIntegration({
             name: files["uploads[]"].name,
             instance_id: fields.instanceID,
-            local: true,
+            renamed: true,
             route: newPath,
             aliases: idTable
         });
@@ -537,6 +537,9 @@ async function tersect(params) {
         let tcommand = spawn('tersect', ['view', doc.route, command]);
         await new Promise((resolve, reject) => {
             let output = fs.createWriteStream(filepath);
+            if(params.fullCommandOrig){
+                output.write(`##fileformat=VCFv4.3\n##OriginalTersectCommand=${params.fullCommandOrig}`)
+            }
             tcommand.on("error", (err) => {
                 reject(err)
             });
