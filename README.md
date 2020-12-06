@@ -39,7 +39,11 @@ CRAMER Github repository: <https://github.com/FadyMohareb/cramer>.
 
 [Genome browser page](#genome-browser-page)
 
+[Tersect Plugin Usage](#tersect-plugin-usage)
+
 [Hands-on Example](#hands-on-example)
+
+[Analysing Properties Of Variants With Tersect](#analysing-properties-of-variants-with-tersect)
 
 [Common errors](#common-errors)
 
@@ -682,63 +686,69 @@ visualise them, these files will not be saved in the database.
 
 #### Tersect Plugin Usage
 
-In order to use the VCF querying functionalities of Tersect from within the browser window, the Plugin must first be 
-selected from the list within the CRAMER instance window. In addition, the VCF and/or the VCF density plugins must be 
-enabled to view any respective tracks from the Tersect queries. These tracks will be added to the instance database entry,
-and thus will persist between sessions. They can be deleted from the instance via the instance modification window.
-
-When viewing an instance in the browser window, the Tersect functionalities can be accessed via the "**T**" icon on the right-hand-side
-toolbar. This will open the the main menu for interacting with Tersect Indexes:
+To use the Tersect plugin and its capabilities, either create or modify an instance, adding the appropriate Track types 
+for viewing the selected genome. Ensure that a genome object is selected (**A**), either from Ensembl, or a file local to the server, 
+and activate the Tersect extension (**B**).
+In addition, the VCF and/or the VCF density plugins must be enabled to view any respective tracks from the Tersect queries (**C**). 
+Any tracks added via the Tersect GUI will be added to the instance database entry, and thus will persist between sessions. 
+They can be deleted from the instance via the instance modification window.
 
 ![](media/tersect_menu1.png)
 
-From here, a Tersect index will need to be selected or generated. This can be achieved via the upload functionalities in
-the Tersect index menu (**A**). Complete Tersect Indexes are uploadable, or VCF files can be supplied to generate a new index.
-
-Files can either be dragged and dropped from the desktop environment or selected via a file chooser.
-Existing indexes can also be deleted from the database via this menu:
+When viewing an instance in the browser window, the Tersect functionalities can be accessed via the "**T**" icon on the right-hand-side toolbar. 
 
 ![](media/tersect_menu2.png)
 
-Once supplied, this menu can be closed and the main menu will be updated:
+This will open the following menu for interacting with Tersect Indexes:
 
 ![](media/tersect_menu3.png)
 
-Samples contained in the Tersect index will be displayed in the view area (**B**, lower left). Individual samples can then be 
-dragged and dropped to the set diagrams at **C**, or multiple samples can be selected using the wildcard/search functionality
-(**B**, upper left).
-
-The set controls at **D** allow the user to add up to two additional Venn diagram circles, and also remove existing ones.
-Right clicking on an area of the Venn diagram will display a pop-up window that contains a list of the samples contained in that area,
-and allows the user to delete samples from a query individually. The total number of samples in each set is displayed at the
-bottom of the "Samples in TSI" pane (**B**, lower left). The "clear samples" button next to this allows for deletion of 
-all samples from a query.
-
-The "Set notation" pane displays the Tersect operation that will be sent to the server with the request (**E**, upper left).
-The "Submit Query" button and name field (**E**, lower left) submit the Tersect request to the server. A popup notification 
-informs the user of a successful receipt of a query. 
-Once this is completed, clicking the "Saved Queries" button (**F**) displays the "Saved Queries" menu:
+Here, a Tersect index will need to be selected or generated. This can be achieved via the upload functionalities in the Tersect index menu. 
+Complete Tersect Indexes are uploadable, or VCF files can be supplied to generate a new index.
+Files can either be dragged and dropped from the desktop environment or selected via a file chooser. 
+Uploaded Tersect indexes are renamed using a aliased naming system, meaning the sample names of Index files downloaded at 
+**B** will not match the original VCF sample names. To rectify this, clicking the "Revert" button (**B**) will generate a new index
+with the original naming scheme, that is suitable for downloading with the original sample names. This action will also generate a new
+entry in the current window, with the naming scheme "<index-name>_original".
+Existing indexes can also be deleted from the database via this menu:
 
 ![](media/tersect_menu4.png)
 
-This menu contains all the queries submitted to the server related to the specific instance being viewed. If a Tersect request 
-has recently been made, a small amount of time may be required for the request to finish processing, depending on the specifications
-of the server. In the event a recent request isn't visible from this pop-up, clicking the "Refresh List" button in the top left
-will refresh the list with any new entries.
+Once supplied, this menu can be closed and the main menu will be updated:
 
-Each entry in the list displays its name and the command used in its generation. Hovering over an entry will show a full length
-command view in the event it becomes "cut off" in the tabular view. Additionally, each entry in the list has the option for the user to 
-download the generated VCF file, or delete both the VCF file and the database entry from the server. Additionally the "Purge Query DB"
-button in the bottom left allows the User to delete all VCF queries associated with the instance, in the event that entries have
-become disassociated from their file entries.
+![](media/tersect_menu5.png)
 
-Clicking a query name selects a entry for viewing in the browser. Multiple entries can be selected at once in this way. 
-Once selected, the user selects either or both of the Track options in the bottom right. "VCF Track" will display a typical
-CRAMER-style VCF track, and the "Density" option with provide an accompanying density plot.
-Selecting the "Add tracks to instance" button will refresh the page, with the new tracks now visible.
+Samples contained in the Tersect index will be displayed in the view area (**A**, lower left). 
+Individual samples can then be dragged and dropped to the set diagrams at **B**, or multiple samples can be selected using the wildcard/search functionality (**A**, upper left).
+The set controls at **A**, upper left, allow the user to add up to two additional Venn diagram circles, 
+and also remove existing ones. 
+
+Right clicking on an area of the Venn diagram will display a pop-up window that contains 
+a list of the samples contained in that area and allows the user to delete samples from a query individually. 
+The total number of samples in each set is displayed in the tab sections above **A**. The "clear samples" button at **C** allows for deletion of all samples from a query. 
+The "Full Command" pane displays the Tersect operation that will be sent to the server with the request (**F**, upper left). 
+The "Submit Query" button and name field (**E**, lower left) submit the Tersect request to the server. 
+A popup notification informs the user of a successful receipt of a query. Once this is completed, clicking the "Saved Queries" button (**E**, right) displays the "Saved Queries" menu:
+
+![](media/tersect_menu6.png)
+
+This menu contains all the queries submitted to the server related to the specific instance being viewed. 
+If a Tersect request has recently been made, a small amount of time may be required for the request to finish processing, 
+depending on the specifications of the server. In the event a recent request is not visible from this pop-up, clicking 
+the "Refresh List" button in the top left will refresh the list with any new entries.
+
+Each entry in the list displays its name and the command used in its generation. Hovering over an entry will show a full-length 
+command view in the event it becomes "cut off" in the tabular view. Additionally, each entry in the list has the option 
+for the user to download the generated VCF file, edit a query using the same sample selections, or delete both the VCF 
+file and the database entry from the server (**B**). Additionally, the "Purge Query DB" button at **D** allows the 
+User to delete all VCF queries associated with the instance, in the event that entries have become disassociated from their database entries.
+
+Clicking a query name selects a entry for viewing in the browser (**A**). Selected entries are highlighted with a white border. Multiple entries can be selected at once in this way. 
+Once selected, the user selects either or both Track options at **C**. "VCF Track" will display a typical CRAMER-style VCF track, 
+and the "Density" option with provide an accompanying density plot. Selecting the "Add tracks to instance" button (**C**) will 
+refresh the page, with the new tracks now visible.
 
 (n.b. Both types of track for viewing must be enabled in the Instance Modification Window in order to be displayed.)
-
 
 # Hands-on Example 
 
@@ -893,7 +903,7 @@ the Ensembl webpage for this gene, which will open in a new tab.
 
 *Fig. 9 CRAMER gene search result for PLAC1*
 
-## 5\. Analysing properties of Variants with Tersect
+## Analysing properties of Variants with Tersect
 
 1\. Tersect's functionalities can be used with files located in the aforementioned 1000Genomes FTP server, although samples 
 are required to have chromosome numberings in the Tabix format to be compatible with the CRAMER browser view.
@@ -911,11 +921,11 @@ There is no need to supply tabix files for this operation:
 
 ![](media/tersect_menu10.png)
 
-3\. Once the index file has been generated, it can be queried in the main Tersect Menu:
+3\. Once the index file has been generated, it can be queried in the main Tersect Menu. Selected samples turn grey in the left-hand menu.
 
 ![](media/tersect_menu11.png)
 
-4\. Select the query in the Query menu. Selected VCFs are indicated by a white border:
+4\. Select the query in the Query menu. Selected VCFs are indicated by a white border. Clicking the "Add track to Instance" button will refresh the browser window and show the track in the browser view:
 
 ![](media/tersect_menu12.png)
 
@@ -923,9 +933,11 @@ There is no need to supply tabix files for this operation:
 
 ![](media/tersect_menu13.png)
 
+![](media/tersect_menu14.png)
+
 Zooming and clicking on a band will reveal information about it, and tracks can be removed from the instance modification
 window.
-
+Additionally, with density tracks added to the instance, the bin/sample size used in the representation can be edited by clicking the track tools pop-out at the right of the track and selecting a value. Additionally, the track can be refreshed by clicking the ↺ button to the right of the density selection.
 
 ## Common errors
 
@@ -944,12 +956,16 @@ A complex chromosome name such as
     instance details.
 
   - An incorrect URL/Filepath
+Establishment of the instance details can be achieved by modifying the instance's associated 
+JavasScript Object file defining chromosome limits. A new instance object can also be generated with the FASTArename utility script in the 
+/scripts application directory .
 
 **<span class="underline">When uploading a VCF file, the following error
 may appear: *“ERROR: Gzipped VCF files must be accompanied by a .tbi
 index file”</span>***
 
-This error means that the VCF file is not properly compressed.
+This error means that the VCF file is not properly compressed or missing a Tabix index file.
+This can be rectified by compressing the VCF file with bgzip (NOT gzip), and running "tabix <filename.vcf(.gz)>"
 
 **<span class="underline">In the genome browser page a warning may
 appear after you perform the drag and drop operation: *“Data for this

@@ -10,6 +10,7 @@ var fs = require('fs');
 var mkdirAsync = util.promisify(fs.mkdir);
 var writeFileAsync = util.promisify(fs.writeFile);
 var renameAsync = util.promisify(fs.rename);
+var copyAsync = util.promisify(fs.copyFile);
 require('lodash.combinations');
 var _ = require('lodash');
 var GenoverseInstance = require('../models/GenoverseInstance.js');
@@ -265,6 +266,70 @@ router.post('/vcfUpload/new',isUploadAuthenticated, async function(req,res,next)
     }
 });
 
+//route for converting Index Keys back into original sample names, not advised but might be useful
+//if the user wants to download the file with its original references.
+////Translation Route --------------------------------------------------------
+
+router.post('/tersectUpload/:id/translate', isTersectAuthenticated, async function(req,res,next){
+    try {
+        if (!req.params.id) {
+            throw new UserError('Malformed Request', 400);
+        }
+        let query = {_id: req.params.id};
+        let doc = await TersectIntegration.findOne(query);
+        if (!doc) {
+            throw new UserError('Cannot find file for download ID.', 404)
+        }
+        if (doc.renamed == false){
+            throw new UserError('This ID is already using its original naming scheme.', 400)
+        };
+        let originalAliases =  Array.from(doc.aliases).reduce((originalAliases, [key, value]) => (
+            Object.assign(originalAliases, { [key]: value })), {});
+        let invertedAliases = _.invert(originalAliases);
+        console.log("Inverted Aliases: " + invertedAliases )
+        let newName = `${doc.name}_${uuid()}.tsi`;
+        let indexPath = path.join(path.dirname(doc.route), newName);
+        let idTableText = "";
+        for(let i in invertedAliases){
+            console.log(i)
+            idTableText = idTableText + `${i}\t${invertedAliases[i]}\n`
+        }
+        let idtableTextOutput = idTableText;
+        await copyAsync(doc.route, indexPath);
+        await writeFileAsync(indexPath+'.tsv', idtableTextOutput);
+        try {
+            const bl = await spawnAsync("tersect", ["rename", indexPath, "-n", indexPath+'.tsv'], {shell:true, cwd: path.join(dir,"indexes")});
+        } catch(error){
+            console.error(`Code: ${error.code}; \n STDERR: ${error.stderr}; \n STDOUT: ${error.stdout};`)
+            serialDeleter(indexPath);
+            throw error
+        }
+        let item = new TersectIntegration({
+            name: `${doc.name}_original`,
+            instance_id: doc.instance_id,
+            renamed: false,
+            route: indexPath,
+            samples: Object.values(invertedAliases)
+        });
+        try {
+            await item.save();
+            res.send('success')
+            console.log("saved to DB!")
+        } catch (e) {
+            serialDeleter(indexPath);
+            throw e
+        }
+
+    } catch (e) {
+        console.error(e);
+        if (!res.headersSent) {
+            if (e instanceof UserError) {
+                res.status(e.statusCode).send(e.message)
+            } else res.status(500).send('Internal Error Encountered. Check Server Logs.')
+        }
+    }
+});
+
 ////Populator Routes --------------------------------------------------------
 
 //populator route for updating the list of TSI files on the server.
@@ -313,62 +378,31 @@ router.post('/tersectQueries', async function(req,res,next) {
 });
 
 //Route for populating sample list for the Venn GUI.
-router.post('/tersectUpload/view',function(req,res,next){
-    if(!(req.body.tsifile)){
-        res.status(400).send("No ID parameter specified")
-    } else {
-        var query = {_id:req.body.tsifile};
-        TersectIntegration.findOne(query, function(err,entry){
-            if (err){
-                console.error("Population Error: Cant Find Ref: " + err);
-                res.status(404).send("Resource Not Found.");
-            } else {
-                console.log(entry.name);
-                if(!entry.renamed){
-                    console.error("No associated DB sample name information");
-                    res.status(404).send("Resource Not Found.")
-                    //res.send({samples: entry.samples})
-                } else {
-                    var arr = []
-                    for (var i of entry.aliases.keys()){
-                        arr.push(i)
-                    }
-                    res.send({ "samples": arr });
-                    // var arr = [];
-                    // var getSamples = spawn('tersect', ['samples', entry.route], { shell: true });
-                    // //The output of the command is printed in the command line if there are no errors
-                    // getSamples.stdout.on('data', (data) => {
-                    //     //each sample name is on a new line, split by new line
-                    //     arr = data.toString().trim().split('\n');
-                    //     //remove first item - Sample
-                    //     arr.shift();
-                    // });
-                    // getSamples.on("error", err => {
-                    //     console.error(err);
-                    //     if(err.message === "malformedTSI"){
-                    //         res.status(415).send("Corrupted Index!");
-                    //     } else {
-                    //         res.status(500).send("Tersect Error.")
-                    //     }
-                    // });
-                    // //prints error from running tersect
-                    // getSamples.stderr.on('data', (data) => {
-                    //     console.error(`Error in retrieving samples within TSI file: ${data}`);
-                    //     getSamples.emit("error", new Error("malformedTSI"))
-                    // });
-                    // //prints after command is complete if there was an error
-                    // getSamples.on('close', (code) => {
-                    //     if (code !== 0) {
-                    //         console.log(`tersect process exited with code ${code}`);
-                    //     } else {
-                    //         console.log(arr);
-                    //         res.send({ "samples": arr });
-                    //     }
-                    // });
-                }
-
+router.post('/tersectUpload/view', async function(req,res,next){
+    try {
+        if(!(req.body.tsifile)){
+            res.status(400).send("No ID parameter specified",400)
+        }
+        let query = {_id:req.body.tsifile};
+        let doc = await TersectIntegration.findOne(query);
+        console.log(doc.name);
+        if(doc.renamed == false){
+            res.send({samples: doc.samples})
+        } else if(doc.renamed == true) {
+            let arr = [];
+            for (let i of doc.aliases.keys()){
+                arr.push(i)
             }
-        })
+            res.send({ "samples": arr });
+
+        }
+    } catch (e) {
+        console.error(e);
+        if (!res.headersSent){
+            if(e instanceof UserError){
+                res.status(e.statusCode).send(e.message)
+            } else res.status(500).send('Internal Error Encountered. Check Server Logs.')
+        }
     }
 });
 
@@ -494,7 +528,7 @@ router.delete('/tersectQueries/:id',isTersectAuthenticated, async function(req,r
 function thresholdCalculator(_threshold, sets){
     var threshold = parseInt(_threshold);
     console.log("SetJoined: "+JSON.stringify(sets));
-    if(Number.isInteger(threshold) && threshold >= 1 && threshold <= 2){
+    if(Number.isInteger(threshold) && threshold >= 1 && threshold <= 3){
         var subqueries = [];
         var combinations = _.combinations(sets, threshold);
         for(var combination of combinations){
@@ -503,6 +537,9 @@ function thresholdCalculator(_threshold, sets){
         }
         var query = (subqueries.length > 0) ?  "&(" + subqueries.join("|") + ")" : "";
         return query
+    } else if(Number.isInteger(threshold) && threshold == 100) {
+        let combination = "&(i('" + sets.join("','") + "'))"
+        return combination
     } else {
         console.log("returning nothing...");
         return ""
@@ -532,13 +569,13 @@ async function tersect(params) {
         console.log(doc.route);
 
         let thresholdCommand = (doc.renamed) ? thresholdCalculator(params.threshold, params.setsTranslatedJoined) : thresholdCalculator(params.threshold, params.setsJoined);
-        command = command + thresholdCommand;
+        command = "("+ command+ ")" + thresholdCommand;
         console.log("Final Command: " + command);
         let tcommand = spawn('tersect', ['view', doc.route, command]);
         await new Promise((resolve, reject) => {
             let output = fs.createWriteStream(filepath);
             if(params.fullCommandOrig){
-                output.write(`##fileformat=VCFv4.3\n##OriginalTersectCommand=${params.fullCommandOrig}`)
+                output.write(`##fileformat=VCFv4.3\n##OriginalTersectCommand=${params.fullCommandOrig}\n`)
             }
             tcommand.on("error", (err) => {
                 reject(err)
@@ -711,25 +748,23 @@ router.post('/tersectQueries/generate', async function(req,res,next){
         } else {
             let setsJoined = [];
             for(let set of Object.keys(sets)){
-                sets[set].forEach((element)=>{
-                    console.log("ELEMENT: " + element);
-                    if(typeof element == 'object'){
-                        element = element.join();
-                        console.log("TARGET ELEMENT: " + element);
+                for( let i = 0; i < sets[set].length; i++){
+                    if(typeof sets[set][i] == 'object'){
+                        sets[set][i] = sets[set][i].join();
+                        console.log("TARGET ELEMENT: " + sets[set][i]);
                         doc.samples.forEach(function(sample) {
                             console.log("CURRENT KEY: " + sample);
-                            if (sample.indexOf(element) == 0 ){
+                            if (sample.indexOf(sets[set][i]) == 0 ){
                                 console.log("TARGET KEY" + sample);
                                 setsJoined.push(sample)
                             }
                         });
+                        sets[set][i] = sets[set][i] + "*"
                     } else {
-                        // console.log("ELEMENT TYPE: " + typeof element);
-                        // console.log("Alias Value: " +  entry.aliases.get(element));
-                        setsJoined.push(element)
+                        setsJoined.push(sets[set][i])
                     }
-                })
-            };
+                }
+            }
             let comm = req.body.command;
             let threshold = req.body.threshold;
             let mapObj = {
@@ -761,6 +796,32 @@ router.post('/tersectQueries/generate', async function(req,res,next){
         console.error(e);
         if (!res.headersSent){
             if(e instanceof UserError){
+                res.status(e.statusCode).send(e.message)
+            } else res.status(500).send('Internal Error Encountered. Check Server Logs.')
+        }
+    }
+});
+
+////Tersect Index Download Route --------------------------------
+
+router.post('/tersectUpload/:id/download', async function (req, res, next){
+    try {
+        if (!req.params.id) {
+            throw new UserError('Malformed Request', 400);
+        }
+        let query = {_id: req.params.id};
+        let doc = await TersectIntegration.findOne(query);
+        if (!doc) {
+            throw new UserError('Cannot find file for download ID.', 404)
+        }
+        let file = doc.route;
+        res.download(file);
+
+
+    } catch (e) {
+        console.error(e);
+        if (!res.headersSent) {
+            if (e instanceof UserError) {
                 res.status(e.statusCode).send(e.message)
             } else res.status(500).send('Internal Error Encountered. Check Server Logs.')
         }

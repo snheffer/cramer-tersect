@@ -94,24 +94,24 @@
 .gv-tersect-integration-plugin .gv-tersect-integration-file-menu .gv-tersect-dropzone{
     height: 310px;
     min-height: 310px;
-    width: 100%;
     overflow: auto;
+    width: 100%;
 }
 
 .gv-tersect-integration-plugin .gv-tersect-integration-file-menu .gv-tersect-dropzone .filename
 {
     display:inline-block;
+    font-size: 12pt;
     vertical-align:top;
     width:75%;
-    font-size: 12pt;
 }
 .gv-tersect-integration-plugin .gv-tersect-integration-file-menu .gv-tersect-dropzone .filesize
 {
     display:inline-block;
-    vertical-align:top;
-    width:20%;
     font-size: 12pt;
     margin-right:5px;
+    vertical-align:top;
+    width:20%;
 }
 
 .gv-tersect-integration-plugin .gv-tersect-integration-file-menu .gv-tersect-list {
@@ -133,8 +133,8 @@
 
 .gv-tersect-integration-plugin .gv-tersect-integration-file-menu {
     left: 24%;
-    top: 70px;
     max-width: 600px;
+    top: 70px;
 }
 
 .gv-tersect-integration-plugin .gv-tersect-integration-file-menu table {
@@ -166,9 +166,9 @@
     border-radius: 0 12px 0 0;
 }
 
-.gv-tersect-integration-plugin .gv-tersect-integration-file-menu tr td:first-child {
-    padding-right: 50px!important;
-}
+/*.gv-tersect-integration-plugin .gv-tersect-integration-file-menu tr td:first-child {*/
+/*    padding-right: 50px!important;*/
+/*}*/
 
 .gv-tersect-integration-plugin .gv-tersect-integration-file-menu .gv-close {
     font-size: 20px;
@@ -179,9 +179,9 @@
 }
 
 .gv-tersect-integration-plugin .gv-tersect-list{
+    border-collapse: collapse;
     overflow: scroll;
     table-layout: fixed;
-    border-collapse: collapse;
     width: 100%;
 }
 
@@ -257,9 +257,9 @@ progress[value] {
 .filesize
 {
     display:inline-block;
+    margin-right:5px;
     vertical-align:top;
     width:100px;
-    margin-right:5px;
 }
 .gv-tersect-dropzone div:nth-child(odd) span{
     background-color: rgba(6, 54, 95, 0.35);
@@ -267,15 +267,15 @@ progress[value] {
 
 
 #gv-tersect-gui-container td{
-    padding: 5px 5px;
-    margin: 2px 1px;
-    display: inline-block;
+    background: #ebebeb;
     border: 3px solid #4D6297;
     border-radius: 5px;
-    background: #ebebeb;
     color: #000;
-    width: auto !important;
+    display: inline-block;
+    margin: 2px 1px;
+    padding: 5px 5px;
     text-align: center;
+    width: auto !important;
 }
 
 #gv-tersect-gui-container body {
@@ -283,13 +283,13 @@ progress[value] {
 }
 
 #genomeTable  {
-    height: 200px;
-    width: 300px;
-    overflow: auto;
-    display: inline-block;
     border: 3px solid #4D6297;
+    display: inline-block;
+    height: 200px;
+    overflow: auto;
     padding: 15px;
     white-space: normal;
+    width: 300px;
 }
 
 #gv-tersect-gui-container {
@@ -297,34 +297,34 @@ progress[value] {
 }
 
 .venntooltip {
-    position: absolute;
-    text-align: center;
-    height: 150px;
     background: #555;
-    color: #fff;
-    padding: 2px;
     border: 0px;
     border-radius: 8px;
+    color: #fff;
+    display: inline-block;
+    height: 150px;
     opacity: 0;
     overflow: auto;
-    display: inline-block;
+    padding: 2px;
+    position: absolute;
+    text-align: center;
 }
 
 .venntooltip th {
-    position: sticky;
-    top: 0px;
-    text-align: center;
-    padding: 2px 2px;
-    margin: 2px 1px;
     display: inline-block;
+    margin: 2px 1px;
+    padding: 2px 2px;
+    position: sticky;
+    text-align: center;
+    top: 0px;
     }
 
     .venntooltip td {
-        padding: 1px 1px;
-        margin: 1px 1px;
         display: inline-block;
-        width: auto !important;
+        margin: 1px 1px;
+        padding: 1px 1px;
         text-align: center;
+        width: auto !important;
     }
 
 #gv-tersect-gui-container .samples {
@@ -339,25 +339,25 @@ progress[value] {
 }
 
 #gv-tersect-gui-container .samples.ui-draggable-disabled {
-    cursor: not-allowed;
     background-color: #555;
+    cursor: not-allowed;
 }
 
 #venn {
-    height: 450px;
-    width: 100%;
-    display: flex;
-    justify-content: center;
     align-items: center;
     cursor: pointer;
+    display: flex;
+    height: 450px;
+    justify-content: center;
+    width: 100%;
 }
 
 
 #tersectMenu{
     background-color: white;
-    color : #0f0f0f;
-    border-style: solid;
     border-color: #4D6297;
+    border-style: solid;
+    color : #0f0f0f;
 }
 
 #tersectMenu>div>table {
@@ -375,13 +375,13 @@ progress[value] {
     color: #0f0f0f;
 }
 
-#queryMenu {
-    width: 900px;
+#tersectQueryMenu {
+    left: 5%;
     max-width: 900px;
-    left: 5%
+    width: 900px;
 }
 
-#queryMenu table {
+#tersectQueryMenu table {
     max-width: 98%;
     width: 100%;
 }
@@ -405,41 +405,83 @@ input[type="radio"]{
 }
 
 .CellComment{
-    position:absolute;
-    z-index:1;
-    border:1px;
     background-color:white;
+    border:1px;
+    border-color:red;
     border-style:solid;
     border-width:1px;
-    border-color:red;
-    padding:3px;
     color:red;
-    top:20px;
     left:20px;
+    padding:3px;
+    position:fixed;
+    top:20px;
     visibility: hidden;
-
+    z-index:1;
 }
 
 .CellWithComment:hover .CellComment{
     display:block;
     visibility: visible;
+    white-space: normal;
+    width: available;
+    word-break: break-word;
 
+
+}
+
+#tersectIndexMenu {
+    max-width: 60%;
+}
+
+#tersectIndexMenu .gv-tersect-list {
+    margin-left:0;
+    table-layout: fixed;
+    width: 100%;
+}
+
+#tersectIndexMenu .gv-tersect-list td{
+    max-width: 20%;
 }
 
 #tersectIndexMenu .gv-tersect-list tbody tr:nth-child(even){
     background-color: rgba(6, 54, 95, 0.15);
 }
-#tersectIndexMenu .gv-tersect-list tbody td{
-    overflow: hidden;
-    cursor: pointer;
+#tersectIndexMenu .gv-tersect-list tbody td:nth-child(1) {
+    min-width: 400px;
+}
+#tersectIndexMenu .gv-tersect-list tbody td:nth-child(2) {
+    text-align: right;
+}
+#tersectIndexMenu .gv-tersect-list tbody td {
+    cursor:    pointer;
+    max-width: 400px;
+    overflow:  hidden;
+}
+#tersectQueryMenu .gv-tersect-list {
+    margin-left:0;
+    table-layout: fixed;
+    width: 100%;
 }
 
-#queryMenu .gv-tersect-list tbody tr:nth-child(even){
+#tersectQueryMenu .gv-tersect-list thead td:nth-child(1){
+    width: 165px
+}
+#tersectQueryMenu .gv-tersect-list tbody td:nth-child(1){
+    width: 23%;
+}
+#tersectQueryMenu .gv-tersect-list tbody td:nth-child(2){
+    width: 72%;
+}
+
+#tersectQueryMenu .gv-tersect-list tbody tr:nth-child(even){
     background-color: rgba(6, 54, 95, 0.15);
 }
-#queryMenu .gv-tersect-list tbody td{
-    overflow: hidden;
+#tersectQueryMenu .gv-tersect-list tbody td{
     cursor: pointer;
+    overflow: hidden;
+}
+#purge-queries{
+    float: right;
 }
 
 #indexGenerationMenu{
@@ -449,6 +491,10 @@ input[type="radio"]{
 #indexGenerationMenu table {
     max-width: 97%;
     width: 98%;
+}
+
+#venncontrols .panel-body {
+    overflow: auto;
 }
 
 #gv-tersect-advancedInput{

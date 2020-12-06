@@ -14,7 +14,7 @@
     "url": ""
   },
   "dependencies": {
-    "async": "^2.6.0",
+    "async": "^2.6.3",
     "await-spawn": "^4.0.1",
     "bcrypt": "^3.0.6",
     "body-parser": "~1.18.2",

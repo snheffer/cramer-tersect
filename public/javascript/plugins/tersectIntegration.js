@@ -47,7 +47,7 @@ Genoverse.Plugins.tersectIntegration = function () {
                                     tersectFileMenu.show();
                                 } else {
                                     tersectFileMenu = makeTersectFileMenu().attr("id", "tersectFileMenu");
-                                    $('#tsi-locate-index', tersectIndexMenu).on('click', indexPopulator("#tersectIndexMenu .gv-tersect-list tbody", "/index/tersectUpload", "#queryMenu .gv-tersect-list tbody", "/index/tersectQueries"))
+                                    $('#tsi-locate-index', tersectIndexMenu).on('click', indexPopulator("#tersectIndexMenu .gv-tersect-list tbody", "/index/tersectUpload", "#tersectQueryMenu .gv-tersect-list tbody", "/index/tersectQueries"));
 
                                     $(this).data("tersectFileMenu", tersectFileMenu);
                                 }
@@ -66,7 +66,7 @@ Genoverse.Plugins.tersectIntegration = function () {
                             $(this).data("tersectIndexMenu", tersectIndexMenu);
                             var queryMenu = $("body").data('queryMenu');
                             if (!queryMenu) {
-                                queryMenu = makeQueryMenu().attr("id", "queryMenu").hide();
+                                queryMenu = makeQueryMenu().attr("id", "tersectQueryMenu").hide();
                                 $("body").data("queryMenu", queryMenu);
 
                             }
@@ -78,7 +78,7 @@ Genoverse.Plugins.tersectIntegration = function () {
                         if (queryMenu) {
                             queryMenu.show();
                         } else {
-                            queryMenu = makeQueryMenu().attr("id", "queryMenu");
+                            queryMenu = makeQueryMenu().attr("id", "tersectQueryMenu");
                             $("body").data("queryMenu", queryMenu);
 
                         }
@@ -146,7 +146,7 @@ Genoverse.Plugins.tersectIntegration = function () {
                     '<button class="btn btn-primary btn-block" id="generate-new-button">Generate New Index <i class="fa fa-arrow-circle-right"></i></button>': '',
 
                 }).addClass('gv-tersect-integration-file-menu');
-                $('#tsi-refresh', indexMenu).on('click', function () { indexPopulator("#tersectIndexMenu .gv-tersect-list tbody", "/index/tersectUpload", "#queryMenu .gv-tersect-list tbody", "/index/tersectQueries") })
+                $('#tsi-refresh', indexMenu).on('click', function () { indexPopulator("#tersectIndexMenu .gv-tersect-list tbody", "/index/tersectUpload", "#tersectQueryMenu .gv-tersect-list tbody", "/index/tersectQueries") });
                 $('#tsi-refresh', indexMenu).click();
                 return indexMenu;
             }
@@ -181,12 +181,11 @@ Genoverse.Plugins.tersectIntegration = function () {
                     '<div>Choose Query VCF</div>': '',
                     '<span class="gv-tersect-integration-span" id="query-refresh"><a class="gv-tersect-integration-text">Refresh List <i class="fa fa-arrow-circle-right"></i></a></span>': '',
                     '<table class="gv-tersect-integration-text gv-tersect-list"><thead><tr><td>File Name</td><td>Command</td></tr></thead><tbody></tbody></table>': '',
-                    '<button class="btn btn-primary" id="add-tracks">Add tracks to Instance <i class="fa fa-arrow-circle-right"></i></button>': '<label for="gv-tersect-query-vcf">VCF Track:</label>&nbsp;<input type="checkbox" id="gv-tersect-query-vcf">&emsp;<label for="gv-tersect-query-density">Density Track: </label>&nbsp;<input type="checkbox" id="gv-tersect-query-density">',
-                    '<button class="btn btn-danger" id="purge-queries">Purge Query DB <i class="fa fa-arrow-circle-right"></i></button>': ''
+                    '<button class="btn btn-primary" id="add-tracks">Add tracks to Instance <i class="fa fa-arrow-circle-right"></i></button>&nbsp;&nbsp;<label htmlFor="gv-tersect-query-vcf">VCF Track:</label>&nbsp;<input type="checkbox" id="gv-tersect-query-vcf">&emsp;<label htmlFor="gv-tersect-query-density">Density Track: </label>&nbsp;<input type="checkbox" id="gv-tersect-query-density"><button class="btn btn-danger" id="purge-queries">Purge Query DB <i class="fa fa-arrow-circle-right"></i></button>': '',
                 }).addClass('gv-tersect-integration-file-menu');
                 $('#query-refresh').on('click', function () {
                     if ($(document).data('query-id')) {
-                        queryPopulator('#queryMenu .gv-tersect-list tbody', $(document).data('query-id'), '/index/tersectQueries');
+                        queryPopulator('#tersectQueryMenu .gv-tersect-list tbody', $(document).data('query-id'), '/index/tersectQueries');
                     }
                 });
                 $('#purge-queries').on('click', function(){
@@ -326,11 +325,46 @@ function indexPopulator(index_list, url, query_list, query_url) {
         success: function (data) {
             console.log("latest value" + this);
             $.each(data, function () {
-                $(index_list).append('<tr data-id="' + this._id + '"><td><a class="gv-tersect-index-name">' + this.name + '</a></td><td><a class="gv-tersect-index-delete">delete</a></td></tr>');
+                $(index_list).append('<tr data-id="' + this._id + '"><td><a class="gv-tersect-index-name">' + this.name + '</a></td><td>'+ (this.renamed ? '<a class="gv-tersect-index-translate">Revert</a>' : '') +'  <a class="gv-tersect-index-download">Download</a>  <a class="gv-tersect-index-delete">delete</a></td></tr>');
             });
 
+            $(index_list).parent().off().on('click', '.gv-tersect-index-download', function () {
+                let form = $('<form>', { action: url + "/" + $(this).parent().parent().data("id") + "/download", method: 'POST' });
+                console.log(url+"/" + $(this).parent().parent().data("id") + "/download")
+                $(document.body).append(form);
+                form.submit();
+            });
 
-            $(index_list).parent().off().on('click', '.gv-tersect-index-delete', function () {
+            $(index_list).parent().on('click', '.gv-tersect-index-translate', function (){
+                let flag = confirm("This will generate an index with the original sample naming scheme. This may be used to " +
+                    "rectify some issues with wildcard functionalities.");
+                if(flag == true) {
+                    $.ajax({
+                        type: 'POST',
+                        url: url + "/" + $(this).parent().parent().data("id") + "/translate",
+                        success: function (data) {
+                            new Noty({
+                                type: 'success',
+                                layout: 'topRight',
+                                text: "Index will be translated",
+                                timeout: '2000',
+                                theme: 'light',
+                            }).show();
+                        },
+                        error: function (xhr) {
+                            new Noty({
+                                type: 'error',
+                                layout: 'topRight',
+                                text: `${xhr.status}: ${xhr.responseText} `,
+                                timeout: '4000',
+                                theme: 'light',
+                            }).show();
+                        }
+                    })
+                }
+            });
+
+            $(index_list).parent().on('click', '.gv-tersect-index-delete', function () {
                 console.log("delete event fired at: " + Date.now());
                 let flag = confirm("Are you sure you want to permanently delete that Index file?")
                 if(flag == true) {
@@ -394,6 +428,9 @@ function queryPopulator(query_list, id, query_url) {
                     $(this).css("border", "5px solid white");
                     idsForTracks.push($(this).parent().data('id'));
                 }
+            });
+            $(query_list).parent().on('mouseover', '.CellWithComment', function(event){
+                $('.CellComment').css({top:event.clientY,left:event.clientX})
             });
             $(query_list).parent().on('click', '.gv-tersect-query-delete', function () {
                 let flag = confirm("Are you sure you want to permanently delete that query file?");
@@ -755,102 +792,6 @@ function indexGetter(parent, idToGet, url) {
     });
 }
 
-// function indexGetter(parent, idToGet, url) {
-//     $.ajax({
-//         url: url + "/view",
-//         type: 'POST',
-//         data: { "tsifile": idToGet },
-//         processData: false,
-//         contentType: false,
-//         success: function (data) {
-//             operations.idToGet = idToGet;
-//             var samples = data.samples;
-//             console.log(samples)
-//             $('#genomeTable').empty();
-//             $('#genomeTable').append('<tr>');
-//             for (i = 0; i < samples.length; i++) {
-//                 $('<td>' + samples[i] + '</td>').attr({ id: [i], class: 'samples' }).appendTo('#genomeTable').draggable({
-//                     opacity: 0.5,
-//                     helper: "clone",
-//                     //make sure cursor is out of the way so that mouseover event for venn can fire properly
-//                     cursorAt: { left: -2, top: -2 },
-//                     // Register what we're dragging with the drop manager
-//                     start: function (event) {
-//                         DragDrop.dragged = event.target;
-//                     },
-//                     drag: function (event) {
-//                         var goodPos = DragDrop.placement();
-//                         //change tooltip depending on location of cursor
-//                         div.style('cursor', function () {
-//                             return (goodPos) ? 'copy' : 'no-drop';
-//                         });
-//                         //if location is outside of venn or in intersect do not disable drag and return sample to table
-//                         $(event.target).draggable('option', 'revert', (goodPos) ? false : true);
-//                         $(event.target).draggable('option', 'disabled', (goodPos) ? true : false);
-//                     },
-//                     stop: function (event) {
-//                         var goodPos = DragDrop.placement();
-//                         if (goodPos) {
-//                             new Noty({
-//                                 type: 'success',
-//                                 layout: 'topRight',
-//                                 text: DragDrop.dragged.innerText + ' has been dropped in: ' + DragDrop.droppable,
-//                                 timeout: '4000',
-//                                 theme: 'light',
-//                             }).show();
-//                             DragDrop.add();
-//
-//                         } else {
-//                             new Noty({
-//                                 type: 'warning',
-//                                 layout: 'topRight',
-//                                 text: DragDrop.dragged.innerText + " cannot be dropped here!",
-//                                 timeout: '5000',
-//                                 theme: 'light',
-//                                 closeWith: ['click'],
-//                             }).show();
-//
-//
-//                         }
-//                         div.style('cursor', 'pointer');
-//
-//                     }
-//                 })
-//
-//             };
-//             $('#genomeTable').append(`</tr>`);
-//             //case sensitive search for samples (only matches from the beginning of samples)
-//             $("#searchBox").off().on("keyup", function () {
-//                 wildcardgroup = $(this).val();
-//                 $("#genomeTable td").filter(function () {
-//                     $(this).toggle($(this).text().indexOf(wildcardgroup) == 0)
-//                 });
-//             });
-//
-//         },
-//         statusCode: {
-//             413: function (xhr) {
-//                 new Noty({
-//                     type: 'error',
-//                     layout: 'topRight',
-//                     text: "Error with TSI retrieval: corrupt file..",
-//                     timeout: '4000',
-//                     theme: 'light',
-//                 }).show();
-//             }
-//         },
-//         error: function (xhr, status, error) {
-//             xhr.abort();
-//             new Noty({
-//                 type: 'error',
-//                 layout: 'topRight',
-//                 text: "Error Uploading. You Must be logged in.",
-//                 timeout: '4000',
-//                 theme: 'light',
-//             }).show();
-//         }
-//     });
-// }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //

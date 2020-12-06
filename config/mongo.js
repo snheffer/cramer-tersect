@@ -9,7 +9,7 @@ var url = "mongodb://localhost:27017/genoverse";
 
 module.exports = {
     init: function () {
-        mongoose.connect(process.env.MONGODB_URL);
+        mongoose.connect(process.env.MONGODB_URL,{ useNewUrlParser: true, useUnifiedTopology: true });
         var db = mongoose.connection;
         db.on('error', function (err) {
             if (err) {
